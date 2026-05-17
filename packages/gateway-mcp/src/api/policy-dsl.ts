@@ -137,7 +137,7 @@ export class PolicyDslAPI {
           merged as any,
           ctxFromReq(req),
         );
-        res.status(204).send();
+        res.json({ ok: true });
       } catch (err: any) {
         const status = (err?.status as number) ?? 500;
         res.status(status).json({ error: err.message });

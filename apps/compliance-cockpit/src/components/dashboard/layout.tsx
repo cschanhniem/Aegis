@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-  LayoutDashboard, FileText, Shield,
+  LayoutDashboard, FileText, Shield, ScrollText,
   CheckCircle, AlertTriangle, Settings, FlaskConical,
   Menu, X,
 } from 'lucide-react'
@@ -16,6 +16,7 @@ const navigation = [
   { name: 'Overview',    href: '/',            icon: LayoutDashboard },
   { name: 'Traces',      href: '/traces',      icon: FileText        },
   { name: 'Policies',    href: '/policies',    icon: Shield          },
+  { name: 'DSL',         href: '/dsl',         icon: ScrollText      },
   { name: 'Approvals',   href: '/approvals',   icon: CheckCircle     },
   { name: 'Violations',  href: '/violations',  icon: AlertTriangle   },
   { name: 'Playground',  href: '/playground',  icon: FlaskConical    },
