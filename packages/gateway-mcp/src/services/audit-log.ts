@@ -18,7 +18,8 @@ export type AuditAction =
   | 'retention.update' | 'retention.purge'
   | 'judge.batch' | 'judge.trace'
   | 'webhook.create' | 'webhook.delete'
-  | 'data.export' | 'data.seed';
+  | 'data.export' | 'data.seed'
+  | 'tenant.config.update' | 'tenant.config.replace' | 'tenant.config.apply-template';
 
 export type ResourceType =
   | 'policy' | 'approval' | 'apikey' | 'agent'

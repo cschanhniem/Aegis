@@ -31,6 +31,11 @@ import { RetentionService } from './services/retention';
 import { UsageMeteringService } from './services/usage-metering';
 import { SLAMetricsService } from './services/sla-metrics';
 import { AdminAPI } from './api/admin';
+import { ConfigBus } from './services/config-bus';
+import { TenantConfigService } from './services/tenant-config';
+import { TenantConfigAPI } from './api/tenant-config';
+import { DslPolicyService } from './services/policy-dsl';
+import { PolicyDslAPI } from './api/policy-dsl';
 
 const VERSION = '2.0.0';
 
@@ -67,7 +72,6 @@ async function main() {
   const policyEngine  = new PolicyEngine(db, logger);
   const killSwitch    = new KillSwitchService(db, logger);
   const webhooks      = new WebhookService(db, logger);
-  const mcpProxy      = new MCPProxyService(db, policyEngine, killSwitch, logger);
   const aegisMcp      = new AegisMcpServer(db, logger);
   const requireAuth   = createAuthMiddleware(db);
 
@@ -97,6 +101,19 @@ async function main() {
   const retention     = new RetentionService(db, logger);
   const usageMetering = new UsageMeteringService(db, logger);
   const slaMetrics    = new SLAMetricsService(db, logger);
+
+  // Per-tenant runtime config (deployment mode, layer toggles, thresholds)
+  const configBus     = new ConfigBus(logger);
+  const tenantConfig  = new TenantConfigService(db, logger, configBus, auditLog);
+  tenantConfig.seedDefaults();
+
+  // Per-tenant policy DSL (fail-safe composer over classifier + AJV + anomaly)
+  const dslPolicy = new DslPolicyService(logger, configBus, tenantConfig);
+  const orgIds = db.prepare('SELECT id FROM organizations').all() as { id: string }[];
+  dslPolicy.warmCache(orgIds.map((o) => o.id));
+
+  // MCP proxy (instantiated after dslPolicy + tenantConfig so DSL flows through)
+  const mcpProxy = new MCPProxyService(db, policyEngine, killSwitch, logger, dslPolicy, tenantConfig);
 
   // Start background schedulers
   if (isFeatureEnabled('data-retention')) {
@@ -306,6 +323,8 @@ async function main() {
     config.anomaly.enabled ? anomalyDetector : undefined,
     config.anomaly.enabled ? profileManager : undefined,
     config.anomaly.enabled ? slidingWindow : undefined,
+    dslPolicy,
+    tenantConfig,
   ).router);
 
   // ── Management routes (auth required) ────────────────────────────────────
@@ -318,6 +337,12 @@ async function main() {
   // Enterprise admin routes (auth + feature gate)
   app.use('/api/v1/admin', requireAuth, requireFeature('multi-tenancy'),
     new AdminAPI(db, logger, rbac, auditLog, retention, usageMetering, slaMetrics).router);
+
+  // Per-tenant config (self-service, scoped to req.orgId)
+  app.use('/api/v1/config', requireAuth, new TenantConfigAPI(tenantConfig, logger).router);
+
+  // Per-tenant DSL (self-service)
+  app.use('/api/v1/dsl', requireAuth, new PolicyDslAPI(tenantConfig, dslPolicy, logger).router);
 
   // Kill-switch endpoints (auth required)
   app.post('/api/v1/kill-switch/revoke', requireAuth, async (req, res) => {

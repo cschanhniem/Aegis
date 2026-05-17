@@ -10,6 +10,9 @@ import {
 } from '@agentguard/core-schema';
 import { PolicyEngine } from '../policies/policy-engine';
 import { KillSwitchService } from '../services/kill-switch';
+import { DslPolicyService } from '../services/policy-dsl';
+import { TenantConfigService } from '../services/tenant-config';
+import { MatchResult } from '../policies/dsl/evaluator';
 
 interface MCPMessage {
   jsonrpc: '2.0';
@@ -33,7 +36,9 @@ export class MCPProxyService {
     private db: Database.Database,
     private policyEngine: PolicyEngine,
     private killSwitch: KillSwitchService,
-    private logger: Logger
+    private logger: Logger,
+    private dslPolicy?: DslPolicyService,
+    private tenantConfig?: TenantConfigService,
   ) {}
 
   private connectionAgentIds = new Map<string, string>();
@@ -167,8 +172,52 @@ export class MCPProxyService {
         return;
       }
 
-      // Check if approval is needed
-      if (validation.risk_level === 'HIGH' || validation.risk_level === 'CRITICAL') {
+      // ── Per-tenant DSL evaluation (fail-safe: only tightens) ────────────
+      // MCP proxy currently has no tenant context plumbed from auth, so use
+      // 'default' until per-connection tenant ID lands.
+      let dslMatch: MatchResult | null = null
+      if (this.dslPolicy) {
+        const orgId = 'default'
+        const deploymentMode =
+          this.tenantConfig?.get(orgId).deploymentMode ?? 'standard'
+        dslMatch = this.dslPolicy.evaluate(orgId, {
+          classifier: (validation as any).classification ?? { category: 'unknown' },
+          policy: {
+            passed: validation.passed,
+            riskLevel: validation.risk_level,
+            violations: validation.violations ?? [],
+          },
+          tool: { name: toolRequest.tool, args: toolRequest.arguments },
+          agent: { id: agentId },
+          tenant: { id: orgId, deploymentMode },
+        })
+        // DSL block → mirror policy failure path: reject with violation
+        if (dslMatch?.decision === 'block') {
+          await this.killSwitch.recordViolation(agentId, validation)
+          trace['approval_status'] = 'REJECTED'
+          await this.storeTrace(trace)
+          ws.send(
+            JSON.stringify({
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32002,
+                message: dslMatch.reason ?? `Blocked by DSL rule ${dslMatch.ruleName}`,
+                data: {
+                  policy: 'dsl',
+                  rule: dslMatch.ruleName,
+                  trace_id: traceId,
+                },
+              },
+            })
+          )
+          return
+        }
+      }
+      const dslPending = dslMatch?.decision === 'pending'
+
+      // Check if approval is needed (HIGH/CRITICAL or DSL says pending)
+      if (validation.risk_level === 'HIGH' || validation.risk_level === 'CRITICAL' || dslPending) {
         // Store pending approval
         const approvalId = uuidv4();
         this.pendingApprovals.set(approvalId, toolRequest);

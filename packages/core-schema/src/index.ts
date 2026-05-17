@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { createHash } from 'crypto';
 
+export * from './tenant-config';
+export * from './policy-dsl';
+
 // Base schemas
 export const AgentIdSchema = z.string().uuid();
 export const TraceIdSchema = z.string().uuid();

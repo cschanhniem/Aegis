@@ -30,6 +30,9 @@ import { EventBus } from '../services/event-bus';
 import { AnomalyDetector, AnomalyResult } from '../services/anomaly-detector';
 import { ProfileManager } from '../services/profile-manager';
 import { SlidingWindowStats } from '../services/sliding-window';
+import { DslPolicyService } from '../services/policy-dsl';
+import { TenantConfigService } from '../services/tenant-config';
+import { MatchResult } from '../policies/dsl/evaluator';
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -65,6 +68,8 @@ export class CheckAPI {
     private anomalyDetector?: AnomalyDetector,
     private profileManager?: ProfileManager,
     private slidingWindow?: SlidingWindowStats,
+    private dslPolicy?: DslPolicyService,
+    private tenantConfig?: TenantConfigService,
   ) {
     this.router = Router()
     this.initTable()
@@ -236,6 +241,40 @@ export class CheckAPI {
           }
         }
 
+        // ── Per-tenant DSL evaluation (fail-safe: only tightens) ────────────
+        let dslMatch: MatchResult | null = null
+        if (this.dslPolicy) {
+          const orgId = (req as any).orgId ?? 'default'
+          const deploymentMode =
+            this.tenantConfig?.get(orgId).deploymentMode ?? 'standard'
+          dslMatch = this.dslPolicy.evaluate(orgId, {
+            classifier: {
+              category: classification.category,
+              signals: classification.signals,
+              risks: classification.risks as any,
+            },
+            anomaly: anomalyResult
+              ? {
+                  score: anomalyResult.composite_score,
+                  decision: anomalyResult.decision,
+                }
+              : undefined,
+            policy: {
+              passed: validation.passed,
+              riskLevel: validation.risk_level,
+              violations: validation.violations ?? [],
+            },
+            tool: { name: body.tool_name, args: body.arguments as Record<string, unknown> },
+            agent: { id: body.agent_id },
+            tenant: { id: orgId, deploymentMode },
+          })
+          if (dslMatch && (dslMatch.decision === 'block' || dslMatch.decision === 'pending')) {
+            isRisky = true
+          }
+        }
+        const dslBlocks = dslMatch?.decision === 'block'
+        const dslPending = dslMatch?.decision === 'pending'
+
         // Communication tools (email, messaging) always require human review in blocking mode
         const requiresHumanReview = classification.category === 'communication'
 
@@ -288,22 +327,33 @@ export class CheckAPI {
             check_id:   checkId,
             risk_level: validation.risk_level,
             category:   classification.category,
-            reason:     anomalyResult?.decision === 'escalate'
-              ? `Behavioral anomaly detected (score=${anomalyResult.composite_score})`
-              : (validation.violations?.[0] ?? 'Requires human review'),
+            reason:     dslMatch?.reason
+              ?? (anomalyResult?.decision === 'escalate'
+                ? `Behavioral anomaly detected (score=${anomalyResult.composite_score})`
+                : (validation.violations?.[0] ?? 'Requires human review')),
             anomaly: anomalyResult ? {
               score: anomalyResult.composite_score,
               decision: anomalyResult.decision,
               signals: anomalyResult.signals.length,
+            } : undefined,
+            dsl: dslMatch ? {
+              decision: dslMatch.decision,
+              rule: dslMatch.ruleName,
+              reason: dslMatch.reason,
             } : undefined,
             latency_ms: Date.now() - start,
           })
         }
 
         // ── FAST-PATH: auto decision ──────────────────────────────────────────
-        // Anomaly can override policy pass to block
+        // Anomaly can override policy pass to block.
+        // DSL is fail-safe — block forces block; pending collapses to block
+        // (fast-path callers opted out of pending semantics).
         let decision: 'allow' | 'block' = validation.passed ? 'allow' : 'block'
         if (decision === 'allow' && anomalyResult?.decision === 'block') {
+          decision = 'block'
+        }
+        if (decision === 'allow' && (dslBlocks || dslPending)) {
           decision = 'block'
         }
 
@@ -343,14 +393,21 @@ export class CheckAPI {
           category:   classification.category,
           signals:    classification.signals,
           reason:     decision === 'block'
-            ? (anomalyResult?.decision === 'block'
-              ? `Behavioral anomaly (score=${anomalyResult.composite_score})`
-              : (validation.violations?.[0] ?? 'Policy violation'))
+            ? (dslBlocks
+              ? (dslMatch?.reason ?? `DSL rule ${dslMatch?.ruleName} blocked`)
+              : anomalyResult?.decision === 'block'
+                ? `Behavioral anomaly (score=${anomalyResult.composite_score})`
+                : (validation.violations?.[0] ?? 'Policy violation'))
             : undefined,
           anomaly: anomalyResult ? {
             score: anomalyResult.composite_score,
             decision: anomalyResult.decision,
             signals: anomalyResult.signals.length,
+          } : undefined,
+          dsl: dslMatch ? {
+            decision: dslMatch.decision,
+            rule: dslMatch.ruleName,
+            reason: dslMatch.reason,
           } : undefined,
           latency_ms: Date.now() - start,
         })
