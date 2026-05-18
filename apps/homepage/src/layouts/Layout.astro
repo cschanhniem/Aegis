@@ -19,8 +19,15 @@ const {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Tiempos / Söhne are Anthropic's licensed fonts. Closest free
+      approximations on Google Fonts:
+        - Instrument Serif → Tiempos Headline (headings)
+        - Inter            → Söhne (body, ui)
+        - JetBrains Mono   → Söhne Mono (code)
+    -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap"
       rel="stylesheet"
     />
     <meta property="og:title" content={title} />
@@ -32,50 +39,88 @@ const {
     <slot />
     <style is:global>
       :root {
-        --bg: hsl(36 20% 95%);
-        --panel: hsl(36 22% 97%);
-        --border: hsl(36 12% 87%);
-        --text: hsl(30 10% 18%);
-        --muted: hsl(30 8% 50%);
-        --accent: hsl(38 22% 42%);
-        --accent-soft: hsl(38 20% 52%);
-        --link: hsl(214 60% 38%);
+        /* Claude-like warm cream palette */
+        --bg: #f0eee6;
+        --surface: #f7f5ee;
+        --text: #1f1e1b;
+        --muted: #6f6b62;
+        --hairline: rgba(31, 30, 27, 0.12);
+        --accent: #c96442; /* Anthropic-ish warm clay */
+        --link: #1f1e1b;
       }
+
       * {
         box-sizing: border-box;
       }
+
       html {
         font-family:
-          'Plus Jakarta Sans',
-          system-ui,
+          'Inter',
           -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          system-ui,
           sans-serif;
+        font-weight: 400;
         background: var(--bg);
         color: var(--text);
-        line-height: 1.55;
+        line-height: 1.62;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        font-feature-settings:
+          'kern' 1,
+          'liga' 1,
+          'calt' 1;
       }
+
       body {
         margin: 0;
       }
+
+      /* Serif for headings & display copy — Tiempos-like */
+      h1,
+      h2,
+      h3,
+      .serif {
+        font-family:
+          'Instrument Serif',
+          'Tiempos Headline',
+          'Source Serif Pro',
+          ui-serif,
+          Georgia,
+          serif;
+        font-weight: 400;
+        letter-spacing: -0.005em;
+        line-height: 1.15;
+        color: var(--text);
+      }
+
       code,
       pre,
       kbd {
-        font-family: 'JetBrains Mono', ui-monospace, monospace;
-        font-size: 0.92em;
+        font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+        font-size: 0.86em;
       }
+
       a {
         color: var(--link);
-        text-decoration: underline;
-        text-underline-offset: 3px;
-        text-decoration-thickness: 1px;
+        text-decoration: none;
+        border-bottom: 1px solid var(--hairline);
+        padding-bottom: 0.5px;
+        transition: border-color 120ms ease;
       }
       a:hover {
-        text-decoration-thickness: 2px;
+        border-bottom-color: var(--text);
       }
+
       ::selection {
-        background: hsl(38 30% 78%);
+        background: rgba(201, 100, 66, 0.18);
+      }
+
+      hr {
+        border: 0;
+        border-top: 1px solid var(--hairline);
+        margin: 4rem 0;
       }
     </style>
   </body>

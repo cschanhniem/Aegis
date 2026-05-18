@@ -20,65 +20,70 @@ const { title, venue, arxivId, abstract, authors, badge } = Astro.props;
   <p class="abstract">{abstract}</p>
   <div class="links">
     <a href={`https://arxiv.org/abs/${arxivId}`} target="_blank" rel="noopener">arXiv:{arxivId}</a>
+    <span class="dot">·</span>
     <a href={`https://arxiv.org/pdf/${arxivId}`} target="_blank" rel="noopener">PDF</a>
   </div>
 </article>
 
 <style>
   .paper {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.25rem 1.4rem;
-    transition: border-color 120ms ease, transform 120ms ease;
+    padding: 1.6rem 0;
+    border-bottom: 1px solid var(--hairline);
   }
-  .paper:hover {
-    border-color: var(--accent-soft);
+  .paper:last-child {
+    border-bottom: 0;
   }
   .meta {
     display: flex;
     gap: 0.6rem;
     align-items: center;
-    margin-bottom: 0.55rem;
+    margin-bottom: 0.5rem;
   }
   .venue {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-size: 0.74rem;
     color: var(--muted);
-    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 500;
   }
   .badge {
     font-size: 0.66rem;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
-    background: hsl(38 24% 88%);
     color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
+    letter-spacing: 0.08em;
+    font-weight: 500;
   }
   h3 {
-    font-size: 1.05rem;
-    font-weight: 600;
+    font-size: 1.5rem;
+    line-height: 1.25;
     margin: 0 0 0.35rem;
-    line-height: 1.35;
-    color: var(--text);
   }
   .authors {
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     color: var(--muted);
-    margin: 0 0 0.7rem;
+    margin: 0 0 0.85rem;
+    font-style: italic;
   }
   .abstract {
-    font-size: 0.88rem;
+    font-size: 0.97rem;
     color: var(--text);
-    margin: 0 0 0.85rem;
-    opacity: 0.85;
+    margin: 0 0 1rem;
+    opacity: 0.84;
+    line-height: 1.6;
   }
   .links {
-    display: flex;
-    gap: 1rem;
-    font-size: 0.82rem;
+    font-size: 0.84rem;
+    color: var(--muted);
+  }
+  .links a {
+    color: var(--muted);
+  }
+  .links a:hover {
+    color: var(--text);
+    border-bottom-color: var(--text);
+  }
+  .dot {
+    margin: 0 0.45rem;
+    opacity: 0.5;
   }
 </style>

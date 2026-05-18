@@ -4,83 +4,77 @@ import PaperCard from '@/components/PaperCard.astro';
 ---
 
 <Layout>
-  <main class="container">
-    <!-- Header -->
-    <header class="header">
-      <h1>Aojie Yuan <span class="alias">/ Justin</span></h1>
-      <p class="tagline">
-        M.S. student at <a href="https://www.usc.edu" target="_blank" rel="noopener">USC</a> · AI agent security, runtime guardrails, behavioral
-        anomaly detection.
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <p class="eyebrow">Aojie Yuan · Justin</p>
+      <h1>
+        I work on the runtime <em>safety layer</em> for tool-using AI agents.
+      </h1>
+      <p class="lede">
+        M.S. student at <a href="https://www.usc.edu" target="_blank" rel="noopener">USC</a>.
+        Building AEGIS — an open-source pre-execution firewall that keeps a
+        hallucinated <code>DROP&nbsp;TABLE</code> from ever reaching production.
       </p>
-      <nav class="links">
+      <nav class="header-links">
         <a href="https://github.com/Justin0504" target="_blank" rel="noopener">GitHub</a>
-        <span class="sep">·</span>
         <a href="https://arxiv.org/a/yuan_a_3" target="_blank" rel="noopener">arXiv</a>
-        <span class="sep">·</span>
         <a href="mailto:aojieyua@usc.edu">aojieyua@usc.edu</a>
       </nav>
-    </header>
-
-    <!-- About -->
-    <section class="section">
-      <h2>About</h2>
-      <p>
-        I work on the runtime-safety layer for LLM agents. My current focus is
-        <strong>pre-execution policy enforcement</strong> for tool-using agents
-        — keeping a hallucinated <code>DROP TABLE</code> or
-        <code>rm -rf /</code> from reaching production before any human is in the
-        loop. Side interests include hidden-error detection in chain-of-thought
-        reasoning, and reasoning-aware memory hierarchies for LLMs.
-      </p>
     </section>
+
+    <hr />
 
     <!-- Featured project -->
-    <section class="section">
-      <h2>Currently building</h2>
-      <div class="project">
-        <div class="project-head">
-          <h3>AEGIS</h3>
-          <span class="project-tagline">Pre-execution firewall &amp; audit layer for AI agents</span>
-        </div>
-        <p class="project-blurb">
-          Open-source gateway that classifies every tool call, runs a
-          cost-aware L1/L2/L3 cascade (rules → XGBoost → LLM-judge), enforces
-          per-tenant DSL policies with fail-safe semantics, and writes a
-          tamper-evident audit chain — with zero changes to your agent code.
-        </p>
-        <div class="project-stats">
-          <span><strong>99.9%</strong> block rate</span>
-          <span><strong>1.1 ms</strong> p50 latency</span>
-          <span><strong>14</strong> frameworks supported</span>
-          <span><strong>MIT</strong> licensed</span>
-        </div>
-        <div class="project-links">
-          <a class="primary" href="https://github.com/Justin0504/Aegis" target="_blank" rel="noopener">
-            GitHub
-          </a>
-          <a href="https://arxiv.org/abs/2603.12621" target="_blank" rel="noopener">
-            Paper
-          </a>
-          <code class="install">curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash</code>
-        </div>
+    <section>
+      <p class="section-eyebrow">Currently building</p>
+      <h2>AEGIS</h2>
+      <p class="section-lede">
+        A pre-execution firewall and audit layer for AI agents. Every tool call
+        is classified, run through a cost-aware L1/L2/L3 cascade
+        <span class="muted">(rules → XGBoost → LLM-judge)</span>, and matched
+        against a per-tenant Policy DSL with fail-safe semantics — all before
+        execution, with zero changes to agent code.
+      </p>
+
+      <div class="stats">
+        <div><span class="num">99.9%</span><span class="label">block rate</span></div>
+        <div><span class="num">1.1<i>ms</i></span><span class="label">p50 latency</span></div>
+        <div><span class="num">14</span><span class="label">frameworks</span></div>
+        <div><span class="num">MIT</span><span class="label">licensed</span></div>
       </div>
+
+      <div class="project-actions">
+        <a class="cta" href="https://github.com/Justin0504/Aegis" target="_blank" rel="noopener">
+          View on GitHub →
+        </a>
+        <a class="cta-secondary" href="https://arxiv.org/abs/2603.12621" target="_blank" rel="noopener">
+          Read the paper
+        </a>
+      </div>
+
+      <pre class="install"><code>curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash</code></pre>
     </section>
 
+    <hr />
+
     <!-- Papers -->
-    <section class="section">
-      <h2>Selected papers</h2>
+    <section>
+      <p class="section-eyebrow">Selected work</p>
+      <h2>Papers</h2>
+
       <div class="papers">
         <PaperCard
           title="AEGIS: No Tool Call Left Unchecked — A Pre-Execution Firewall and Audit Layer for AI Agents"
-          venue="EMNLP 2026 (System Demonstrations)"
+          venue="EMNLP 2026 · System Demonstrations"
           arxivId="2603.12621"
           authors="Aojie Yuan, Zhiyuan Su, Yue Zhao"
           badge="open source"
-          abstract="Cost-aware three-layer cascade (rules → XGBoost classifier → LLM judge) that resolves the fast-but-brittle vs. flexible-but-expensive trade-off. 99.9% block rate at 1.1ms median latency and $0.05/run on a 5,525-call benchmark."
+          abstract="Cost-aware three-layer cascade (rules → XGBoost classifier → LLM judge) that resolves the fast-but-brittle vs. flexible-but-expensive trade-off in tool-call defense. 99.9% block rate at 1.1 ms median latency and $0.05/run on a 5,525-call benchmark."
         />
         <PaperCard
           title="Sovereign-OS: A Charter-Governed Operating System for Autonomous AI Agents with Verifiable Fiscal Discipline"
-          venue="Workshop (in submission)"
+          venue="Workshop · in submission"
           arxivId="2603.14011"
           abstract="Charter-based execution environment that binds autonomous agents to a fiscal envelope; deviations produce verifiable audit trails enforceable by external runtimes."
         />
@@ -88,157 +82,201 @@ import PaperCard from '@/components/PaperCard.astro';
           title="HMAR: Hierarchical Modality-Aware Expert and Dynamic Routing Medical Image Retrieval Architecture"
           venue="cs.CV"
           arxivId="2603.16679"
-          abstract="MoE retrieval architecture with modality-aware expert selection and dynamic top-k routing, evaluated on medical image corpora."
+          abstract="A mixture-of-experts retrieval architecture with modality-aware expert selection and dynamic top-k routing, evaluated on medical image corpora."
         />
       </div>
     </section>
 
+    <hr />
+
     <!-- Footer -->
-    <footer class="footer">
+    <footer>
       <p>
-        Currently in Los Angeles. Always happy to chat about agent safety,
-        LLM tooling, or the systems half of ML —
-        <a href="mailto:aojieyua@usc.edu">drop me a line</a>.
+        Currently in Los Angeles · happy to talk agent safety, LLM tooling, or
+        the systems half of ML — <a href="mailto:aojieyua@usc.edu">drop me a line</a>.
       </p>
     </footer>
   </main>
 
   <style>
-    .container {
-      max-width: 720px;
+    main {
+      max-width: 640px;
       margin: 0 auto;
-      padding: 4rem 1.5rem 6rem;
+      padding: 7rem 1.75rem 6rem;
     }
 
-    .header h1 {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      margin: 0 0 0.5rem;
-      color: var(--text);
-    }
-    .alias {
+    /* Hero ──────────────────────────────────────────── */
+    .eyebrow {
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin: 0 0 1.5rem;
       font-weight: 500;
-      color: var(--muted);
-      font-size: 0.85em;
-    }
-    .tagline {
-      font-size: 1.05rem;
-      color: var(--muted);
-      margin: 0 0 1rem;
-    }
-    .header .links {
-      font-size: 0.92rem;
-      color: var(--muted);
-    }
-    .sep {
-      margin: 0 0.5rem;
-      opacity: 0.5;
     }
 
-    .section {
-      margin-top: 3.2rem;
+    .hero h1 {
+      font-size: clamp(2.3rem, 5.5vw, 3.6rem);
+      line-height: 1.08;
+      margin: 0 0 1.6rem;
+      letter-spacing: -0.012em;
     }
-    .section h2 {
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      font-weight: 600;
-      margin: 0 0 1rem;
-    }
-    .section p {
-      font-size: 1rem;
-      margin: 0;
-    }
-
-    .project {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem 1.6rem;
-    }
-    .project-head {
-      display: flex;
-      align-items: baseline;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-    }
-    .project h3 {
-      font-size: 1.4rem;
-      margin: 0;
-      font-weight: 700;
-      letter-spacing: 0.03em;
+    .hero h1 em {
+      font-style: italic;
       color: var(--accent);
     }
-    .project-tagline {
-      font-size: 0.88rem;
+
+    .lede {
+      font-size: 1.12rem;
+      line-height: 1.6;
+      color: var(--text);
+      opacity: 0.84;
+      margin: 0 0 2rem;
+      max-width: 38ch;
+    }
+
+    .header-links {
+      display: flex;
+      gap: 1.6rem;
+      font-size: 0.95rem;
       color: var(--muted);
     }
-    .project-blurb {
-      margin: 0.85rem 0 1rem;
-      font-size: 0.95rem;
+    .header-links a {
+      color: var(--muted);
+      border-bottom-color: transparent;
     }
-    .project-stats {
+    .header-links a:hover {
+      color: var(--text);
+      border-bottom-color: var(--text);
+    }
+
+    /* Section common ─────────────────────────────────── */
+    .section-eyebrow {
+      font-size: 0.74rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      margin: 0 0 0.7rem;
+      font-weight: 500;
+    }
+    section h2 {
+      font-size: 2.4rem;
+      margin: 0 0 1.4rem;
+    }
+    .section-lede {
+      font-size: 1.04rem;
+      line-height: 1.6;
+      margin: 0 0 2rem;
+      max-width: 56ch;
+    }
+    .muted {
+      color: var(--muted);
+    }
+
+    /* Project ────────────────────────────────────────── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem 1rem;
+      margin: 0 0 2rem;
+      padding: 1.4rem 0;
+      border-top: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .stats > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .num {
+      font-family:
+        'Instrument Serif',
+        ui-serif,
+        Georgia,
+        serif;
+      font-size: 1.85rem;
+      line-height: 1.05;
+      color: var(--text);
+    }
+    .num i {
+      font-style: italic;
+      font-size: 0.65em;
+      color: var(--muted);
+      padding-left: 0.05em;
+    }
+    .label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .project-actions {
       display: flex;
       gap: 1.4rem;
-      flex-wrap: wrap;
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 1.1rem;
-    }
-    .project-stats strong {
-      color: var(--text);
-    }
-    .project-links {
-      display: flex;
-      gap: 0.7rem;
-      flex-wrap: wrap;
       align-items: center;
+      margin: 0 0 1.8rem;
+      flex-wrap: wrap;
     }
-    .project-links a {
-      padding: 0.4rem 0.85rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: 0.85rem;
-      transition: background 100ms ease;
-    }
-    .project-links a:hover {
-      background: hsl(36 18% 92%);
-    }
-    .project-links a.primary {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-    .project-links a.primary:hover {
-      background: hsl(38 24% 38%);
-    }
-    .install {
-      flex: 1;
-      min-width: 0;
-      padding: 0.45rem 0.7rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.72rem;
-      overflow-x: auto;
-      white-space: nowrap;
+    .cta {
+      font-size: 0.96rem;
       color: var(--text);
+      border-bottom: 1px solid var(--text);
+      padding-bottom: 1px;
     }
-
-    .papers {
-      display: grid;
-      gap: 0.9rem;
+    .cta:hover {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
     }
-
-    .footer {
-      margin-top: 4rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.88rem;
+    .cta-secondary {
+      font-size: 0.96rem;
       color: var(--muted);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .cta-secondary:hover {
+      color: var(--text);
+      border-bottom-color: var(--text);
+    }
+
+    .install {
+      margin: 0;
+      padding: 1rem 1.2rem;
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .install code {
+      font-size: inherit;
+    }
+
+    /* Papers ─────────────────────────────────────────── */
+    .papers {
+      margin-top: 1rem;
+    }
+
+    /* Footer ─────────────────────────────────────────── */
+    footer {
+      font-size: 0.92rem;
+      color: var(--muted);
+      max-width: 50ch;
+    }
+
+    /* Responsive ─────────────────────────────────────── */
+    @media (max-width: 560px) {
+      main {
+        padding: 4.5rem 1.4rem 4rem;
+      }
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.2rem;
+      }
+      section h2 {
+        font-size: 2rem;
+      }
     }
   </style>
 </Layout>
