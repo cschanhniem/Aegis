@@ -60,7 +60,15 @@ Watch it trace tool calls, block SQL injection, detect PII, and pause for human 
 
 ## Quick Start
 
-**3 commands. 30 seconds. Full protection.**
+**One command. 30 seconds. Full protection.**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash
+```
+
+<sub>The installer clones the repo into <code>./aegis</code>, writes <code>.env</code>, runs <code>docker compose up -d</code>, waits for the gateway to become healthy, and prints your dashboard URL + bootstrap API key. Set <code>AEGIS_DIR</code>, <code>AEGIS_BRANCH</code>, or <code>AEGIS_NO_START=1</code> to customize.</sub>
+
+Or do it manually:
 
 ```bash
 git clone https://github.com/Justin0504/Aegis
