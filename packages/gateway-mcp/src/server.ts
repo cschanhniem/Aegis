@@ -125,7 +125,7 @@ async function main() {
 
   // ── Express app ──────────────────────────────────────────────────────────
   const app = express();
-  app.use(express.json({ limit: '10mb' }));
+  app.use(express.json({ limit: config.bodyParser.jsonLimit }));
 
   // Request ID + access logging (before everything else)
   app.use(requestContextMiddleware(logger));
@@ -159,12 +159,18 @@ async function main() {
     next();
   });
 
-  // Security headers
+  // Security headers (OWASP A05:2021 — Security Misconfiguration)
   app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '0');
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'",
+    );
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
     next();
   });
 
@@ -238,7 +244,12 @@ async function main() {
 
   app.use('/api/v1/check', (req, res, next) => {
     if (req.method !== 'POST') return next();
-    const key = req.body?.agent_id || req.ip || 'unknown';
+    // Composite key isolates tenants — one noisy tenant cannot exhaust
+    // counters for another. /check is unauthenticated, so req.orgId may be
+    // undefined; default to a sentinel so it slots into the same key space.
+    const orgKey = (req as any).orgId || 'public';
+    const agentKey = req.body?.agent_id || req.ip || 'unknown';
+    const key = `${orgKey}:${agentKey}`;
     const now = Date.now();
     const timestamps = (rateLimitWindow.get(key) || []).filter(t => now - t < RATE_LIMIT_MS);
     const remaining = RATE_LIMIT_MAX - timestamps.length;

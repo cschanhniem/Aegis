@@ -29,6 +29,9 @@ const envSchema = z.object({
   RATE_LIMIT_MAX:    z.coerce.number().int().min(1).default(100),
   RATE_LIMIT_WINDOW: z.coerce.number().int().min(1000).default(60000),
 
+  // Body parser
+  JSON_BODY_LIMIT:   z.string().default('2mb'),
+
   // Anomaly
   ANOMALY_ENABLED:          z.string().default('true'),
   ANOMALY_MIN_TRACES:       z.coerce.number().int().min(1).default(50),
@@ -116,6 +119,9 @@ export const config = {
   rateLimit: {
     max: env.RATE_LIMIT_MAX,
     windowMs: env.RATE_LIMIT_WINDOW,
+  },
+  bodyParser: {
+    jsonLimit: env.JSON_BODY_LIMIT,
   },
   anomaly: {
     enabled: env.ANOMALY_ENABLED !== 'false',

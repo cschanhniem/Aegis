@@ -72,7 +72,19 @@ export class AdminAPI {
 
     this.router.patch('/orgs/:orgId', (req: Request, res: Response) => {
       try {
-        const { plan, settings } = req.body;
+        const { plan, settings } = req.body ?? {};
+        if (plan !== undefined && (typeof plan !== 'string' || plan.length > 64)) {
+          return res.status(400).json({ error: 'plan must be a string ≤64 chars' });
+        }
+        if (settings !== undefined) {
+          if (settings === null || typeof settings !== 'object' || Array.isArray(settings)) {
+            return res.status(400).json({ error: 'settings must be an object' });
+          }
+          // Bound size to prevent DoS via huge JSON blobs
+          if (JSON.stringify(settings).length > 64 * 1024) {
+            return res.status(413).json({ error: 'settings payload exceeds 64KB' });
+          }
+        }
         if (plan) this.rbac.updateOrgPlan(req.params.orgId, plan);
         if (settings) this.rbac.updateOrgSettings(req.params.orgId, settings);
 

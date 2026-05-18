@@ -1,6 +1,16 @@
 import { Router } from 'express';
 import Database from 'better-sqlite3';
 import { Logger } from 'pino';
+import { z } from 'zod';
+
+// agent_id is supplied by SDKs and is typically a UUID, but legacy callers
+// may use slug-like identifiers. Accept either, reject anything else so we
+// never run a query with arbitrary control chars or 10MB strings.
+const AgentIdParamSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9._:-]+$/);
 
 export class AgentsAPI {
   router: Router;
@@ -11,6 +21,15 @@ export class AgentsAPI {
   }
 
   private registerRoutes() {
+    // Param-level validation — runs before every /:agentId/... handler.
+    this.router.param('agentId', (req, res, next, value) => {
+      const parsed = AgentIdParamSchema.safeParse(value);
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Invalid agentId parameter' });
+      }
+      next();
+    });
+
     // GET /api/v1/agents/:agentId/anomaly-summary
     this.router.get('/:agentId/anomaly-summary', (req, res) => {
       try {

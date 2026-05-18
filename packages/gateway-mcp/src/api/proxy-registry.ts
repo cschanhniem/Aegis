@@ -16,6 +16,17 @@ import { Router, Request, Response } from 'express';
 import Database from 'better-sqlite3';
 import { Logger } from 'pino';
 import { randomUUID } from 'crypto';
+import { z } from 'zod';
+
+const UpdateProxyServerSchema = z
+  .object({
+    name: z.string().min(1).max(128).optional(),
+    upstream_command: z.union([z.string().max(4096), z.array(z.string()).max(64)]).optional(),
+    agent_id: z.string().min(1).max(128).optional(),
+    blocking: z.boolean().optional(),
+    enabled: z.boolean().optional(),
+  })
+  .strict();
 
 export class ProxyRegistryAPI {
   public readonly router: Router;
@@ -115,7 +126,11 @@ export class ProxyRegistryAPI {
     // Update a proxy server
     this.router.patch('/servers/:serverId', (req: Request, res: Response) => {
       try {
-        const { name, upstream_command, agent_id, blocking, enabled } = req.body;
+        const parsed = UpdateProxyServerSchema.safeParse(req.body);
+        if (!parsed.success) {
+          return res.status(400).json({ error: 'Invalid update', details: parsed.error.issues });
+        }
+        const { name, upstream_command, agent_id, blocking, enabled } = parsed.data;
         const updates: string[] = [];
         const values: any[] = [];
 
