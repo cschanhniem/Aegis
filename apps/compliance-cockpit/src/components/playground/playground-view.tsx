@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Play, CheckCircle, XCircle, AlertTriangle, Zap, Database, Globe, FileText, Terminal, Mail } from 'lucide-react'
 
-const BORDER = 'hsl(36 12% 88%)'
-const MUTED  = 'hsl(30 8% 55%)'
+const BORDER = 'hsl(var(--border))'
+const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
 
 const RISK_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -212,7 +212,7 @@ export function PlaygroundView() {
                     ? <CheckCircle className="h-7 w-7 flex-shrink-0" style={{ color: 'hsl(150 18% 40%)' }} />
                     : blocked
                     ? <XCircle    className="h-7 w-7 flex-shrink-0" style={{ color: 'hsl(0 14% 46%)' }} />
-                    : <AlertTriangle className="h-7 w-7 flex-shrink-0" style={{ color: 'hsl(38 20% 46%)' }} />
+                    : <AlertTriangle className="h-7 w-7 flex-shrink-0" style={{ color: 'hsl(var(--primary))' }} />
                   }
                   <div>
                     <p className="text-lg font-bold" style={{ color: rc?.text }}>

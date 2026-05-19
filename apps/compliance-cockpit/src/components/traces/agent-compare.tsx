@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react'
 import { CheckCircle, AlertCircle, Clock, Zap, BarChart2 } from 'lucide-react'
 
-const BORDER = 'hsl(36 12% 88%)'
-const MUTED  = 'hsl(30 8% 55%)'
+const BORDER = 'hsl(var(--border))'
+const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
 const GOLD   = 'hsl(38 20% 42%)'
 

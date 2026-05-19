@@ -10,7 +10,7 @@ const TOOL_META: Record<string, { icon: React.ElementType; color: string; label:
 }
 
 function getToolMeta(name: string) {
-  return TOOL_META[name] || { icon: Zap, color: 'hsl(30 8% 46%)', label: name }
+  return TOOL_META[name] || { icon: Zap, color: 'hsl(var(--muted-foreground))', label: name }
 }
 
 interface DecisionGraphProps {
@@ -27,7 +27,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
     return (
       <div
         className="flex items-center justify-center rounded-lg h-64 text-sm"
-        style={{ background: 'hsl(36 20% 97%)', color: 'hsl(30 8% 55%)' }}
+        style={{ background: 'hsl(36 20% 97%)', color: 'hsl(var(--muted-foreground))' }}
       >
         Select a trace session to view execution flow
       </div>
@@ -39,7 +39,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
       className="rounded-lg border overflow-y-auto p-6"
       style={{
         background: 'hsl(36 20% 97%)',
-        borderColor: 'hsl(36 12% 88%)',
+        borderColor: 'hsl(var(--border))',
         maxHeight: 'calc(100vh - 280px)',
       }}
     >
@@ -76,7 +76,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
                 {/* Step number */}
                 <span
                   className="absolute -top-2.5 left-4 text-[10px] font-bold px-1.5 py-0.5 rounded"
-                  style={{ background: '#ffffff', color: 'hsl(30 8% 55%)', border: '1px solid hsl(36 12% 85%)' }}
+                  style={{ background: '#ffffff', color: 'hsl(var(--muted-foreground))', border: '1px solid hsl(36 12% 85%)' }}
                 >
                   STEP {i + 1}
                 </span>
@@ -98,7 +98,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
                       </span>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {dur !== undefined && (
-                          <span className="text-[11px]" style={{ color: 'hsl(30 8% 55%)' }}>
+                          <span className="text-[11px]" style={{ color: 'hsl(var(--muted-foreground))' }}>
                             {dur < 1 ? '<1ms' : `${Math.round(dur)}ms`}
                           </span>
                         )}
@@ -111,13 +111,13 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
 
                     {/* Input */}
                     <div>
-                      <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: 'hsl(30 8% 55%)' }}>Input</span>
+                      <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>Input</span>
                       <p className="text-xs mt-0.5 break-all" style={{ color: 'hsl(30 10% 25%)' }}>{prompt}</p>
                     </div>
 
                     {/* Output */}
                     <div>
-                      <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: hasErr ? 'hsl(0 18% 50%)' : 'hsl(30 8% 55%)' }}>
+                      <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: hasErr ? 'hsl(0 18% 50%)' : 'hsl(var(--muted-foreground))' }}>
                         {hasErr ? 'Error' : 'Output'}
                       </span>
                       <p className="text-xs mt-0.5 break-all" style={{ color: hasErr ? 'hsl(0 18% 50%)' : 'hsl(30 8% 40%)' }}>

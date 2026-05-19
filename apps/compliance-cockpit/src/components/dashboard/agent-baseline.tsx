@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { gw } from '@/lib/gateway'
 
 const TEXT  = 'hsl(30 10% 15%)'
-const MUTED = 'hsl(30 8% 55%)'
-const BORDER = 'hsl(36 12% 88%)'
+const MUTED = 'hsl(var(--muted-foreground))'
+const BORDER = 'hsl(var(--border))'
 
 const RISK_COLORS: Record<string, string> = {
   LOW:      'hsl(150 14% 42%)',
@@ -30,7 +30,7 @@ export function AgentBaseline({ agentId }: Props) {
   })
 
   if (isLoading) {
-    return <div className="h-24 rounded-lg animate-pulse" style={{ background: 'hsl(36 14% 91%)' }} />
+    return <div className="h-24 rounded-lg animate-pulse" style={{ background: 'hsl(var(--secondary))' }} />
   }
 
   if (!data || data.total === 0) {

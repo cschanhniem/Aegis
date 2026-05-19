@@ -8,9 +8,9 @@ import {
   Activity, Plus, Trash2, ChevronDown, ChevronRight,
 } from 'lucide-react'
 
-const MUTED  = 'hsl(30 8% 55%)'
+const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
-const BORDER = 'hsl(36 12% 88%)'
+const BORDER = 'hsl(var(--border))'
 const ACCENT = 'hsl(36 60% 50%)'
 const GREEN  = 'hsl(142 50% 36%)'
 const RED    = 'hsl(0 60% 50%)'

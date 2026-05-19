@@ -3,9 +3,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { DollarSign, Cpu, TrendingUp, BarChart2 } from 'lucide-react'
 
-const MUTED  = 'hsl(30 8% 55%)'
+const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
-const BORDER = 'hsl(36 12% 88%)'
+const BORDER = 'hsl(var(--border))'
 
 // Monochrome palette for model bars
 const BAR_COLORS = [
@@ -65,7 +65,7 @@ export function CostPanel() {
     return (
       <div className="space-y-3">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-12 rounded-lg animate-pulse" style={{ background: 'hsl(36 14% 91%)' }} />
+          <div key={i} className="h-12 rounded-lg animate-pulse" style={{ background: 'hsl(var(--secondary))' }} />
         ))}
       </div>
     )
@@ -146,7 +146,7 @@ export function CostPanel() {
         </div>
         {totalTokens > 0 && (
           <div className="mt-3">
-            <div style={{ height: '8px', background: 'hsl(36 14% 91%)', borderRadius: '4px', overflow: 'hidden', display: 'flex' }}>
+            <div style={{ height: '8px', background: 'hsl(var(--secondary))', borderRadius: '4px', overflow: 'hidden', display: 'flex' }}>
               <div style={{ height: '100%', width: `${(totalInput / totalTokens) * 100}%`,
                 background: 'hsl(0 0% 38%)', transition: 'width 0.4s ease' }} />
               <div style={{ height: '100%', flex: 1, background: 'hsl(0 0% 72%)' }} />

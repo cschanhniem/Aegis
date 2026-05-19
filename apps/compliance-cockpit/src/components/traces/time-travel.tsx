@@ -83,14 +83,14 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
     return (
       <div
         className="flex items-center justify-center rounded-lg h-64 text-sm"
-        style={{ background: 'hsl(36 20% 97%)', color: 'hsl(30 8% 55%)' }}
+        style={{ background: 'hsl(36 20% 97%)', color: 'hsl(var(--muted-foreground))' }}
       >
         No traces to replay
       </div>
     )
   }
 
-  const meta    = TOOL_META[current?.tool_call?.tool_name] || { icon: Zap, color: 'hsl(30 8% 46%)' }
+  const meta    = TOOL_META[current?.tool_call?.tool_name] || { icon: Zap, color: 'hsl(var(--muted-foreground))' }
   const Icon    = meta.icon
   const hasErr  = !!current?.observation?.error
   const dur     = current?.observation?.duration_ms
@@ -99,22 +99,22 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
   return (
     <div
       className="rounded-lg border overflow-hidden"
-      style={{ background: 'hsl(36 20% 97%)', borderColor: 'hsl(36 12% 88%)', height: 'calc(100vh - 280px)' }}
+      style={{ background: 'hsl(36 20% 97%)', borderColor: 'hsl(var(--border))', height: 'calc(100vh - 280px)' }}
     >
       <div className="flex h-full">
         {/* ── Left: Step list ── */}
         <div
           className="w-48 flex-shrink-0 border-r flex flex-col"
-          style={{ borderColor: 'hsl(36 12% 88%)', background: '#ffffff' }}
+          style={{ borderColor: 'hsl(var(--border))', background: '#ffffff' }}
         >
-          <div className="px-3 py-2.5 border-b" style={{ borderColor: 'hsl(36 12% 88%)' }}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'hsl(30 8% 50%)' }}>
+          <div className="px-3 py-2.5 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground))' }}>
               Steps ({filtered.length})
             </p>
           </div>
           <div ref={listRef} className="flex-1 overflow-y-auto py-1">
             {filtered.map((t, i) => {
-              const m     = TOOL_META[t.tool_call?.tool_name] || { icon: Zap, color: 'hsl(30 8% 46%)' }
+              const m     = TOOL_META[t.tool_call?.tool_name] || { icon: Zap, color: 'hsl(var(--muted-foreground))' }
               const StepIcon = m.icon
               const active = i === idx
               return (
@@ -146,23 +146,23 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
         {/* ── Right: Detail + controls ── */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Progress bar */}
-          <div className="h-0.5 w-full" style={{ background: 'hsl(36 12% 88%)' }}>
+          <div className="h-0.5 w-full" style={{ background: 'hsl(var(--border))' }}>
             <div
               className="h-full transition-all duration-300"
-              style={{ width: `${pct}%`, background: 'hsl(38 20% 46%)' }}
+              style={{ width: `${pct}%`, background: 'hsl(var(--primary))' }}
             />
           </div>
 
           {/* Controls */}
           <div
             className="flex items-center gap-2 px-4 py-2.5 border-b"
-            style={{ borderColor: 'hsl(36 12% 88%)', background: '#ffffff' }}
+            style={{ borderColor: 'hsl(var(--border))', background: '#ffffff' }}
           >
             <button
               onClick={() => { setPlaying(false); setIdx(0) }}
               disabled={idx === 0}
               className="p-1.5 rounded transition-colors disabled:opacity-30"
-              style={{ color: 'hsl(30 8% 46%)' }}
+              style={{ color: 'hsl(var(--muted-foreground))' }}
               title="Jump to start"
             >
               <SkipBack className="h-3.5 w-3.5" />
@@ -171,7 +171,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
               onClick={() => { setPlaying(false); setIdx(i => Math.max(0, i - 1)) }}
               disabled={idx === 0}
               className="p-1.5 rounded transition-colors disabled:opacity-30"
-              style={{ color: 'hsl(30 8% 46%)' }}
+              style={{ color: 'hsl(var(--muted-foreground))' }}
               title="Previous step"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -183,7 +183,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-colors"
               style={{
                 background: playing ? 'hsl(36 12% 92%)' : 'hsl(43 56% 42% / 0.12)',
-                color: playing ? 'hsl(30 10% 30%)' : 'hsl(43 56% 38%)',
+                color: playing ? 'hsl(var(--foreground))' : 'hsl(43 56% 38%)',
                 border: `1px solid ${playing ? 'hsl(36 12% 84%)' : 'hsl(43 56% 42% / 0.35)'}`,
               }}
             >
@@ -195,7 +195,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
               onClick={() => { setPlaying(false); setIdx(i => Math.min(filtered.length - 1, i + 1)) }}
               disabled={idx === filtered.length - 1}
               className="p-1.5 rounded transition-colors disabled:opacity-30"
-              style={{ color: 'hsl(30 8% 46%)' }}
+              style={{ color: 'hsl(var(--muted-foreground))' }}
               title="Next step"
             >
               <ChevronRight className="h-3.5 w-3.5" />
@@ -204,13 +204,13 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
               onClick={() => { setPlaying(false); setIdx(filtered.length - 1) }}
               disabled={idx === filtered.length - 1}
               className="p-1.5 rounded transition-colors disabled:opacity-30"
-              style={{ color: 'hsl(30 8% 46%)' }}
+              style={{ color: 'hsl(var(--muted-foreground))' }}
               title="Jump to end"
             >
               <SkipForward className="h-3.5 w-3.5" />
             </button>
 
-            <span className="ml-auto text-xs" style={{ color: 'hsl(30 8% 55%)' }}>
+            <span className="ml-auto text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
               Step {idx + 1} of {filtered.length}
             </span>
           </div>
@@ -227,7 +227,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                   <p className="font-semibold text-sm" style={{ color: meta.color }}>
                     {current.tool_call?.tool_name}
                   </p>
-                  <p className="text-xs" style={{ color: 'hsl(30 8% 50%)' }}>
+                  <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     {fmt(current.timestamp)}
                     {dur !== undefined && ` · ${dur < 1 ? '<1ms' : `${Math.round(dur)}ms`}`}
                     {' · '}
@@ -266,10 +266,10 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
 
               {/* Input */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(30 8% 50%)' }}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
                   Input Prompt
                 </p>
-                <div className="rounded-md px-3 py-2.5 text-sm break-all" style={{ background: 'hsl(36 20% 96%)', color: 'hsl(30 10% 20%)', border: '1px solid hsl(36 12% 88%)' }}>
+                <div className="rounded-md px-3 py-2.5 text-sm break-all" style={{ background: 'hsl(36 20% 96%)', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' }}>
                   {current.input_context?.prompt || '—'}
                 </div>
               </div>
@@ -277,10 +277,10 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
               {/* Thought chain */}
               {current.thought_chain?.raw_tokens && current.thought_chain.raw_tokens !== 'No thought chain captured' && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(30 8% 50%)' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     Thought Chain
                   </p>
-                  <div className="rounded-md px-3 py-2.5 text-xs italic break-all" style={{ background: 'hsl(36 20% 96%)', color: 'hsl(30 8% 45%)', border: '1px solid hsl(36 12% 88%)' }}>
+                  <div className="rounded-md px-3 py-2.5 text-xs italic break-all" style={{ background: 'hsl(36 20% 96%)', color: 'hsl(30 8% 45%)', border: '1px solid hsl(var(--border))' }}>
                     {current.thought_chain.raw_tokens}
                   </div>
                 </div>
@@ -288,7 +288,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
 
               {/* Output */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: hasErr ? 'hsl(0 14% 46%)' : 'hsl(30 8% 50%)' }}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: hasErr ? 'hsl(0 14% 46%)' : 'hsl(var(--muted-foreground))' }}>
                   {hasErr ? 'Error' : 'Result'}
                 </p>
                 <div
@@ -296,7 +296,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                   style={{
                     background: hasErr ? 'hsl(0 10% 97%)' : 'hsl(36 20% 96%)',
                     color: hasErr ? 'hsl(0 14% 46%)' : 'hsl(30 8% 30%)',
-                    border: `1px solid ${hasErr ? 'hsl(0 10% 88%)' : 'hsl(36 12% 88%)'}`,
+                    border: `1px solid ${hasErr ? 'hsl(0 10% 88%)' : 'hsl(var(--border))'}`,
                   }}
                 >
                   {hasErr ? current.observation.error : JSON.stringify(current.observation?.raw_output, null, 2)}
@@ -309,7 +309,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                   <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(30 8% 62%)' }}>
                     Integrity Hash
                   </p>
-                  <p className="text-[10px] font-mono break-all" style={{ color: 'hsl(30 8% 55%)' }}>
+                  <p className="text-[10px] font-mono break-all" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     {current.integrity_hash}
                   </p>
                 </div>

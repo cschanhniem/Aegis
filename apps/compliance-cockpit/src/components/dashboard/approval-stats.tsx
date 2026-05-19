@@ -64,7 +64,7 @@ export function ApprovalStats() {
 
   if (!total) {
     return (
-      <div className="flex items-center justify-center h-[180px]" style={{ color: 'hsl(30 8% 55%)' }}>
+      <div className="flex items-center justify-center h-[180px]" style={{ color: 'hsl(var(--muted-foreground))' }}>
         <p className="text-sm">No approval data yet</p>
       </div>
     )

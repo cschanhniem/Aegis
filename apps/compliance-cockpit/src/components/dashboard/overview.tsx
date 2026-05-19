@@ -25,8 +25,8 @@ import { SessionsPanel } from './sessions-panel'
 import { LiveFeed } from './live-feed'
 import { AdminPanel } from './admin-panel'
 
-const BORDER = 'hsl(36 12% 88%)'
-const MUTED  = 'hsl(30 8% 55%)'
+const BORDER = 'hsl(var(--border))'
+const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
 
 function GlobalSearch() {
@@ -114,7 +114,7 @@ export function DashboardOverview() {
   const trendLabel = (value: number | undefined) => {
     if (value === undefined || value === null) return null
     const sign = value > 0 ? '+' : ''
-    const color = value > 0 ? 'hsl(150 18% 40%)' : value < 0 ? 'hsl(0 14% 46%)' : 'hsl(30 8% 55%)'
+    const color = value > 0 ? 'hsl(150 18% 40%)' : value < 0 ? 'hsl(0 14% 46%)' : 'hsl(var(--muted-foreground))'
     return (
       <span style={{ color }}>{sign}{value}% vs prev hour</span>
     )

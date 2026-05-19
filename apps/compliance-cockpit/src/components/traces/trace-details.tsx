@@ -8,13 +8,13 @@ import { Download, Shield, AlertCircle, ThumbsUp, ThumbsDown, EyeOff, ChevronRig
 import { formatDate, getStatusColor, getRiskLevelColor } from '@/lib/utils'
 import { useState, ReactNode } from 'react'
 
-const BORDER = 'hsl(36 12% 88%)'
-const MUTED  = 'hsl(30 8% 55%)'
+const BORDER = 'hsl(var(--border))'
+const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
 const KEY_COLOR = 'hsl(30 12% 42%)'
 const STR_COLOR = 'hsl(150 14% 38%)'
 const NUM_COLOR = 'hsl(210 18% 44%)'
-const BOOL_COLOR = 'hsl(38 20% 46%)'
+const BOOL_COLOR = 'hsl(var(--primary))'
 const NULL_COLOR = 'hsl(30 8% 62%)'
 
 /* ── Collapsible panel ─────────────────────────────────────── */

@@ -24,9 +24,9 @@ function sessionFlowLabel(toolNames: string | undefined): string {
   return steps.slice(0, 3).join(' → ') + ` +${steps.length - 3}`
 }
 
-const MUTED  = 'hsl(30 8% 55%)'
+const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
-const BORDER = 'hsl(36 12% 88%)'
+const BORDER = 'hsl(var(--border))'
 
 function fmt$(n: number) {
   if (!n) return '$0.00'
@@ -107,7 +107,7 @@ export function SessionsPanel() {
     return (
       <div className="space-y-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: 'hsl(36 14% 91%)' }} />
+          <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: 'hsl(var(--secondary))' }} />
         ))}
       </div>
     )

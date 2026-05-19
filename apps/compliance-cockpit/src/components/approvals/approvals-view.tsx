@@ -6,8 +6,8 @@ import { CheckCircle, XCircle, Clock, Globe, FileText, Database, Send, Zap } fro
 import { formatDate } from '@/lib/utils'
 import { PendingChecks } from './pending-checks'
 
-const BORDER  = 'hsl(36 12% 88%)'
-const MUTED   = 'hsl(30 8% 55%)'
+const BORDER  = 'hsl(var(--border))'
+const MUTED   = 'hsl(var(--muted-foreground))'
 const TEXT    = 'hsl(30 10% 15%)'
 
 const TOOL_ICONS: Record<string, React.ElementType> = {
@@ -84,7 +84,7 @@ export function ApprovalsView() {
           <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: 'hsl(38 24% 88%)', color: 'hsl(38 24% 38%)' }}>
             Blocking mode
           </span>
-          <span className="text-[11px] ml-auto" style={{ color: 'hsl(30 8% 55%)' }}>
+          <span className="text-[11px] ml-auto" style={{ color: 'hsl(var(--muted-foreground))' }}>
             Agents are paused until you decide
           </span>
         </div>
@@ -144,7 +144,7 @@ export function ApprovalsView() {
                 fontWeight: 600,
                 padding: '1px 5px',
                 borderRadius: '4px',
-                background: active ? 'hsl(38 20% 46% / 0.12)' : 'hsl(36 12% 88%)',
+                background: active ? 'hsl(38 20% 46% / 0.12)' : 'hsl(var(--border))',
                 color: active ? 'hsl(38 20% 42%)' : MUTED,
               }}>
                 {count}
@@ -157,7 +157,7 @@ export function ApprovalsView() {
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: 'hsl(36 14% 91%)' }} />
+            <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: 'hsl(var(--secondary))' }} />
           ))}
         </div>
       ) : traces.length === 0 ? (

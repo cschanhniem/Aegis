@@ -5,8 +5,8 @@ import { useState } from 'react'
 import { Shield, ShieldAlert, ShieldCheck, Plus, Trash2, ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X, FlaskConical } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-const BORDER = 'hsl(36 12% 88%)'
-const MUTED  = 'hsl(30 8% 55%)'
+const BORDER = 'hsl(var(--border))'
+const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
 
 const RISK_STYLE: Record<string, { bg: string; color: string; border: string }> = {
@@ -238,7 +238,7 @@ export function PoliciesView() {
             rows={3}
             style={{
               width: '100%', padding: '8px 10px', borderRadius: '6px', fontSize: '13px',
-              border: `1px solid hsl(36 12% 88%)`, background: '#fff', color: TEXT,
+              border: `1px solid hsl(var(--border))`, background: '#fff', color: TEXT,
               outline: 'none', resize: 'vertical', fontFamily: 'inherit',
             }}
           />
@@ -376,7 +376,7 @@ export function PoliciesView() {
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: 'hsl(36 14% 91%)' }} />
+            <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: 'hsl(var(--secondary))' }} />
           ))}
         </div>
       ) : policies.length === 0 ? (

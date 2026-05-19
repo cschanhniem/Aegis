@@ -6,8 +6,8 @@ import { CheckCircle, AlertCircle, Shield, Clock } from 'lucide-react'
 import { traceSummary } from '@/lib/trace-summary'
 
 const TEXT   = 'hsl(30 10% 15%)'
-const MUTED  = 'hsl(30 8% 55%)'
-const BORDER = 'hsl(36 12% 88%)'
+const MUTED  = 'hsl(var(--muted-foreground))'
+const BORDER = 'hsl(var(--border))'
 
 const TOOL_COLORS: Record<string, string> = {
   web_search:   'hsl(210 20% 48%)',

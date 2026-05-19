@@ -75,7 +75,7 @@ export function ViolationChart() {
 
   if (!data?.length) {
     return (
-      <div className="flex items-center justify-center h-[280px]" style={{ color: 'hsl(30 8% 55%)' }}>
+      <div className="flex items-center justify-center h-[280px]" style={{ color: 'hsl(var(--muted-foreground))' }}>
         <p className="text-sm">No violations recorded yet</p>
       </div>
     )
@@ -104,12 +104,12 @@ export function ViolationChart() {
           />
           <XAxis
             dataKey="policy"
-            tick={{ fill: 'hsl(30 8% 46%)', fontSize: 11 }}
+            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: 'hsl(30 8% 46%)', fontSize: 11 }}
+            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
           />

@@ -44,7 +44,7 @@ export function BlockAlertToast({ alerts, dismissAlert }: Props) {
             className="pointer-events-auto rounded-xl shadow-lg border overflow-hidden"
             style={{
               background:  '#fff',
-              borderColor: 'hsl(36 12% 88%)',
+              borderColor: 'hsl(var(--border))',
               borderLeft:  `4px solid ${style.bar}`,
               animation:   'slideInRight 0.2s ease-out',
             }}
@@ -65,7 +65,7 @@ export function BlockAlertToast({ alerts, dismissAlert }: Props) {
                   {alert.tool_name}
                 </p>
                 {alert.reason && (
-                  <p className="text-[11px] mt-1 line-clamp-2" style={{ color: 'hsl(30 8% 50%)' }}>
+                  <p className="text-[11px] mt-1 line-clamp-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     {alert.reason}
                   </p>
                 )}
@@ -86,7 +86,7 @@ export function BlockAlertToast({ alerts, dismissAlert }: Props) {
               <button
                 onClick={() => dismissAlert(alert.id)}
                 className="flex-shrink-0 rounded p-0.5 hover:opacity-60 transition-opacity"
-                style={{ color: 'hsl(30 8% 55%)' }}
+                style={{ color: 'hsl(var(--muted-foreground))' }}
               >
                 <X className="h-3.5 w-3.5" />
               </button>

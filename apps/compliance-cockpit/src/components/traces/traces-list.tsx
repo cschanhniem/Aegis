@@ -20,8 +20,8 @@ const TIME_OPTIONS = [
   { value: '24h',  label: 'Last 24h'   },
 ]
 
-const BORDER  = 'hsl(36 12% 88%)'
-const MUTED   = 'hsl(30 8% 55%)'
+const BORDER  = 'hsl(var(--border))'
+const MUTED   = 'hsl(var(--muted-foreground))'
 const TEXT    = 'hsl(30 10% 15%)'
 
 function Highlight({ text, query }: { text: string; query: string }) {
@@ -149,7 +149,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
             onClick={() => setFiltersOpen(o => !o)}
             className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md border flex-shrink-0"
             style={{
-              borderColor: activeFilters > 0 ? 'hsl(38 20% 46%)' : BORDER,
+              borderColor: activeFilters > 0 ? 'hsl(var(--primary))' : BORDER,
               color: activeFilters > 0 ? 'hsl(38 20% 42%)' : MUTED,
               background: activeFilters > 0 ? 'hsl(38 20% 46% / 0.08)' : '#fff',
             }}

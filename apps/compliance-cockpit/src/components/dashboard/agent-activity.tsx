@@ -40,7 +40,7 @@ export function AgentActivity() {
     return (
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-9 rounded animate-pulse" style={{ background: 'hsl(36 14% 91%)' }} />
+          <div key={i} className="h-9 rounded animate-pulse" style={{ background: 'hsl(var(--secondary))' }} />
         ))}
       </div>
     )
@@ -48,7 +48,7 @@ export function AgentActivity() {
 
   if (traces.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-sm" style={{ color: 'hsl(30 8% 50%)' }}>
+      <div className="flex items-center justify-center h-32 text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
         No activity yet
       </div>
     )
@@ -79,7 +79,7 @@ export function AgentActivity() {
             </div>
 
             {/* Prompt preview */}
-            <span className="flex-1 text-xs truncate" style={{ color: 'hsl(30 8% 46%)' }}>
+            <span className="flex-1 text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
               {String(prompt).slice(0, 60)}
             </span>
 

@@ -5,8 +5,8 @@ import { AlertTriangle, Shield } from 'lucide-react'
 import { useState, useMemo } from 'react'
 
 const TEXT   = 'hsl(30 10% 15%)'
-const MUTED  = 'hsl(30 8% 46%)'
-const BORDER = 'hsl(36 12% 88%)'
+const MUTED  = 'hsl(var(--muted-foreground))'
+const BORDER = 'hsl(var(--border))'
 
 const RISK_LEVELS = ['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const
 const RISK_COLORS: Record<string, { bg: string; border: string; text: string }> = {
@@ -114,7 +114,7 @@ export function ViolationsView() {
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: 'hsl(36 14% 91%)' }} />
+            <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: 'hsl(var(--secondary))' }} />
           ))}
         </div>
       ) : violations.length === 0 ? (
@@ -133,7 +133,7 @@ export function ViolationsView() {
               {policy && (
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-sm font-semibold" style={{ color: TEXT }}>{policy}</h3>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'hsl(36 14% 91%)', color: MUTED }}>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'hsl(var(--secondary))', color: MUTED }}>
                     {items.length}
                   </span>
                 </div>

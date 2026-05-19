@@ -5,8 +5,8 @@ import { AlertRules } from './alert-rules'
 import { useRuleEvaluator } from './use-rule-evaluator'
 import { CheckCircle, XCircle, Loader2, Copy, Check, Eye, EyeOff, RefreshCw, Database, Play } from 'lucide-react'
 
-const BORDER = 'hsl(36 12% 88%)'
-const MUTED  = 'hsl(30 8% 55%)'
+const BORDER = 'hsl(var(--border))'
+const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
 const BG     = '#fff'
 
@@ -414,7 +414,7 @@ export function SettingsView() {
           <button
             onClick={copyQuickStart}
             className="absolute top-2 right-2 p-1.5 rounded text-xs flex items-center gap-1"
-            style={{ background: 'hsl(36 12% 88%)', color: MUTED }}
+            style={{ background: 'hsl(var(--border))', color: MUTED }}
           >
             {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
           </button>

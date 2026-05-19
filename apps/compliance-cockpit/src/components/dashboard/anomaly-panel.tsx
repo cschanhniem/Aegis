@@ -75,7 +75,7 @@ export function AnomalyPanel() {
 
   if (!hasAny) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 h-32 text-sm" style={{ color: 'hsl(30 8% 55%)' }}>
+      <div className="flex flex-col items-center justify-center gap-2 h-32 text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
         <CheckCircle className="h-5 w-5" style={{ color: 'hsl(150 18% 44%)' }} />
         No anomalies detected
       </div>

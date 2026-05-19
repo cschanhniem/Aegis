@@ -13,7 +13,7 @@ const CONDITION_LABELS: Record<AlertCondition, string> = {
 
 const INPUT = {
   base: 'w-full rounded-md px-2.5 py-1.5 text-sm border outline-none',
-  style: { background: '#fff', borderColor: 'hsl(36 12% 88%)', color: 'hsl(30 10% 15%)' },
+  style: { background: '#fff', borderColor: 'hsl(var(--border))', color: 'hsl(30 10% 15%)' },
 }
 
 export function AlertRules() {
@@ -55,7 +55,7 @@ export function AlertRules() {
   return (
     <div className="space-y-3">
       {rules.length === 0 && (
-        <p className="text-sm py-4 text-center" style={{ color: 'hsl(30 8% 55%)' }}>
+        <p className="text-sm py-4 text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
           No alert rules — add one below
         </p>
       )}
@@ -64,7 +64,7 @@ export function AlertRules() {
         <div
           key={rule.id}
           className="rounded-lg border p-4 space-y-3"
-          style={{ borderColor: 'hsl(36 12% 88%)', background: rule.enabled ? '#fff' : 'hsl(36 14% 97%)' }}
+          style={{ borderColor: 'hsl(var(--border))', background: rule.enabled ? '#fff' : 'hsl(36 14% 97%)' }}
         >
           {/* Row 1: name + severity + enable/delete */}
           <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ export function AlertRules() {
             <button
               onClick={() => update(rule.id, { enabled: !rule.enabled })}
               className="p-1.5 rounded flex-shrink-0"
-              style={{ color: rule.enabled ? 'hsl(150 18% 40%)' : 'hsl(30 8% 55%)' }}
+              style={{ color: rule.enabled ? 'hsl(150 18% 40%)' : 'hsl(var(--muted-foreground))' }}
               title={rule.enabled ? 'Disable' : 'Enable'}
             >
               {rule.enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
@@ -105,7 +105,7 @@ export function AlertRules() {
           {/* Row 2: condition + threshold + window */}
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(30 8% 50%)' }}>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 Condition
               </label>
               <select
@@ -120,7 +120,7 @@ export function AlertRules() {
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(30 8% 50%)' }}>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 Threshold
               </label>
               <input
@@ -133,7 +133,7 @@ export function AlertRules() {
               />
             </div>
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(30 8% 50%)' }}>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 Window (min)
               </label>
               <input
@@ -150,7 +150,7 @@ export function AlertRules() {
           {/* Row 3: destination type + value + cooldown */}
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(30 8% 50%)' }}>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 Destination
               </label>
               <select
@@ -165,7 +165,7 @@ export function AlertRules() {
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(30 8% 50%)' }}>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 {(rule.destinationType ?? 'webhook') === 'pagerduty' ? 'Integration Key' : 'URL'}
               </label>
               <input
@@ -181,7 +181,7 @@ export function AlertRules() {
               />
             </div>
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(30 8% 50%)' }}>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 Cooldown (min)
               </label>
               <input
@@ -198,7 +198,7 @@ export function AlertRules() {
           {/* Row 4: signing secret (webhook/slack only) */}
           {(rule.destinationType ?? 'webhook') !== 'pagerduty' && (
             <div>
-              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(30 8% 50%)' }}>
+              <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 Signing Secret <span style={{ color: 'hsl(30 8% 65%)', fontWeight: 400, textTransform: 'none' }}>(optional — adds X-AEGIS-Signature header)</span>
               </label>
               <input
