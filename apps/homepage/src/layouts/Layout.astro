@@ -2,11 +2,18 @@
 interface Props {
   title?: string;
   description?: string;
+  /** Optional override for og:image (absolute or root-relative). */
+  ogImage?: string;
 }
 const {
   title = 'Aojie Yuan — Justin',
-  description = 'M.S. student at USC. AI agent security, runtime guardrails, behavioral anomaly detection.',
+  description = 'Building AEGIS — an open-source pre-execution firewall and audit layer for AI agents.',
+  ogImage = '/og-image.png',
 } = Astro.props;
+
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://aojieyuan.com';
+const canonical = new URL(Astro.url.pathname, siteUrl).toString();
+const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
 ---
 
 <!doctype html>
@@ -40,9 +47,30 @@ const {
       href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap"
       rel="stylesheet"
     />
+    <!-- Canonical + theme -->
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#f0eee6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1c1b18" media="(prefers-color-scheme: dark)" />
+    <meta name="author" content="Aojie Yuan" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="Aojie Yuan" />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The runtime safety layer for tool-using AI agents — Aojie Yuan / AEGIS" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
     <title>{title}</title>
   </head>
   <body>

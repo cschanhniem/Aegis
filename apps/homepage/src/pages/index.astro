@@ -57,6 +57,28 @@ import { sortedPosts as posts } from '@/data/posts';
       </div>
 
       <pre class="install"><code>curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash</code></pre>
+
+      <figure class="flow" aria-label="AEGIS request flow">
+        <div class="flow-row">
+          <span class="node">your agent</span>
+          <span class="arrow" aria-hidden="true">→</span>
+          <span class="node group">
+            <span class="stage">classify</span>
+            <span class="stage">L1 rules</span>
+            <span class="stage">L2 ML</span>
+            <span class="stage">L3 judge</span>
+            <span class="stage">DSL</span>
+          </span>
+          <span class="arrow" aria-hidden="true">→</span>
+          <span class="node">tool</span>
+        </div>
+        <figcaption>
+          Every call: classified, cascaded, matched against tenant DSL — decisions
+          are <span class="d-allow">allow</span> ·
+          <span class="d-pending">pending</span> ·
+          <span class="d-block">block</span>. Defaults can be tightened, never relaxed.
+        </figcaption>
+      </figure>
     </section>
 
     <hr />
@@ -256,6 +278,65 @@ import { sortedPosts as posts } from '@/data/posts';
     }
     .install code {
       font-size: inherit;
+    }
+
+    /* Flow diagram ───────────────────────────────────── */
+    .flow {
+      margin: 2rem 0 0;
+      padding: 1.3rem 0 0;
+      border-top: 1px solid var(--hairline);
+    }
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+    .node {
+      padding: 0.32rem 0.65rem;
+      border: 1px solid var(--hairline);
+      border-radius: 4px;
+      background: var(--surface);
+      white-space: nowrap;
+    }
+    .node.group {
+      display: inline-flex;
+      gap: 0.35rem;
+      padding: 0.18rem 0.32rem;
+    }
+    .stage {
+      padding: 0.12rem 0.45rem;
+      background: var(--bg);
+      border-radius: 3px;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+    .arrow {
+      color: var(--muted);
+      opacity: 0.7;
+      font-size: 0.92rem;
+    }
+    .flow figcaption {
+      margin-top: 0.85rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .d-allow { color: hsl(150 22% 38%); }
+    .d-pending { color: var(--accent); }
+    .d-block { color: hsl(0 50% 45%); }
+
+    @media (max-width: 560px) {
+      .flow-row {
+        font-size: 0.74rem;
+        gap: 0.5rem;
+      }
+      .stage {
+        font-size: 0.7rem;
+      }
     }
 
     /* Writing ────────────────────────────────────────── */

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <!-- Background: Claude cream -->
+  <rect width="1200" height="630" fill="#f0eee6"/>
+
+  <!-- Hairline divider top -->
+  <line x1="80" y1="80" x2="1120" y2="80" stroke="#1f1e1b" stroke-opacity="0.10" stroke-width="1"/>
+  <line x1="80" y1="550" x2="1120" y2="550" stroke="#1f1e1b" stroke-opacity="0.10" stroke-width="1"/>
+
+  <!-- Eyebrow -->
+  <text x="80" y="125" fill="#6f6b62" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="500" letter-spacing="2">AOJIE  YUAN  ·  JUSTIN</text>
+
+  <!-- Main headline (Instrument Serif vibe — use a serif fallback chain) -->
+  <text x="80" y="280" fill="#1f1e1b" font-family="Instrument Serif, Tiempos Headline, Source Serif Pro, Georgia, serif" font-size="84" font-weight="400" letter-spacing="-1.5">
+    The runtime <tspan font-style="italic" fill="#c96442">safety layer</tspan>
+  </text>
+  <text x="80" y="380" fill="#1f1e1b" font-family="Instrument Serif, Tiempos Headline, Source Serif Pro, Georgia, serif" font-size="84" font-weight="400" letter-spacing="-1.5">
+    for tool-using AI agents.
+  </text>
+
+  <!-- Subline -->
+  <text x="80" y="470" fill="#6f6b62" font-family="Inter, system-ui, sans-serif" font-size="26" font-weight="400">
+    Building AEGIS — open-source pre-execution firewall &amp; audit layer.
+  </text>
+
+  <!-- Footer -->
+  <text x="80" y="600" fill="#6f6b62" font-family="JetBrains Mono, ui-monospace, monospace" font-size="20" font-weight="400">
+    aojieyuan.com
+  </text>
+  <text x="1120" y="600" fill="#6f6b62" font-family="JetBrains Mono, ui-monospace, monospace" font-size="20" font-weight="400" text-anchor="end">
+    github.com/Justin0504/Aegis
+  </text>
+</svg>
