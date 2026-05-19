@@ -1,0 +1,137 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+
+const lastUpdated = '2026-05-19';
+---
+
+<Layout title="Now — Aojie Yuan" description="What I'm focused on right now.">
+  <main>
+    <Header current="now" />
+
+    <header class="page-head">
+      <p class="eyebrow">Now</p>
+      <h1>What I'm focused on, right now.</h1>
+      <p class="updated">Updated {new Date(lastUpdated).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} · Los Angeles</p>
+    </header>
+
+    <section class="prose">
+      <h2>Doing</h2>
+      <ul>
+        <li>
+          <strong>AEGIS.</strong> Open-source pre-execution firewall and audit
+          layer for AI agents. Just shipped per-tenant Policy DSL with
+          fail-safe semantics and a Monaco-based editor in the Cockpit.
+          Looking for design-partner deployments — reach out if you're
+          running production agents and want to talk.
+        </li>
+        <li>
+          <strong>EMNLP 2026 (Demo).</strong> Co-authored paper on AEGIS's
+          three-layer cascade is in review. Companion benchmark
+          (<em>ToolGuard-Bench</em>, 5,525 tool calls) is open-source.
+        </li>
+        <li>
+          <strong>M.S. at USC.</strong> First-year. Splitting time between
+          research (with Prof. Yue Zhao on agent observability) and product
+          work. F-1 status, which shapes what I can take on outside school
+          — open to collaborations, not full-time roles.
+        </li>
+      </ul>
+
+      <h2>Thinking about</h2>
+      <ul>
+        <li>How to make L4 of the cascade — heuristic learning from
+          tenant-specific false positives — without making customers feel
+          like they're labelling data for free.</li>
+        <li>Whether agent-alignment auditing (LlamaFirewall-style CoT
+          inspection) should be a separate service or another DSL signal.</li>
+        <li>The right shape for a verifiable budget primitive in
+          Sovereign-OS — closer to ERC-4337 paymaster than to a Linux
+          cgroup, but neither is quite right.</li>
+      </ul>
+
+      <h2>Not doing right now</h2>
+      <ul>
+        <li>Full-time roles, freelance contract work, and anything else my
+          visa would frown on.</li>
+        <li>SSO / WorkOS integration. Will revisit when the first
+          enterprise customer asks.</li>
+        <li>Postgres support in AEGIS. SQLite is fine for self-host;
+          Postgres lands when a paying customer needs it.</li>
+        <li>Anything cryptocurrency-adjacent.</li>
+      </ul>
+
+      <h2>Reach out</h2>
+      <p>
+        <a href="mailto:aojieyua@usc.edu">aojieyua@usc.edu</a> · I read every
+        message and reply to most within a day or two.
+      </p>
+
+      <p class="meta">
+        This is a <a href="https://nownownow.com/about" target="_blank" rel="noopener">/now page</a>
+        — a Derek Sivers convention.
+      </p>
+    </section>
+  </main>
+
+  <style>
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1.5rem 1.75rem 6rem;
+    }
+    .page-head {
+      margin: 4rem 0 3rem;
+    }
+    .eyebrow {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      margin: 0 0 0.7rem;
+      font-weight: 500;
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 2.9rem);
+      line-height: 1.15;
+      margin: 0 0 0.8rem;
+      letter-spacing: -0.012em;
+    }
+    .updated {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin: 0;
+    }
+    .prose {
+      font-size: 1.04rem;
+      line-height: 1.7;
+    }
+    .prose h2 {
+      font-size: 1.4rem;
+      margin: 2.6rem 0 0.8rem;
+      line-height: 1.3;
+    }
+    .prose ul {
+      padding-left: 1.3rem;
+      margin: 0 0 1.4rem;
+    }
+    .prose li {
+      margin-bottom: 0.7rem;
+    }
+    .prose em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .prose strong {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      border-top: 1px solid var(--hairline);
+      padding-top: 1.5rem;
+      margin-top: 2.5rem;
+    }
+  </style>
+</Layout>

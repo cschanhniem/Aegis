@@ -1,0 +1,44 @@
+---
+interface Props {
+  current?: 'home' | 'writing' | 'now';
+}
+const { current } = Astro.props;
+---
+
+<nav class="site-nav" aria-label="Primary">
+  <a href="/" class:list={['nav-link', current === 'home' && 'active']}>Home</a>
+  <a href="/writing" class:list={['nav-link', current === 'writing' && 'active']}>Writing</a>
+  <a href="/now" class:list={['nav-link', current === 'now' && 'active']}>Now</a>
+  <span class="spacer"></span>
+  <a class="nav-link external" href="https://github.com/Justin0504" target="_blank" rel="noopener">GitHub ↗</a>
+</nav>
+
+<style>
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+    font-size: 0.92rem;
+    padding: 1.6rem 0 0;
+    color: var(--muted);
+  }
+  .spacer {
+    flex: 1;
+  }
+  .nav-link {
+    color: var(--muted);
+    border-bottom-color: transparent;
+    padding-bottom: 1px;
+  }
+  .nav-link:hover {
+    color: var(--text);
+    border-bottom-color: var(--text);
+  }
+  .nav-link.active {
+    color: var(--text);
+    border-bottom-color: var(--text);
+  }
+  .nav-link.external {
+    font-size: 0.85rem;
+  }
+</style>

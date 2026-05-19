@@ -16,15 +16,16 @@ const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ),
 })
 
-// Warm palette (matches dashboard layout)
-const BG = 'hsl(36 20% 95%)'
-const PANEL = 'hsl(36 22% 97%)'
-const BORDER = 'hsl(36 12% 87%)'
-const TEXT = 'hsl(30 10% 20%)'
-const MUTED = 'hsl(30 8% 50%)'
-const ACCENT = 'hsl(38 22% 46%)'
-const RED = 'hsl(0 50% 45%)'
-const GREEN = 'hsl(150 22% 38%)'
+// Read from the shared design tokens defined in globals.css :root so the page
+// automatically follows any palette update (currently the Claude-cream theme).
+const BG = 'hsl(var(--background))'
+const PANEL = 'hsl(var(--card))'
+const BORDER = 'hsl(var(--border))'
+const TEXT = 'hsl(var(--foreground))'
+const MUTED = 'hsl(var(--muted-foreground))'
+const ACCENT = 'hsl(var(--primary))'
+const RED = 'hsl(var(--destructive))'
+const GREEN = 'hsl(150 22% 38%)' // no green token in palette; component-local
 
 interface DslExample {
   id: string

@@ -1,0 +1,129 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+
+interface Post {
+  slug: string;
+  title: string;
+  date: string;
+  description: string;
+}
+
+// Manual list for now; switch to Astro Content Collections once there are >5
+// posts so the editing surface stays simple.
+const posts: Post[] = [
+  {
+    slug: 'aegis-fail-safe-dsl',
+    title: 'Why the AEGIS Policy DSL refuses to relax defaults',
+    date: '2026-05-18',
+    description:
+      'The single design decision that decides whether your agent-security product survives a SOC 2 audit.',
+  },
+];
+---
+
+<Layout title="Writing — Aojie Yuan" description="Notes on agent safety, runtime systems, and the messy middle of ML engineering.">
+  <main>
+    <Header current="writing" />
+
+    <header class="page-head">
+      <p class="eyebrow">Writing</p>
+      <h1>Notes on the things I'm building.</h1>
+      <p class="lede">
+        Mostly agent safety, runtime systems, and the messy middle of ML
+        engineering. Short, honest, irregularly published.
+      </p>
+    </header>
+
+    <ul class="post-list">
+      {
+        posts.map((p) => (
+          <li>
+            <a href={`/writing/${p.slug}`} class="post-link">
+              <time datetime={p.date}>
+                {new Date(p.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </time>
+              <h2>{p.title}</h2>
+              <p>{p.description}</p>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+
+  <style>
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1.5rem 1.75rem 6rem;
+    }
+    .page-head {
+      margin-top: 4rem;
+      margin-bottom: 3rem;
+    }
+    .eyebrow {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      margin: 0 0 0.7rem;
+      font-weight: 500;
+    }
+    h1 {
+      font-size: clamp(2rem, 4.5vw, 2.8rem);
+      margin: 0 0 1.2rem;
+      letter-spacing: -0.012em;
+    }
+    .lede {
+      font-size: 1.04rem;
+      color: var(--muted);
+      max-width: 46ch;
+      margin: 0;
+    }
+    .post-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .post-list li {
+      border-bottom: 1px solid var(--hairline);
+    }
+    .post-list li:first-child {
+      border-top: 1px solid var(--hairline);
+    }
+    .post-link {
+      display: block;
+      padding: 1.8rem 0;
+      border-bottom: 0;
+      color: var(--text);
+    }
+    .post-link:hover h2 {
+      color: var(--accent);
+    }
+    .post-link time {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    .post-link h2 {
+      font-size: 1.55rem;
+      margin: 0 0 0.4rem;
+      line-height: 1.3;
+      transition: color 120ms ease;
+    }
+    .post-link p {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.6;
+    }
+  </style>
+</Layout>

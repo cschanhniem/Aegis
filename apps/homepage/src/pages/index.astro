@@ -1,10 +1,13 @@
 ---
 import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
 import PaperCard from '@/components/PaperCard.astro';
 ---
 
 <Layout>
   <main>
+    <Header current="home" />
+
     <!-- Hero -->
     <section class="hero">
       <p class="eyebrow">Aojie Yuan · Justin</p>
@@ -17,9 +20,9 @@ import PaperCard from '@/components/PaperCard.astro';
         hallucinated <code>DROP&nbsp;TABLE</code> from ever reaching production.
       </p>
       <nav class="header-links">
-        <a href="https://github.com/Justin0504" target="_blank" rel="noopener">GitHub</a>
         <a href="https://arxiv.org/a/yuan_a_3" target="_blank" rel="noopener">arXiv</a>
         <a href="mailto:aojieyua@usc.edu">aojieyua@usc.edu</a>
+        <a href="/now">/now</a>
       </nav>
     </section>
 
@@ -102,7 +105,10 @@ import PaperCard from '@/components/PaperCard.astro';
     main {
       max-width: 640px;
       margin: 0 auto;
-      padding: 7rem 1.75rem 6rem;
+      padding: 1.5rem 1.75rem 6rem;
+    }
+    .hero {
+      margin-top: 5rem;
     }
 
     /* Hero ──────────────────────────────────────────── */
