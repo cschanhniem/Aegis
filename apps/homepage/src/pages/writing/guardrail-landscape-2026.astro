@@ -1,0 +1,244 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+
+const title = "The agent-guardrail landscape, 2026";
+const date = '2026-05-15';
+const description =
+  "Lakera is at Cisco now. Protect AI is at Palo Alto. Lasso is independent. Meta open-sourced its own. Here's the actual shape of the market, and why open-source still has a seat at the table.";
+---
+
+<Layout title={`${title} — Aojie Yuan`} description={description}>
+  <main>
+    <Header current="writing" />
+
+    <article>
+      <header class="post-head">
+        <a href="/writing" class="back">← Writing</a>
+        <time datetime={date}>
+          {new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </time>
+        <h1>{title}</h1>
+        <p class="lede">{description}</p>
+      </header>
+
+      <section class="prose">
+        <p>
+          When I started building AEGIS in late 2025, "agent guardrails" was
+          still a label most enterprise buyers had to be talked into.
+          Eighteen months later, almost every serious infrastructure vendor
+          ships some flavor of it, and the consolidation pattern is
+          unmistakable. If you're building a product in this category, or
+          buying one, here's the lay of the land as I see it from the
+          inside.
+        </p>
+
+        <h2>Tier 1 — the big-vendor absorptions</h2>
+
+        <p>
+          <strong>Cisco AI Defense</strong> (which absorbed Lakera in mid-2025)
+          and <strong>Palo Alto Prisma AIRS 3.0</strong> (which absorbed Protect AI
+          and Portkey across 2025–26) are the two unavoidable names. Both
+          ship as part of a larger network security stack, both have real
+          enterprise sales motions, and both inherit their parents' ability
+          to sell into security teams that have never thought about agents
+          before. Lakera Guard's prompt-injection detector, repackaged
+          inside Cisco, is probably the highest-volume guardrail running in
+          production today.
+        </p>
+
+        <p>
+          The cost is rigidity. Buying Cisco AI Defense or Prisma AIRS
+          means buying into Cisco's or Palo Alto's existing posture about
+          how runtime security should look. If your AI product needs to
+          enforce a policy these vendors didn't anticipate, you wait for
+          a release. There's no fork.
+        </p>
+
+        <h2>Tier 2 — the independent SaaS</h2>
+
+        <p>
+          <strong>Lasso Security</strong>'s recent pivot to "Intent Deputy" —
+          per-agent behavioral baselines + drift detection — is the most
+          differentiated bet I've seen from the independents. It's
+          orthogonal to prompt-injection detection: instead of asking
+          "is this call malicious?" Lasso asks "is this call out of
+          character for this agent?". For long-lived agents in production,
+          that's a real signal.
+        </p>
+
+        <p>
+          <strong>Galileo</strong> bundles runtime intervention into its
+          evaluation platform — the pitch is "the same suite that scored
+          your model in CI now blocks it in prod." Strong story for teams
+          who buy the eval-first worldview, less compelling for teams who
+          treat eval and runtime as separate concerns.
+        </p>
+
+        <h2>Tier 3 — open source</h2>
+
+        <p>
+          This is where the action is, and where AEGIS lives.
+        </p>
+
+        <ul>
+          <li>
+            <strong>Meta LlamaFirewall</strong> is the most credible
+            open-source entrant. PromptGuard&nbsp;2 for jailbreak detection,
+            an agent-alignment auditor that inspects chain-of-thought for
+            goal divergence, and CodeShield for code-generation safety. The
+            framing is "library, not platform" — there's no Cockpit, no
+            audit log, no human-in-the-loop. You're meant to glue it into
+            your own stack.
+          </li>
+          <li>
+            <strong>NVIDIA NeMo Guardrails</strong>, especially Colang 2.0,
+            is the most expressive: you can write conversational flows,
+            multi-step rails, parallel evaluation. It's also the heaviest
+            — Colang is a real DSL, and the NeMo runtime expects to live
+            inside an NVIDIA-shaped stack.
+          </li>
+          <li>
+            <strong>Guardrails AI</strong> remains the easiest single-call
+            input/output validator. Excellent if your problem is
+            "structured output validation for one LLM call." Not designed
+            for multi-step agents.
+          </li>
+          <li>
+            <strong>Protect AI LLM Guard</strong> is the broadest
+            scanner-by-scanner toolkit — 35 individual scanners across
+            input and output. The price you pay for breadth is that
+            nothing composes; it's a library of detectors, not a system.
+          </li>
+        </ul>
+
+        <h2>Where AEGIS fits, and where it doesn't</h2>
+
+        <p>
+          The category open-source AEGIS targets isn't "best prompt-
+          injection detector" — Lakera and PromptGuard own that already.
+          It's "the open-source agent guardrail that ships a UI, an audit
+          trail, human approvals, and per-tenant customization in one
+          package." LlamaFirewall doesn't ship a Cockpit. NeMo doesn't
+          ship a compliance audit log. Guardrails AI doesn't do
+          multi-step agents. There's room in the middle.
+        </p>
+
+        <p>
+          If you're a small company that wants to self-host a complete
+          guardrail story — DSL, dashboard, approvals, hash-chained
+          traces — you can do it with AEGIS today. If you're a Fortune
+          500 that wants someone in Cupertino to take the support call,
+          you buy Cisco AI Defense.
+        </p>
+
+        <p>
+          Both are reasonable choices. The thing the market doesn't have
+          yet — and probably won't for a while — is an open-source
+          guardrail that's <em>also</em> the obvious choice for that
+          Fortune 500.
+        </p>
+
+        <h2>What I'd watch in 2026</h2>
+
+        <ul>
+          <li>
+            <strong>Agent-alignment auditing</strong> moving from research
+            (LlamaFirewall's chain-of-thought inspector) into the default
+            stack. Most guardrails today check the call; few check the
+            agent's reasoning that produced it.
+          </li>
+          <li>
+            <strong>Per-tenant adaptive learning.</strong> Lasso's Intent
+            Deputy is the early shape. The interesting question is whether
+            customers will tolerate "your model gets better the longer it
+            sees your traffic" without it feeling like surveillance.
+          </li>
+          <li>
+            <strong>The MCP attack surface.</strong> Model Context Protocol
+            adoption made MCP servers the new "everything is reachable
+            from one place" target. Cisco AI Defense already inspects MCP
+            traffic; I expect every guardrail to follow.
+          </li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <style>
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1.5rem 1.75rem 6rem;
+    }
+    .post-head {
+      margin: 4rem 0 3rem;
+    }
+    .back {
+      font-size: 0.85rem;
+      color: var(--muted);
+      border-bottom-color: transparent;
+      display: inline-block;
+      margin-bottom: 2rem;
+    }
+    .back:hover {
+      color: var(--text);
+      border-bottom-color: var(--text);
+    }
+    .post-head time {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.7rem;
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      line-height: 1.15;
+      margin: 0 0 1.2rem;
+      letter-spacing: -0.014em;
+    }
+    .lede {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 46ch;
+      line-height: 1.55;
+      margin: 0;
+    }
+    .prose {
+      font-size: 1.04rem;
+      line-height: 1.72;
+    }
+    .prose h2 {
+      font-size: 1.55rem;
+      margin: 3rem 0 1rem;
+      line-height: 1.3;
+    }
+    .prose p {
+      margin: 0 0 1.3rem;
+    }
+    .prose ul {
+      padding-left: 1.3rem;
+      margin: 0 0 1.5rem;
+    }
+    .prose li {
+      margin-bottom: 0.7rem;
+    }
+    .prose code {
+      background: var(--surface);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.86em;
+      border: 1px solid var(--hairline);
+    }
+    .prose em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .prose strong {
+      font-weight: 600;
+      color: var(--text);
+    }
+  </style>
+</Layout>

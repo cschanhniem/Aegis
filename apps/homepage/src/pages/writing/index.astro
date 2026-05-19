@@ -1,25 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import Header from '@/components/Header.astro';
-
-interface Post {
-  slug: string;
-  title: string;
-  date: string;
-  description: string;
-}
-
-// Manual list for now; switch to Astro Content Collections once there are >5
-// posts so the editing surface stays simple.
-const posts: Post[] = [
-  {
-    slug: 'aegis-fail-safe-dsl',
-    title: 'Why the AEGIS Policy DSL refuses to relax defaults',
-    date: '2026-05-18',
-    description:
-      'The single design decision that decides whether your agent-security product survives a SOC 2 audit.',
-  },
-];
+import { sortedPosts as posts } from '@/data/posts';
 ---
 
 <Layout title="Writing — Aojie Yuan" description="Notes on agent safety, runtime systems, and the messy middle of ML engineering.">
