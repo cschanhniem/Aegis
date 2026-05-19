@@ -105,29 +105,32 @@ That's it. Every tool call is now classified, policy-checked, and recorded in a 
 
 ## Why AEGIS?
 
-Every agent observability tool (LangFuse, Helicone, Arize) tells you **what happened**. AEGIS **prevents it from happening.**
+The agent-guardrail category is consolidating around two camps: closed
+enterprise platforms (Cisco AI Defense, Palo Alto Prisma AIRS), and
+narrow open-source libraries (LlamaFirewall, NeMo, Guardrails AI).
+AEGIS is the open-source platform that ships the full vertical —
+gateway, cascade, DSL, dashboard, audit trail, approvals — in one repo.
 
-|  | LangFuse | Helicone | Arize | **AEGIS** |
-|--|----------|----------|-------|-----------|
-| Observability dashboard | ✅ | ✅ | ✅ | ✅ |
-| **Pre-execution blocking** | ❌ | ❌ | ❌ | ✅ |
-| **Human-in-the-loop approvals** | ❌ | ❌ | ❌ | ✅ |
-| **Zero-config tool classification** | ❌ | ❌ | ❌ | ✅ |
-| **Cryptographic audit trail** | ❌ | ❌ | ❌ | ✅ |
-| **Kill switch** | ❌ | ❌ | ❌ | ✅ |
-| **Natural language policy editor** | ❌ | ❌ | ❌ | ✅ |
-| **Behavioral anomaly detection** | ❌ | ❌ | ❌ | ✅ |
-| **HTTP proxy for closed-source agents** | ❌ | ❌ | ❌ | ✅ |
-| **MCP server for Claude Desktop** | ❌ | ❌ | ❌ | ✅ |
-| **LLM-as-a-Judge evaluation** | ❌ | ❌ | ❌ | ✅ |
-| **Multi-tenancy & RBAC** | ❌ | ❌ | ❌ | ✅ |
-| **Admin audit log (SOC 2)** | ❌ | ❌ | ❌ | ✅ |
-| **Usage metering & quotas** | ❌ | ❌ | ❌ | ✅ |
-| **SLA metrics (P50/P95/P99)** | ❌ | ❌ | ❌ | ✅ |
-| **Data retention policies (GDPR)** | ❌ | ❌ | ❌ | ✅ |
-| **Supply chain security** | ❌ | ❌ | ❌ | ✅ |
-| **Slack / PagerDuty alerts** | ❌ | ❌ | ❌ | ✅ |
-| Self-hostable, MIT-licensed | ✅ | ❌ | ❌ | ✅ |
+|  | Lakera Guard | NeMo Guardrails | LlamaFirewall | Guardrails AI | **AEGIS** |
+|--|--------------|------------------|---------------|---------------|-----------|
+| Open source | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Self-hostable in full | paid tier | ✅ | ✅ | ✅ | ✅ |
+| Pre-execution blocking | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Compliance dashboard / Cockpit UI** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Human-in-the-loop approval flow** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Tamper-evident audit trail (hash chain + Ed25519)** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Per-tenant Policy DSL (fail-safe)** | ❌ | Colang | ❌ | ❌ | ✅ |
+| **5 ready-made deployment templates** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Behavioral anomaly detection (Isolation Forest + PPM)** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Cost-aware L1→L2→L3 cascade** | ❌ | ❌ | partial | ❌ | ✅ |
+| Multi-framework SDK | API only | NVIDIA-centric | ✅ | ✅ | 14 frameworks |
+| **MCP server / proxy** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **HTTP proxy for closed-source agents** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Kill switch + admin audit log (SOC 2 prep) | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+> If your point of comparison is *observability* (LangFuse, Helicone,
+> Arize) — those tell you **what happened**. AEGIS **prevents it from
+> happening** by sitting on the execution path itself.
 
 ---
 
@@ -142,8 +145,9 @@ Every agent observability tool (LangFuse, Helicone, Arize) tells you **what happ
   │                                                │
   │  ① Classify   (SQL? file? network? shell?)     │
   │  ② Anomaly    (baseline deviation? spike?)     │
-  │  ③ Evaluate   (injection? exfil? traversal?)   │
-  │  ④ Decide     allow / block / pending          │
+  │  ③ Evaluate   AJV policies (injection? exfil?) │
+  │  ④ Match DSL  per-tenant rules (fail-safe)     │
+  │  ⑤ Decide     strictest(allow / pending / block)│
   └──────────┬─────────────────────────────────────┘
              │
       ┌──────┴──────────────┐
@@ -218,7 +222,8 @@ except AgentGuardBlockedError as e:
 
 ### Policy Engine
 
-Seven policies ship by default. Create more in plain English — the AI assistant generates the JSON schema for you.
+Seven AJV policies ship by default. Create more in plain English — the AI
+assistant generates the JSON schema for you.
 
 | Policy | Risk | What it catches |
 |--------|------|-----------------|
@@ -231,6 +236,56 @@ Seven policies ship by default. Create more in plain English — the AI assistan
 | Supply Chain Security | HIGH | Package publish, container push, deployment ops |
 
 > *"Block all file deletions outside the /tmp directory"* → Describe button → policy created instantly.
+
+### Per-Tenant Policy DSL
+
+Each tenant gets a YAML/JSON Policy DSL that runs **on top of** the
+defaults. The DSL can:
+
+- Route specific tool categories to human review
+- Escalate decisions on anomaly score, agent identity, or deployment mode
+- Add new block rules for tenant-specific patterns
+- Flip ambiguous calls from *allow* → *pending*
+
+**Fail-safe semantics.** A DSL rule can only *tighten* a decision —
+`allow` from the DSL can never override an AJV or anomaly `block`. This
+is enforced structurally: the final decision is always
+`strictest(AJV, anomaly, DSL)`.
+
+```yaml
+version: 1
+rules:
+  - name: escalate-high-anomaly
+    when: { anomaly.score: { ">": 0.7 } }
+    then: { decision: pending, reason: "anomaly score above 0.7" }
+
+  - name: block-shell-in-financial
+    when:
+      all:
+        - classifier.category: shell
+        - tenant.deploymentMode: financial
+    then: { decision: block }
+```
+
+Edit in the Cockpit Monaco editor (`/dsl`), test with the **Dry Run**
+panel, save → live for new tool calls (hot-reload, no restart).
+
+### Deployment Mode
+
+Five ready-made templates — one click to apply on the Settings page or
+via `POST /api/v1/config/apply-template`:
+
+| Template | L1 | L2 | L3 | Retention | Best for |
+|----------|----|----|----|-----------|----------|
+| `dev` | ✅ | ❌ | ❌ | 7 d | Local development, minimal cost |
+| `standard` | ✅ | ✅ | escalate | 90 d | Default |
+| `strict` | ✅ | ✅ | all | 180 d | High-sensitivity workloads |
+| `financial` | ✅ | ✅ | all | 7 yr (SOX) | Banking / fintech |
+| `healthcare` | ✅ | ✅ | all | 6 yr (HIPAA) | PHI handling |
+
+Per-tenant config is stored in `organizations.settings`, hot-reloads via
+an in-process ConfigBus, and every change is recorded in the admin audit
+log.
 
 ### Behavioral Anomaly Detection
 
