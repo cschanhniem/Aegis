@@ -23,13 +23,14 @@ const navigation = [
   { name: 'Settings',    href: '/settings',    icon: Settings        },
 ]
 
-// Claude-aligned warm cream palette (kept in sync with globals.css :root)
-const BG       = 'hsl(43 24% 89%)'   // sidebar — slightly deeper cream
-const MAIN_BG  = 'hsl(43 30% 92%)'   // main area — #f0eee6
-const BORDER   = 'hsl(34 10% 84%)'
-const TEXT     = 'hsl(34 10% 12%)'
-const MUTED    = 'hsl(34 6% 42%)'
-const ACTIVE_BG = 'hsl(43 22% 85%)'
+// All values resolve from CSS variables in globals.css (:root). Edit the
+// palette there to retheme the entire Cockpit — nothing else to change.
+const BG        = 'hsl(var(--sidebar))'
+const MAIN_BG   = 'hsl(var(--background))'
+const BORDER    = 'hsl(var(--border))'
+const TEXT      = 'hsl(var(--foreground))'
+const MUTED     = 'hsl(var(--muted-foreground))'
+const ACTIVE_BG = 'hsl(var(--sidebar-active))'
 
 function AegisLogo() {
   return (
@@ -106,7 +107,7 @@ function SidebarContent({ pathname, connected, lastUpdate, notifPermission, requ
             {connected ? 'Live' : 'Connecting\u2026'}
           </span>
           {lastUpdate && (
-            <span className="text-[10px] ml-auto" style={{ color: 'hsl(30 8% 62%)' }}>
+            <span className="text-[10px] ml-auto" style={{ color: MUTED, opacity: 0.7 }}>
               {lastUpdate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
           )}
@@ -116,15 +117,15 @@ function SidebarContent({ pathname, connected, lastUpdate, notifPermission, requ
             onClick={requestNotifPermission}
             className="w-full text-left text-[11px] px-2 py-1 rounded transition-opacity hover:opacity-70"
             style={{
-              background:  notifPermission === 'denied' ? 'hsl(0 10% 95%)' : 'hsl(36 14% 90%)',
-              color:       notifPermission === 'denied' ? 'hsl(0 14% 50%)' : 'hsl(30 10% 35%)',
+              background:  notifPermission === 'denied' ? 'hsl(0 30% 94%)' : 'hsl(var(--accent))',
+              color:       notifPermission === 'denied' ? 'hsl(0 50% 45%)' : TEXT,
             }}
             title={notifPermission === 'denied' ? 'Blocked in browser \u2014 enable in System Settings' : 'Get notified even when this tab is in background'}
           >
             {notifPermission === 'denied' ? 'Notifications blocked' : 'Enable notifications'}
           </button>
         )}
-        <p className="text-[11px]" style={{ color: 'hsl(30 8% 60%)' }}>v{process.env.APP_VERSION}</p>
+        <p className="text-[11px]" style={{ color: MUTED, opacity: 0.85 }}>v{process.env.APP_VERSION}</p>
       </div>
     </>
   )

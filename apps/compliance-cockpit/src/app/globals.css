@@ -25,6 +25,9 @@
     --input:                34 10% 84%;
     --ring:                 16 48% 53%;
     --radius:               0.5rem;
+    /* Sidebar-specific surfaces — slightly deeper cream than the main area */
+    --sidebar:              43 24% 89%;
+    --sidebar-active:       43 22% 85%;
   }
 }
 
