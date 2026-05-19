@@ -4,25 +4,26 @@
 
 @layer base {
   :root {
-    --background:           36 20% 95%;
-    --foreground:           30 10% 11%;
-    --card:                 0 0% 100%;
-    --card-foreground:      30 10% 11%;
+    /* Claude-aligned cream palette — matches the homepage */
+    --background:           43 30% 92%;   /* ~#f0eee6 */
+    --foreground:           34 10% 12%;   /* warm dark */
+    --card:                 43 28% 96%;   /* ~#f7f5ee surface */
+    --card-foreground:      34 10% 12%;
     --popover:              0 0% 100%;
-    --popover-foreground:   30 10% 11%;
-    --primary:              43 56% 42%;
+    --popover-foreground:   34 10% 12%;
+    --primary:              16 48% 53%;   /* warm clay #c96442 */
     --primary-foreground:   0 0% 100%;
-    --secondary:            36 14% 91%;
+    --secondary:            36 16% 88%;
     --secondary-foreground: 30 10% 30%;
-    --muted:                36 14% 91%;
-    --muted-foreground:     30 8% 46%;
-    --accent:               36 14% 88%;
+    --muted:                36 16% 90%;
+    --muted-foreground:     34 6% 42%;
+    --accent:               36 16% 88%;
     --accent-foreground:    30 10% 20%;
-    --destructive:          0 72% 51%;
+    --destructive:          0 60% 47%;
     --destructive-foreground: 0 0% 100%;
-    --border:               36 12% 88%;
-    --input:                36 12% 88%;
-    --ring:                 43 56% 42%;
+    --border:               34 10% 84%;
+    --input:                34 10% 84%;
+    --ring:                 16 48% 53%;
     --radius:               0.5rem;
   }
 }
@@ -32,19 +33,28 @@
   html { color-scheme: light; }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
+    line-height: 1.55;
   }
-  h1, h2, h3, h4 {
-    font-family: var(--font-plus-jakarta), var(--font-geist-sans), system-ui, sans-serif;
-    letter-spacing: -0.025em;
+  /* Big section titles use Tiempos-like serif (Claude landing aesthetic). */
+  h1, h2 {
+    font-family: var(--font-serif), ui-serif, Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.012em;
+    line-height: 1.18;
+  }
+  /* Dense panel/card titles stay sans for legibility. */
+  h3, h4 {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    letter-spacing: -0.012em;
     font-weight: 600;
   }
   code, pre, .font-mono {
-    font-family: var(--font-geist-mono), 'Fira Code', monospace;
+    font-family: var(--font-geist-mono), 'JetBrains Mono', 'Fira Code', monospace;
   }
 }
 

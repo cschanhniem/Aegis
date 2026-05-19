@@ -39,7 +39,7 @@ const {
     <slot />
     <style is:global>
       :root {
-        /* Claude-like warm cream palette */
+        /* Claude-like warm cream palette (light) */
         --bg: #f0eee6;
         --surface: #f7f5ee;
         --text: #1f1e1b;
@@ -47,6 +47,21 @@ const {
         --hairline: rgba(31, 30, 27, 0.12);
         --accent: #c96442; /* Anthropic-ish warm clay */
         --link: #1f1e1b;
+        color-scheme: light;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          /* Warm-dark, low-contrast — matches Anthropic dark mode */
+          --bg: #1c1b18;
+          --surface: #242320;
+          --text: #ebe9e2;
+          --muted: #98948a;
+          --hairline: rgba(235, 233, 226, 0.12);
+          --accent: #e08c6c;
+          --link: #ebe9e2;
+          color-scheme: dark;
+        }
       }
 
       * {
@@ -114,7 +129,13 @@ const {
       }
 
       ::selection {
-        background: rgba(201, 100, 66, 0.18);
+        background: rgba(201, 100, 66, 0.22);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        ::selection {
+          background: rgba(224, 140, 108, 0.28);
+        }
       }
 
       hr {

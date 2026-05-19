@@ -23,13 +23,13 @@ const navigation = [
   { name: 'Settings',    href: '/settings',    icon: Settings        },
 ]
 
-// Warm palette matching Claude's UI
-const BG       = 'hsl(36 18% 93%)'   // sidebar bg — warm off-white
-const MAIN_BG  = 'hsl(36 20% 95%)'  // main area
-const BORDER   = 'hsl(36 12% 87%)'
-const TEXT      = 'hsl(30 10% 20%)'
-const MUTED     = 'hsl(30 8% 50%)'
-const ACTIVE_BG = 'hsl(36 14% 87%)'
+// Claude-aligned warm cream palette (kept in sync with globals.css :root)
+const BG       = 'hsl(43 24% 89%)'   // sidebar — slightly deeper cream
+const MAIN_BG  = 'hsl(43 30% 92%)'   // main area — #f0eee6
+const BORDER   = 'hsl(34 10% 84%)'
+const TEXT     = 'hsl(34 10% 12%)'
+const MUTED    = 'hsl(34 6% 42%)'
+const ACTIVE_BG = 'hsl(43 22% 85%)'
 
 function AegisLogo() {
   return (
