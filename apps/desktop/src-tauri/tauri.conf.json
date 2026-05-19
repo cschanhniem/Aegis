@@ -6,8 +6,8 @@
   "build": {
     "beforeDevCommand": "",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "../scripts/prepare-sidecars.sh",
-    "frontendDist": "../sidecar-stage/cockpit-static"
+    "beforeBuildCommand": "bash -c 'cd \"$(git rev-parse --show-toplevel)\" && bash apps/desktop/scripts/prepare-sidecars.sh'",
+    "frontendDist": "frontend"
   },
   "app": {
     "windows": [
@@ -30,7 +30,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' http://localhost:8080 ws://localhost:8080; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' http://localhost:8080 ws://localhost:8080"
+      "csp": "default-src 'self' http://127.0.0.1:13001 http://127.0.0.1:18080 http://localhost:8080 ws://localhost:8080; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' http://127.0.0.1:13001 http://127.0.0.1:18080 http://localhost:8080 ws://localhost:8080; script-src 'self' 'unsafe-inline'"
     },
     "trayIcon": {
       "iconPath": "icons/icon.png",
@@ -58,6 +58,11 @@
     "copyright": "© 2026 Aojie Yuan",
     "shortDescription": "AEGIS — runtime safety layer for AI agents",
     "longDescription": "AEGIS is an open-source pre-execution firewall and audit layer for AI agents. Every tool call is classified, run through a cost-aware L1/L2/L3 cascade, and matched against a per-tenant Policy DSL with fail-safe semantics — all before execution, with zero changes to agent code.",
+    "resources": {
+      "../sidecar-stage/gateway-bin":   "gateway-bin",
+      "../sidecar-stage/cockpit-static": "cockpit-static",
+      "../sidecar-stage/node-runtime":   "node-runtime"
+    },
     "macOS": {
       "minimumSystemVersion": "11.0",
       "frameworks": [],

@@ -57,7 +57,11 @@ impl Sidecars {
 
         let node_bin = resource_dir.join("node-runtime/bin/node");
         let gateway_script = resource_dir.join("gateway-bin/server.js");
-        let cockpit_script = resource_dir.join("cockpit-static/server.js");
+        // Next.js standalone in a monorepo nests the entry under the
+        // package path. Don't flatten — server.js references its own
+        // .next/server tree by that exact relative path.
+        let cockpit_script =
+            resource_dir.join("cockpit-static/apps/compliance-cockpit/server.js");
 
         for path in [&node_bin, &gateway_script, &cockpit_script] {
             if !path.exists() {

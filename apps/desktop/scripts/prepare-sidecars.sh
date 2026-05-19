@@ -56,15 +56,31 @@ log "Building gateway"
   cd "$REPO_ROOT/packages/gateway-mcp"
   npm run build >/dev/null
 )
+log "Building core-schema (workspace dep of gateway)"
+(
+  cd "$REPO_ROOT/packages/core-schema"
+  npm run build >/dev/null
+)
+log "Staging core-schema as a local package next to gateway-bin/"
+# gateway-mcp/package.json declares `"@agentguard/core-schema": "file:../core-schema"`,
+# which resolves to STAGE/core-schema once we put it there. --install-links
+# then copies it into node_modules/ as a real directory (instead of a
+# workspace symlink that Tauri's bundle scanner can't follow).
+mkdir -p "$STAGE/core-schema"
+cp -R "$REPO_ROOT/packages/core-schema/dist" "$STAGE/core-schema/"
+cp "$REPO_ROOT/packages/core-schema/package.json" "$STAGE/core-schema/"
+
 log "Staging gateway"
 mkdir -p "$STAGE/gateway-bin"
 cp -R "$REPO_ROOT/packages/gateway-mcp/dist/." "$STAGE/gateway-bin/"
 cp "$REPO_ROOT/packages/gateway-mcp/package.json" "$STAGE/gateway-bin/"
-# Production-only deps. Use --omit=dev to skip jest/typescript/etc.
 (
   cd "$STAGE/gateway-bin"
-  npm install --omit=dev --no-audit --no-fund --silent
+  npm install --omit=dev --install-links --no-audit --no-fund --silent
 )
+# The staged core-schema was only needed for npm install resolution.
+# Remove it so it doesn't bloat the eventual .app bundle.
+rm -rf "$STAGE/core-schema"
 # better-sqlite3 native module needs to match the *runtime* architecture.
 # Tauri prepare runs on the build machine, so this works for like-for-like
 # builds. Cross-builds need a CI matrix — out of scope for Phase A.2.
