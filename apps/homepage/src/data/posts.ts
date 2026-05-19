@@ -25,13 +25,6 @@ export const posts: Post[] = [
     description:
       'Lakera at Cisco. Protect AI at Palo Alto. Meta open-sourced its own. The shape of the market, and where open-source still has a seat.',
   },
-  {
-    slug: 'cascade-economics',
-    title: 'Cost-aware cascades beat LLM-judges by a factor of ~1,000×',
-    date: '2026-05-12',
-    description:
-      "A cheap rule layer plus an XGBoost classifier handles 99.9% of the load. The LLM judge only gets the ambiguous 0.1%, and that's what makes the bill fit on a page.",
-  },
 ];
 
 export const sortedPosts = [...posts].sort(

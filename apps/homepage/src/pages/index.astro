@@ -1,7 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import Header from '@/components/Header.astro';
-import PaperCard from '@/components/PaperCard.astro';
+import { sortedPosts as posts } from '@/data/posts';
 ---
 
 <Layout>
@@ -51,8 +51,8 @@ import PaperCard from '@/components/PaperCard.astro';
         <a class="cta" href="https://github.com/Justin0504/Aegis" target="_blank" rel="noopener">
           View on GitHub →
         </a>
-        <a class="cta-secondary" href="https://arxiv.org/abs/2603.12621" target="_blank" rel="noopener">
-          Read the paper
+        <a class="cta-secondary" href="https://github.com/Justin0504/Aegis#readme" target="_blank" rel="noopener">
+          Read the docs
         </a>
       </div>
 
@@ -61,33 +61,32 @@ import PaperCard from '@/components/PaperCard.astro';
 
     <hr />
 
-    <!-- Papers -->
+    <!-- Writing -->
     <section>
-      <p class="section-eyebrow">Selected work</p>
-      <h2>Papers</h2>
+      <p class="section-eyebrow">Writing</p>
+      <h2>Recent posts</h2>
 
-      <div class="papers">
-        <PaperCard
-          title="AEGIS: No Tool Call Left Unchecked — A Pre-Execution Firewall and Audit Layer for AI Agents"
-          venue="EMNLP 2026 · System Demonstrations"
-          arxivId="2603.12621"
-          authors="Aojie Yuan, Zhiyuan Su, Yue Zhao"
-          badge="open source"
-          abstract="Cost-aware three-layer cascade (rules → XGBoost classifier → LLM judge) that resolves the fast-but-brittle vs. flexible-but-expensive trade-off in tool-call defense. 99.9% block rate at 1.1 ms median latency and $0.05/run on a 5,525-call benchmark."
-        />
-        <PaperCard
-          title="Sovereign-OS: A Charter-Governed Operating System for Autonomous AI Agents with Verifiable Fiscal Discipline"
-          venue="Workshop · in submission"
-          arxivId="2603.14011"
-          abstract="Charter-based execution environment that binds autonomous agents to a fiscal envelope; deviations produce verifiable audit trails enforceable by external runtimes."
-        />
-        <PaperCard
-          title="HMAR: Hierarchical Modality-Aware Expert and Dynamic Routing Medical Image Retrieval Architecture"
-          venue="cs.CV"
-          arxivId="2603.16679"
-          abstract="A mixture-of-experts retrieval architecture with modality-aware expert selection and dynamic top-k routing, evaluated on medical image corpora."
-        />
-      </div>
+      <ul class="post-list">
+        {
+          posts.slice(0, 3).map((p) => (
+            <li>
+              <a href={`/writing/${p.slug}`} class="post-link">
+                <time datetime={p.date}>
+                  {new Date(p.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </time>
+                <span class="post-title">{p.title}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="see-all">
+        <a href="/writing">See all writing →</a>
+      </p>
     </section>
 
     <hr />
@@ -259,9 +258,53 @@ import PaperCard from '@/components/PaperCard.astro';
       font-size: inherit;
     }
 
-    /* Papers ─────────────────────────────────────────── */
-    .papers {
-      margin-top: 1rem;
+    /* Writing ────────────────────────────────────────── */
+    .post-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.4rem;
+    }
+    .post-list li {
+      border-top: 1px solid var(--hairline);
+    }
+    .post-list li:last-child {
+      border-bottom: 1px solid var(--hairline);
+    }
+    .post-link {
+      display: flex;
+      gap: 1.2rem;
+      align-items: baseline;
+      padding: 1rem 0;
+      border-bottom: 0;
+      color: var(--text);
+    }
+    .post-link:hover .post-title {
+      color: var(--accent);
+    }
+    .post-link time {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      min-width: 5rem;
+      flex-shrink: 0;
+    }
+    .post-title {
+      font-size: 1.02rem;
+      transition: color 120ms ease;
+    }
+    .see-all {
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin: 0;
+    }
+    .see-all a {
+      color: var(--muted);
+      border-bottom-color: transparent;
+    }
+    .see-all a:hover {
+      color: var(--text);
+      border-bottom-color: var(--text);
     }
 
     /* Footer ─────────────────────────────────────────── */
