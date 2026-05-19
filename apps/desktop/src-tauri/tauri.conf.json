@@ -6,8 +6,8 @@
   "build": {
     "beforeDevCommand": "",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "cd ../../compliance-cockpit && npm run build && npm run export || true",
-    "frontendDist": "../../compliance-cockpit/.next/server/app"
+    "beforeBuildCommand": "../scripts/prepare-sidecars.sh",
+    "frontendDist": "../sidecar-stage/cockpit-static"
   },
   "app": {
     "windows": [

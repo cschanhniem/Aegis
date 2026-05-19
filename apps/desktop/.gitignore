@@ -1,6 +1,11 @@
 # Rust build artifacts (Cargo.lock IS committed — this is a binary, not a lib)
 src-tauri/target/
 
+# Sidecar bundling output (produced by scripts/prepare-sidecars.sh on
+# every `cargo tauri build`). Not committed; regenerated each build.
+sidecar-stage/
+.node-cache/
+
 # Tauri generated
 src-tauri/gen/
 
