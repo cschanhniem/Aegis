@@ -75,18 +75,34 @@ Closes #123
 
 ## 🧪 Testing
 
-All code must pass tests before merging:
+All code must pass tests before merging.
 
 ```bash
-# Run all tests
+# Full suite (Gateway + Cockpit + SDKs)
 npm test
 
-# Run specific test suite
-npm test -- --grep "Gateway"
+# Gateway only
+cd packages/gateway-mcp && npm test
 
-# Run with coverage
-npm run test:coverage
+# Target a single test file
+cd packages/gateway-mcp && npm test -- tenant-config
+cd packages/gateway-mcp && npm test -- policy-dsl
 ```
+
+When touching any of these areas, the corresponding tests must
+remain green and you should extend them:
+
+| Area                  | Test file |
+|-----------------------|-----------|
+| Per-tenant config     | `gateway-mcp/src/__tests__/tenant-config.test.ts` |
+| Policy DSL evaluator  | `gateway-mcp/src/__tests__/policy-dsl.test.ts` |
+| AJV policy engine     | `gateway-mcp/src/__tests__/policy-engine.test.ts` |
+| Anomaly detector      | `gateway-mcp/src/__tests__/anomaly-detector.test.ts` |
+| Smoke / integration   | `gateway-mcp/src/__tests__/api-smoke.test.ts` |
+
+Cockpit changes that don't ship logic (pure styling / palette) can
+rely on `npm run build` in `apps/compliance-cockpit` as the smoke
+check.
 
 ## 📚 Documentation
 
@@ -121,11 +137,14 @@ We welcome feature requests! Please:
 
 ## 🔒 Security
 
-- Never commit secrets or credentials
-- Report security issues privately to security@agentguard.ai
+- Never commit secrets or credentials (`.env`, API keys, signing
+  material — `.gitignore` covers the defaults; double-check)
+- **Report vulnerabilities** following the process in
+  [SECURITY.md](./SECURITY.md). Do not file public issues for
+  security findings.
 - Follow OWASP guidelines
-- Validate all inputs
-- Use parameterized queries
+- Validate all inputs (Zod at every `/api/v1/*` write path)
+- Use parameterized queries — never string-concat into SQL
 
 ## 📋 Review Process
 
