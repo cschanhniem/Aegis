@@ -1,0 +1,12 @@
+{
+  "name": "@agentguard/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AEGIS desktop app — Tauri shell over the Cockpit + embedded gateway",
+  "scripts": {
+    "dev": "cargo tauri dev",
+    "build": "cargo tauri build",
+    "build:debug": "cargo tauri build --debug",
+    "icons": "cargo tauri icon ../homepage/public/favicon.svg"
+  }
+}

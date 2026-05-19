@@ -1,0 +1,11 @@
+# Rust build artifacts (Cargo.lock IS committed — this is a binary, not a lib)
+src-tauri/target/
+
+# Tauri generated
+src-tauri/gen/
+
+# macOS
+.DS_Store
+
+# Icons cache
+src-tauri/icons/*.bak

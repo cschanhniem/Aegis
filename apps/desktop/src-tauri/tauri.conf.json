@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "AEGIS",
+  "version": "0.1.0",
+  "identifier": "com.aojieyuan.aegis",
+  "build": {
+    "beforeDevCommand": "",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "cd ../../compliance-cockpit && npm run build && npm run export || true",
+    "frontendDist": "../../compliance-cockpit/.next/server/app"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "AEGIS",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "decorations": true,
+        "transparent": false,
+        "backgroundColor": "#eae3d2",
+        "titleBarStyle": "Visible",
+        "hiddenTitle": false,
+        "fullscreen": false,
+        "resizable": true,
+        "visible": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' http://localhost:8080 ws://localhost:8080; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' http://localhost:8080 ws://localhost:8080"
+    },
+    "trayIcon": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true,
+      "tooltip": "AEGIS — runtime safety layer",
+      "menuOnLeftClick": false
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "DeveloperTool",
+    "copyright": "© 2026 Aojie Yuan",
+    "shortDescription": "AEGIS — runtime safety layer for AI agents",
+    "longDescription": "AEGIS is an open-source pre-execution firewall and audit layer for AI agents. Every tool call is classified, run through a cost-aware L1/L2/L3 cascade, and matched against a per-tenant Policy DSL with fail-safe semantics — all before execution, with zero changes to agent code.",
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    }
+  }
+}
