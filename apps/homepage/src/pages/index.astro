@@ -325,9 +325,10 @@ import { sortedPosts as posts } from '@/data/posts';
       color: var(--muted);
       line-height: 1.55;
     }
-    .d-allow { color: hsl(150 22% 38%); }
-    .d-pending { color: var(--accent); }
-    .d-block { color: hsl(0 50% 45%); }
+    /* Semantic decision colors — must stay distinguishable in mono palette */
+    .d-allow { color: hsl(150 22% 32%); }    /* moss green */
+    .d-pending { color: hsl(36 60% 32%); }   /* mustard amber */
+    .d-block { color: hsl(0 50% 38%); }      /* oxblood */
 
     @media (max-width: 560px) {
       .flow-row {
@@ -360,7 +361,9 @@ import { sortedPosts as posts } from '@/data/posts';
       color: var(--text);
     }
     .post-link:hover .post-title {
-      color: var(--accent);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
     }
     .post-link time {
       font-size: 0.78rem;

@@ -49,8 +49,8 @@ const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`
     />
     <!-- Canonical + theme -->
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content="#f0eee6" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1c1b18" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#eae3d2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1816" media="(prefers-color-scheme: dark)" />
     <meta name="author" content="Aojie Yuan" />
     <meta name="robots" content="index, follow" />
 
@@ -77,27 +77,27 @@ const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`
     <slot />
     <style is:global>
       :root {
-        /* Claude-like warm cream palette (light) */
-        --bg: #f0eee6;
-        --surface: #f7f5ee;
-        --text: #1f1e1b;
-        --muted: #6f6b62;
-        --hairline: rgba(31, 30, 27, 0.12);
-        --accent: #c96442; /* Anthropic-ish warm clay */
-        --link: #1f1e1b;
+        /* Beige + black — paper-and-ink aesthetic. CTAs are black-on-beige. */
+        --bg: #eae3d2;
+        --surface: #f2edd8;
+        --text: #0a0a0a;
+        --muted: #5c5a50;
+        --hairline: rgba(10, 10, 10, 0.10);
+        --accent: #0a0a0a;
+        --link: #0a0a0a;
         color-scheme: light;
       }
 
       @media (prefers-color-scheme: dark) {
         :root {
-          /* Warm-dark, low-contrast — matches Anthropic dark mode */
-          --bg: #1c1b18;
-          --surface: #242320;
-          --text: #ebe9e2;
-          --muted: #98948a;
-          --hairline: rgba(235, 233, 226, 0.12);
-          --accent: #e08c6c;
-          --link: #ebe9e2;
+          /* Inverted: deep ink ground, beige type */
+          --bg: #1a1816;
+          --surface: #242220;
+          --text: #eae3d2;
+          --muted: #9a968b;
+          --hairline: rgba(234, 227, 210, 0.10);
+          --accent: #eae3d2;
+          --link: #eae3d2;
           color-scheme: dark;
         }
       }
@@ -167,12 +167,12 @@ const ogImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`
       }
 
       ::selection {
-        background: rgba(201, 100, 66, 0.22);
+        background: rgba(10, 10, 10, 0.12);
       }
 
       @media (prefers-color-scheme: dark) {
         ::selection {
-          background: rgba(224, 140, 108, 0.28);
+          background: rgba(234, 227, 210, 0.18);
         }
       }
 

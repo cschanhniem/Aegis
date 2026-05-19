@@ -4,30 +4,30 @@
 
 @layer base {
   :root {
-    /* Claude-aligned cream palette — matches the homepage */
-    --background:           43 30% 92%;   /* ~#f0eee6 */
-    --foreground:           34 10% 12%;   /* warm dark */
-    --card:                 43 28% 96%;   /* ~#f7f5ee surface */
-    --card-foreground:      34 10% 12%;
-    --popover:              0 0% 100%;
-    --popover-foreground:   34 10% 12%;
-    --primary:              16 48% 53%;   /* warm clay #c96442 */
-    --primary-foreground:   0 0% 100%;
-    --secondary:            36 16% 88%;
-    --secondary-foreground: 30 10% 30%;
-    --muted:                36 16% 90%;
-    --muted-foreground:     34 6% 42%;
-    --accent:               36 16% 88%;
-    --accent-foreground:    30 10% 20%;
-    --destructive:          0 60% 47%;
-    --destructive-foreground: 0 0% 100%;
-    --border:               34 10% 84%;
-    --input:                34 10% 84%;
-    --ring:                 16 48% 53%;
+    /* Beige + black — paper-and-ink. CTAs are black on beige. */
+    --background:           42 31% 87%;   /* ~#eae3d2 warm beige */
+    --foreground:           0 0% 4%;      /* ~#0a0a0a near-black */
+    --card:                 44 38% 90%;   /* ~#f2edd8 lighter surface */
+    --card-foreground:      0 0% 4%;
+    --popover:              44 38% 90%;
+    --popover-foreground:   0 0% 4%;
+    --primary:              0 0% 4%;      /* black CTAs */
+    --primary-foreground:   42 31% 87%;   /* beige type on black */
+    --secondary:            42 24% 82%;
+    --secondary-foreground: 0 0% 4%;
+    --muted:                42 24% 84%;
+    --muted-foreground:     45 8% 34%;    /* smoke grey */
+    --accent:               0 0% 4%;
+    --accent-foreground:    42 31% 87%;
+    --destructive:          0 50% 38%;
+    --destructive-foreground: 42 31% 87%;
+    --border:               42 14% 74%;   /* hairline that reads on beige */
+    --input:                42 14% 74%;
+    --ring:                 0 0% 4%;
     --radius:               0.5rem;
-    /* Sidebar-specific surfaces — slightly deeper cream than the main area */
-    --sidebar:              43 24% 89%;
-    --sidebar-active:       43 22% 85%;
+    /* Sidebar-specific surfaces — slightly deeper beige */
+    --sidebar:              42 26% 83%;
+    --sidebar-active:       42 24% 78%;
   }
 }
 
