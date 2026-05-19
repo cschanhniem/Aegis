@@ -9,8 +9,11 @@ AI agents instead of browser plug-ins.
 
 | Phase | What | State |
 |-------|------|-------|
-| A.1   | Tauri scaffold + WebView pointed at Cockpit, system tray | **scaffold landed**, not yet built |
-| A.2   | Bundle the gateway as a sidecar binary (pkg/nexe + better-sqlite3) | not started |
+| A.1   | Tauri scaffold + WebView + system tray | ✅ shipped |
+| A.2.1 | Cockpit `output: 'standalone'` build | ✅ shipped |
+| A.2.2 | `scripts/prepare-sidecars.sh` stages gateway + cockpit + portable Node | ✅ shipped |
+| A.2.3 | Rust spawn logic in `src/sidecars.rs` — release builds spin up both Node servers, kill on exit | ✅ shipped (cargo check clean) |
+| A.2.4 | Actually produce a signed `.dmg` via `cargo tauri build` end-to-end | not started — needs prepare-sidecars to run + bundle.resources uncommented + Apple Developer signing |
 | B     | First-run flow + agent discovery (process scanner) | not started |
 | C     | Auto-update + code signing (Apple Developer, Win cert) | not started |
 
@@ -44,19 +47,54 @@ npm run build
 
 Outputs land in `src-tauri/target/release/bundle/`.
 
+## Building a release bundle (Phase A.2.4 — manual for now)
+
+```bash
+# 1. Stage the sidecars
+apps/desktop/scripts/prepare-sidecars.sh
+# Produces: apps/desktop/sidecar-stage/{cockpit-static,gateway-bin,node-runtime}
+
+# 2. Uncomment the bundle.resources block in src-tauri/tauri.conf.json
+#    (it's annotated; Tauri's schema rejects globs that don't match any file,
+#    which is why we ship the config with the block stripped until step 1 runs)
+
+# 3. Run the actual bundle
+cd apps/desktop && cargo tauri build
+# Outputs land in src-tauri/target/release/bundle/
+```
+
 ## What still needs to happen
 
-1. **Sidecar gateway binary** — the current shell points at
-   `http://localhost:8080` and assumes the user has the gateway
-   running separately (via `docker compose` or `npm run dev`).
-   Phase A.2 will bundle a self-contained gateway binary and spawn
-   it on app start.
+1. **Bundle resources auto-wiring** — automate uncomment-then-build so
+   step 2 above isn't a manual edit. Probably a thin wrapper script that
+   templates `tauri.conf.json` from a JSONC source.
 2. **Bundled SDKs** — installer should drop pip wheels and an
    "Install in venv" affordance.
 3. **Agent process scanner** — detect running Python/Node processes
-   with agent libs loaded and offer one-click instrumentation.
+   with agent libs loaded and offer one-click instrumentation
+   (Phase B).
 4. **Code signing** — Apple Developer account + notarization for
    `.dmg`; Authenticode cert for `.exe`. Both are paid yearly.
+
+## How spawn works (Phase A.2.3 contract)
+
+Release builds gate sidecar spawn behind `#[cfg(not(debug_assertions))]`.
+On startup `Sidecars::spawn_all`:
+
+1. Resolves `app.path().resource_dir()` and `app.path().app_data_dir()`.
+2. Spawns `node node-runtime/bin/node gateway-bin/server.js` with
+   `PORT=18080`, `HOST=127.0.0.1`, `DB_PATH=<app-data>/aegis.db`.
+3. Polls TCP 18080 for up to 20 s.
+4. Spawns the Cockpit sidecar at `PORT=13001`,
+   `GATEWAY_URL=http://127.0.0.1:18080`.
+5. Polls TCP 13001 for up to 20 s.
+6. `lib.rs` then `window.location.replace('http://127.0.0.1:13001')`
+   and reveals the window.
+
+`Sidecars` is stored in Tauri's managed state. On `CloseRequested`
+and again on `Drop`, every spawned child receives `SIGTERM`. Picked
+non-standard ports (18080 / 13001) so a parallel
+`docker compose up` keeps working alongside the desktop app.
 
 ## Why Tauri (and not Electron)
 

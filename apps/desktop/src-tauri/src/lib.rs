@@ -1,21 +1,23 @@
 //! AEGIS Desktop — Tauri shell over the Cockpit.
 //!
-//! Phase A scope (current):
-//!   - Single main window pointed at the Cockpit (dev URL or bundled
-//!     static build).
-//!   - System tray with Open / Toggle Protection (stub) / Quit.
-//!   - Health pinger placeholder — the real gateway sidecar lands in
-//!     Phase A.2 once we settle the Node-binary packaging.
+//! Dev (`cargo tauri dev`): WebView loads `http://localhost:3000` (the
+//! Cockpit dev server) — user runs the gateway and cockpit themselves.
 //!
-//! Out of scope for Phase A:
-//!   - Bundled gateway binary (depends on `pkg`/`nexe` choice).
-//!   - Process-level agent discovery (Phase B).
-//!   - Auto-updater (Phase D).
+//! Release (`cargo tauri build`): spawn the embedded gateway + cockpit
+//! Node servers from sidecar-stage/, wait for both ports to bind, then
+//! redirect the WebView at `http://127.0.0.1:13001` and reveal the
+//! window. Killed via Drop on app exit.
+
+mod sidecars;
+#[cfg(not(debug_assertions))]
+use sidecars::{Sidecars, COCKPIT_URL};
+#[cfg(debug_assertions)]
+use sidecars::Sidecars;
 
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
-    Manager,
+    Manager, WindowEvent,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -24,6 +26,28 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            // ── Spawn the embedded gateway + cockpit in release builds.
+            //    In dev we let the user run them — devUrl in tauri.conf.json
+            //    already points at the Cockpit dev server (:3000).
+            #[cfg(not(debug_assertions))]
+            {
+                let handle = app.handle();
+                let sidecars = Sidecars::spawn_all(handle)
+                    .map_err(|e| format!("failed to start AEGIS sidecars: {e}"))?;
+
+                // Redirect the auto-opened (placeholder) window at the
+                // spawned Cockpit, then reveal it.
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.eval(&format!(
+                        "window.location.replace('{COCKPIT_URL}')",
+                    ));
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+
+                app.manage(sidecars);
+            }
+
             // ── System tray ──────────────────────────────────────────────
             let open_item = MenuItem::with_id(app, "open", "Open AEGIS", true, None::<&str>)?;
             let toggle_item = MenuItem::with_id(
@@ -75,7 +99,15 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, gateway_status])
+        .on_window_event(|window, event| {
+            // Kill spawned sidecars when the user closes the main window.
+            if matches!(event, WindowEvent::CloseRequested { .. }) {
+                if let Some(state) = window.app_handle().try_state::<Sidecars>() {
+                    state.kill_all();
+                }
+            }
+        })
+        .invoke_handler(tauri::generate_handler![greet, gateway_url])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -87,13 +119,17 @@ fn greet(name: &str) -> String {
     format!("Hello, {name}! AEGIS desktop is running.")
 }
 
-/// Probe the embedded gateway. Phase A returns a static placeholder —
-/// real impl pings http://localhost:8080/health once the sidecar lands
-/// in Phase A.2.
+/// Tell the WebView which URL the embedded gateway is reachable at.
+/// Cockpit code can call this via `window.__TAURI__.core.invoke('gateway_url')`
+/// instead of hard-coding 8080 vs 18080 vs whatever the dev value is.
 #[tauri::command]
-async fn gateway_status() -> Result<serde_json::Value, String> {
-    Ok(serde_json::json!({
-        "status": "not_implemented",
-        "note": "gateway sidecar lands in Phase A.2",
-    }))
+fn gateway_url() -> String {
+    #[cfg(debug_assertions)]
+    {
+        "http://localhost:8080".into()
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        sidecars::GATEWAY_URL.into()
+    }
 }
