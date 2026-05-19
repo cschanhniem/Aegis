@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { AlertRules } from './alert-rules'
+import { DeploymentMode } from './deployment-mode'
 import { useRuleEvaluator } from './use-rule-evaluator'
 import { CheckCircle, XCircle, Loader2, Copy, Check, Eye, EyeOff, RefreshCw, Database, Play } from 'lucide-react'
 
@@ -248,6 +249,11 @@ export function SettingsView() {
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p style={{ color: MUTED }}>Gateway configuration, alert rules, and SDK setup</p>
       </div>
+
+      {/* Deployment mode (per-tenant config) */}
+      <Section title="Deployment Mode">
+        <DeploymentMode />
+      </Section>
 
       {/* Gateway */}
       <Section title="Gateway">
