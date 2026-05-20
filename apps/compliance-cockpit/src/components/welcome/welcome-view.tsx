@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Copy, Loader2, Sparkles, ArrowRight, Cpu, ShieldOff } from 'lucide-react'
+import { Check, Copy, Loader2, Sparkles, ArrowRight, Cpu, ShieldOff, ShieldHalf, Compass } from 'lucide-react'
 import { gw } from '@/lib/gateway'
 
 interface CandidateAgent {
@@ -357,6 +357,58 @@ export function WelcomeView() {
           </>
         )}
       </div>
+
+      {/* Try the playgrounds — zero-setup, work before any SDK is wired up. */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <a
+          href="/code-shield"
+          className="rounded-md p-4 transition-colors group"
+          style={{ background: SURFACE, border: `1px solid ${BORDER}` }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.borderColor = PRIMARY
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.borderColor = BORDER
+          }}
+        >
+          <h3
+            className="text-sm font-medium inline-flex items-center gap-2 mb-1"
+            style={{ color: TEXT }}
+          >
+            <ShieldHalf className="h-4 w-4" /> Try Code Shield
+            <ArrowRight className="h-3.5 w-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+          </h3>
+          <p className="text-xs leading-relaxed" style={{ color: MUTED }}>
+            Paste a snippet of agent-generated code. AEGIS runs 19 rules
+            (eval, secrets, rm&nbsp;-rf, dangerous SQL…) in {'< 1 ms'}.
+            No agent needed.
+          </p>
+        </a>
+        <a
+          href="/alignment"
+          className="rounded-md p-4 transition-colors group"
+          style={{ background: SURFACE, border: `1px solid ${BORDER}` }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.borderColor = PRIMARY
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.borderColor = BORDER
+          }}
+        >
+          <h3
+            className="text-sm font-medium inline-flex items-center gap-2 mb-1"
+            style={{ color: TEXT }}
+          >
+            <Compass className="h-4 w-4" /> Try Alignment
+            <ArrowRight className="h-3.5 w-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+          </h3>
+          <p className="text-xs leading-relaxed" style={{ color: MUTED }}>
+            Compose a goal + thought chain + tool call. The judge LLM
+            scores it 0–1 and tags drift signals — same engine your SDK
+            callbacks reach.
+          </p>
+        </a>
+      </section>
 
       {/* Detected processes (Tauri only) ─────────────────────────────────── */}
       {candidates !== null && (
