@@ -25,6 +25,12 @@ dependencies = [
 langchain = [
     "langchain-core>=0.2.0",
 ]
+crewai = [
+    # crewai brings langchain_core transitively; we pin a lower bound
+    # so users get a version with the AgentAction step_callback shape
+    # our integration assumes.
+    "crewai>=0.30.0",
+]
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
