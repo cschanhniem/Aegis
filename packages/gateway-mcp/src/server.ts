@@ -36,6 +36,7 @@ import { TenantConfigService } from './services/tenant-config';
 import { TenantConfigAPI } from './api/tenant-config';
 import { DslPolicyService } from './services/policy-dsl';
 import { PolicyDslAPI } from './api/policy-dsl';
+import { AlignmentAPI } from './api/alignment';
 
 const VERSION = '2.0.0';
 
@@ -354,6 +355,11 @@ async function main() {
 
   // Per-tenant DSL (self-service)
   app.use('/api/v1/dsl', requireAuth, new PolicyDslAPI(tenantConfig, dslPolicy, logger).router);
+
+  // Agent alignment auditor — LlamaFirewall-style CoT inspection.
+  // Standalone for v0.3 preview; SDKs that capture chain-of-thought
+  // call this pre-execution and pass alignment.* into /check.
+  app.use('/api/v1/alignment', requireAuth, requireFeature('judge'), new AlignmentAPI(logger, auditLog).router);
 
   // Kill-switch endpoints (auth required)
   app.post('/api/v1/kill-switch/revoke', requireAuth, async (req, res) => {

@@ -32,6 +32,19 @@ export interface DslContext {
     violations?: string[];
     [k: string]: unknown;
   };
+  /**
+   * Optional agent alignment signal — only present when an SDK that
+   * captures chain-of-thought has run /api/v1/alignment/check and
+   * passes the result through to /check. Rules can match on
+   * `alignment.score < X` or `alignment.drifted == true`.
+   */
+  alignment?: {
+    score?: number;
+    drifted?: boolean;
+    signals?: string[];
+    reason?: string;
+    [k: string]: unknown;
+  };
   tool?: {
     name?: string;
     args?: Record<string, unknown>;
