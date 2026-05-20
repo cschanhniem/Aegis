@@ -21,6 +21,7 @@ Each file is a single, self-contained script. They assume:
 | `quickstart_anthropic.py`        | One-line auto-instrumentation, every tool call traced     |
 | `code_shield_scan.py`            | Scan agent-generated code, get severity + findings        |
 | `langchain_alignment.py`         | Chain-of-thought alignment audit + closed-loop /check     |
+| `custom_agent_alignment.py`      | Framework-agnostic: hand-rolled agent loop using both helpers |
 | `policy_dsl_bootstrap.py`        | Install a DSL from a builtin example via PUT /api/v1/dsl  |
 
 Run any one with `python <file>.py`. None of them depend on each
