@@ -74,6 +74,19 @@ class AutoInstrument:
             alignment_payload = _alignment_state.to_check_payload(verdict)
             if alignment_payload:
                 payload["alignment"] = alignment_payload
+
+        # Same pattern for CodeShield — agents that call
+        # `code_shield.scan(...)` get the worst severity / rules
+        # delivered to /check on the same hop, no manual wiring.
+        try:
+            from ..integrations import _code_shield_state
+            cs_result = _code_shield_state.consume(agent_id)
+        except ImportError:
+            cs_result = None
+        if cs_result:
+            cs_payload = _code_shield_state.to_check_payload(cs_result)
+            if cs_payload:
+                payload["code_shield"] = cs_payload
         return _json_mod.dumps(payload).encode()
 
     def _raise_if_blocked(self, tool_name: str, result: dict) -> Optional[tuple]:
