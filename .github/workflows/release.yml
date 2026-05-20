@@ -115,3 +115,110 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
+
+  # ────────────────────────────────────────────────────────────────────
+  # Desktop app — macOS · Apple Silicon
+  # Builds the Tauri shell + sidecar bundle (gateway + cockpit standalone
+  # + portable Node) and uploads the .dmg to the release matching the tag.
+  # ────────────────────────────────────────────────────────────────────
+  desktop-macos-arm64:
+    name: Build desktop (macOS arm64)
+    runs-on: macos-14
+    needs: [create-release]
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install monorepo deps
+        run: npm install --legacy-peer-deps
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cargo cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2.0" --locked
+
+      - name: Install librsvg (icon rasterizer)
+        run: brew install librsvg
+
+      - name: Build .app
+        working-directory: apps/desktop
+        run: cargo tauri build --bundles app
+
+      - name: Package .dmg
+        working-directory: apps/desktop
+        run: bash scripts/make-dmg.sh
+
+      - name: Upload .dmg to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/desktop/src-tauri/target/release/bundle/dmg/AEGIS_*.dmg
+          fail_on_unmatched_files: true
+
+  # ────────────────────────────────────────────────────────────────────
+  # Desktop app — Windows · x64  (provisional / WIP)
+  # First runs are expected to fail — prepare-sidecars.sh assumes a
+  # .tar.gz Node tarball but the Windows binary ships as .zip, and the
+  # gateway's better-sqlite3 native module needs VS Build Tools that
+  # aren't yet wired through the script. `continue-on-error: true` keeps
+  # the failure from blocking the macOS asset upload while we iterate.
+  # ────────────────────────────────────────────────────────────────────
+  desktop-windows-x64:
+    name: Build desktop (Windows x64) [WIP]
+    runs-on: windows-latest
+    needs: [create-release]
+    timeout-minutes: 45
+    continue-on-error: true
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install monorepo deps
+        shell: bash
+        run: npm install --legacy-peer-deps
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cargo cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2.0" --locked
+
+      - name: Stage sidecars (Git Bash)
+        shell: bash
+        working-directory: apps/desktop
+        run: bash scripts/prepare-sidecars.sh
+
+      - name: Build .msi
+        working-directory: apps/desktop
+        run: cargo tauri build --bundles msi
+
+      - name: Upload .msi to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            apps/desktop/src-tauri/target/release/bundle/msi/*.msi
+            apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
+          fail_on_unmatched_files: false
