@@ -83,10 +83,10 @@ to bypass once. Intel x64, Windows, and Linux builds land in 0.2.x.</sub>
 
 ---
 
-## Quick Start (developer / Docker path)
+## Quick Start — Linux, Windows, or building from source
 
-For the source-based workflow (Linux/Windows, custom builds, hacking on
-the gateway):
+If you're not on macOS (or you just want the Docker / source path
+explicitly):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash
