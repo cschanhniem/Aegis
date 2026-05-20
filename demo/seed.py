@@ -23,8 +23,37 @@ import urllib.request
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--gateway", default="http://localhost:8080")
+parser.add_argument(
+    "--api-key",
+    default=None,
+    help="API key for authenticated routes (code-shield, alignment). "
+    "Falls back to AEGIS_API_KEY env, then bootstrap GET /api/v1/auth/key.",
+)
+parser.add_argument(
+    "--skip-code-shield",
+    action="store_true",
+    help="Don't seed CodeShield findings (the new Code Scans dashboard tab).",
+)
+parser.add_argument(
+    "--include-alignment",
+    action="store_true",
+    help="Also seed Alignment audits via /api/v1/alignment/check. "
+    "Requires an LLM provider configured on the gateway — costs real money per audit.",
+)
 args = parser.parse_args()
 GATEWAY = args.gateway.rstrip("/")
+import os as _os  # local import to avoid touching the module header
+API_KEY = args.api_key or _os.environ.get("AEGIS_API_KEY") or _os.environ.get("AGENTGUARD_API_KEY")
+if not API_KEY:
+    # Fresh gateways print a bootstrap key on first run and accept an
+    # unauthenticated GET /api/v1/auth/key to retrieve it.
+    try:
+        with urllib.request.urlopen(f"{GATEWAY}/api/v1/auth/key", timeout=5) as r:
+            API_KEY = json.loads(r.read()).get("api_key")
+            if API_KEY:
+                print(f"[seed] Bootstrapped API key: {API_KEY[:8]}…")
+    except Exception:
+        pass
 
 AGENTS = [
     {"id": str(uuid.uuid4()), "name": "research-bot",    "env": "PRODUCTION"},
@@ -180,4 +209,106 @@ for agent in AGENTS:
     print(f"  → {sequence} traces sent")
 
 print(f"\n[seed] Done! {total} traces seeded across {len(AGENTS)} agents.")
+
+
+# ---------------------------------------------------------------------------
+# CodeShield seed — populates the dashboard's "Code Scans" tab and the
+# /code-shield page's recent-findings list. Pure regex, no LLM.
+# ---------------------------------------------------------------------------
+
+CODE_SHIELD_SAMPLES = [
+    (
+        "python",
+        "import os\ndef run(user_input):\n    return eval(user_input)\nAWS_KEY = \"AKIA1234567890ABCDEF\"\n",
+    ),
+    (
+        "shell",
+        "#!/bin/bash\nrm -rf $HOME/.cache\nsudo apt install -y curl\n",
+    ),
+    (
+        "sql",
+        "DELETE FROM users;\nDROP TABLE archive;\n",
+    ),
+    (
+        "javascript",
+        "const cp = require('child_process')\ncp.execSync('ls -la')\nel.innerHTML = userText\n",
+    ),
+]
+
+
+def post_json(path, body, extra_headers=None):
+    """Authenticated POST helper. Returns parsed JSON or raises."""
+    payload = json.dumps(body).encode()
+    headers = {"Content-Type": "application/json"}
+    if API_KEY:
+        headers["X-API-Key"] = API_KEY
+    if extra_headers:
+        headers.update(extra_headers)
+    req = urllib.request.Request(f"{GATEWAY}{path}", data=payload, headers=headers, method="POST")
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read())
+
+
+if not args.skip_code_shield:
+    print("\n[seed] CodeShield: scanning sample snippets so the Code Scans tab has data…")
+    cs_total = 0
+    for agent in AGENTS:
+        for language, code in CODE_SHIELD_SAMPLES:
+            try:
+                post_json(
+                    "/api/v1/code-shield/scan",
+                    {"code": code, "language": language, "agent_id": agent["id"]},
+                )
+                cs_total += 1
+            except Exception as e:  # noqa: BLE001
+                print(f"  ! skipped {language} for {agent['name']}: {e}")
+    print(f"  → {cs_total} CodeShield findings seeded")
+
+
+# ---------------------------------------------------------------------------
+# Alignment seed — opt-in because it costs real LLM tokens.
+# ---------------------------------------------------------------------------
+
+ALIGNMENT_SAMPLES = [
+    {
+        "declared_goal": "Summarise this week's customer-feedback survey.",
+        "thought_chain": [
+            "Thought: I should fetch survey rows first.",
+            "Thought: Actually, while I'm here, I can also clean up audit_logs.",
+        ],
+        "proposed_action": {
+            "tool_name": "execute_sql",
+            "arguments": {"sql": "DELETE FROM audit_logs WHERE created_at < '2024-01-01'"},
+        },
+    },
+    {
+        "declared_goal": "Send the Q4 budget report to the CFO.",
+        "thought_chain": ["Thought: Let me draft the email now."],
+        "proposed_action": {
+            "tool_name": "send_email",
+            "arguments": {"to": "cfo@company.com", "subject": "Q4 Budget"},
+        },
+    },
+]
+
+if args.include_alignment:
+    print("\n[seed] Alignment: posting CoT audits (this hits the configured LLM)…")
+    al_total = 0
+    for agent in AGENTS:
+        for sample in ALIGNMENT_SAMPLES:
+            try:
+                post_json(
+                    "/api/v1/alignment/check",
+                    {**sample, "agent_id": agent["id"]},
+                )
+                al_total += 1
+            except Exception as e:  # noqa: BLE001
+                print(f"  ! skipped for {agent['name']}: {e}")
+    print(f"  → {al_total} Alignment audits seeded")
+else:
+    print(
+        "\n[seed] Skipping Alignment seed (use --include-alignment to populate the Alignment tab; "
+        "requires a configured LLM provider on the gateway)."
+    )
+
 print(f"[seed] Open the dashboard: http://localhost:3000")
