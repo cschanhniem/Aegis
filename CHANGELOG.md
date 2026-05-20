@@ -18,9 +18,17 @@ In flight on `main`, slated for the next release.
   API key authenticates, policies loaded, code-shield reachable,
   alignment endpoint reachable). Exit 2 distinguishes
   "unreachable" from "reachable but unhealthy" (exit 1).
+
+### Changed
+- `agentguard status` exits **2** (not 1) when the gateway is
+  unreachable, matching `agentguard doctor`'s convention. Exit 1
+  is now reserved for "command ran, server returned a problem we
+  want a script to handle." Scripts that branched on exit code
+  may need to update.
 - `agentguard configure` gains `--api-key` and `--bootstrap`
-  flags; the shared HTTP helper now picks up
-  `AGENTGUARD_API_KEY` from env or the `api_key` field in
+  flags; the shared HTTP helper now picks up `AEGIS_API_KEY` /
+  `AEGIS_GATEWAY_URL` from env (with `AGENTGUARD_*` kept as
+  legacy aliases) or the `api_key` field in
   `~/.agentguard/cli.json`.
 - **DSL builtin examples** — two new starter docs returned by
   `GET /api/v1/dsl/examples`: `block-unsafe-code-gen` (blocks on
