@@ -247,10 +247,17 @@ export function WelcomeView() {
     return () => { cancelled = true; clearInterval(t) }
   }, [])
 
-  // Poll for the first trace — auto-redirect to overview once it arrives.
+  // Poll for the first trace. Only auto-redirect on the *transition*
+  // from zero → first trace within this session — returning users who
+  // already have traces should be allowed to browse /welcome (SDK
+  // snippets, process scanner) without being yanked away every time
+  // a new trace lands. We arm the redirect only when the very first
+  // poll finds zero traces; if it's already non-zero, this is a repeat
+  // visit and we just stop polling silently.
   useEffect(() => {
     if (!polling) return
     let cancelled = false
+    let baselineWasZero: boolean | null = null
     const tick = async () => {
       try {
         const res = await gw('stats')
@@ -259,7 +266,15 @@ export function WelcomeView() {
         const n = stats?.totals?.traces ?? stats?.total_traces ?? 0
         if (cancelled) return
         setTraceCount(n)
-        if (n > 0) {
+        if (baselineWasZero === null) {
+          baselineWasZero = n === 0
+          if (!baselineWasZero) {
+            // Returning user — don't trigger the celebration redirect.
+            setPolling(false)
+            return
+          }
+        }
+        if (n > 0 && baselineWasZero) {
           setPolling(false)
           setTimeout(() => router.push('/'), 1200)
         }
