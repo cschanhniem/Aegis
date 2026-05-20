@@ -299,8 +299,8 @@ export function DslEditorView() {
           {loading
             ? 'Loading…'
             : savedDsl
-              ? `Saved DSL: ${(savedDsl as any).rules?.length ?? 0} rule(s)`
-              : 'No DSL saved — default policies apply unchanged.'}
+              ? `Saved DSL: ${(savedDsl as any).rules?.length ?? 0} rule(s) live`
+              : 'No DSL saved yet — the editor shows a starter; nothing applies until you click Save.'}
         </span>
         {isDirty && (
           <span style={{ color: ACCENT }}>● unsaved changes</span>
