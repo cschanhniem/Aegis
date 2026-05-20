@@ -22,7 +22,7 @@ import * as path from 'path';
 
 const CONFIG_FILE = path.join(os.homedir(), '.agentguard', 'cli.json');
 
-function loadConfig(): { gateway_url: string } {
+function loadConfig(): { gateway_url: string; api_key?: string } {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
   } catch {
@@ -34,23 +34,47 @@ function gatewayUrl(): string {
   return loadConfig().gateway_url;
 }
 
+function apiKey(): string | undefined {
+  return process.env.AGENTGUARD_API_KEY || loadConfig().api_key;
+}
+
 // ── HTTP helper ─────────────────────────────────────────────────────────────
 
-function request(method: string, urlStr: string, body?: object): Promise<any> {
+interface RequestOpts {
+  /** Override the API key for this request. */
+  apiKey?: string;
+  /** Skip auth even if a key is available — used by the bootstrap call. */
+  noAuth?: boolean;
+  /** Per-request status code if non-2xx — wraps the resolved value. */
+  expectJson?: boolean;
+}
+
+function request(
+  method: string,
+  urlStr: string,
+  body?: object,
+  opts: RequestOpts = {},
+): Promise<any> {
   return new Promise((resolve, reject) => {
     const url = new URL(urlStr);
     const lib = url.protocol === 'https:' ? https : http;
     const data = body ? JSON.stringify(body) : undefined;
+
+    const headers: Record<string, string | number> = {
+      'Content-Type':   'application/json',
+      'Content-Length': data ? Buffer.byteLength(data) : 0,
+    };
+    if (!opts.noAuth) {
+      const key = opts.apiKey ?? apiKey();
+      if (key) headers['X-API-Key'] = key;
+    }
 
     const req = lib.request({
       hostname: url.hostname,
       port:     url.port || (url.protocol === 'https:' ? 443 : 80),
       path:     url.pathname + url.search,
       method,
-      headers: {
-        'Content-Type':   'application/json',
-        'Content-Length': data ? Buffer.byteLength(data) : 0,
-      },
+      headers,
     }, res => {
       let raw = '';
       res.on('data', c => raw += c);
@@ -100,13 +124,35 @@ program
 // ── configure ────────────────────────────────────────────────────────────────
 program
   .command('configure')
-  .description('Set gateway URL')
+  .description('Set gateway URL (and optionally bootstrap an API key)')
   .requiredOption('--url <url>', 'Gateway URL (e.g. http://localhost:8080)')
-  .action(({ url }) => {
+  .option('--api-key <key>', 'API key for authenticated routes (or use --bootstrap)')
+  .option('--bootstrap', 'Auto-fetch the gateway-issued API key (works once, on first connect)')
+  .action(async ({ url, apiKey: keyOpt, bootstrap }) => {
     const dir = path.dirname(CONFIG_FILE);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify({ gateway_url: url }, null, 2));
+    const existing = loadConfig();
+    const next: { gateway_url: string; api_key?: string } = {
+      ...existing,
+      gateway_url: url,
+    };
+    if (keyOpt) next.api_key = keyOpt;
+    if (bootstrap) {
+      try {
+        const data = await request('GET', `${url.replace(/\/$/, '')}/api/v1/auth/key`, undefined, { noAuth: true });
+        if (data && typeof data === 'object' && data.api_key) {
+          next.api_key = data.api_key;
+          console.log(`✓ Bootstrapped API key: ${data.api_key.slice(0, 8)}…`);
+        } else {
+          console.error('⚠ Bootstrap returned no api_key; key may already be issued — pass --api-key explicitly');
+        }
+      } catch (e) {
+        console.error(`⚠ Bootstrap failed: ${(e as Error).message}`);
+      }
+    }
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(next, null, 2));
     console.log(`✓ Saved gateway URL: ${url}`);
+    if (next.api_key) console.log(`✓ Saved API key (${next.api_key.length} chars)`);
   });
 
 // ── status ─────────────────────────────────────────────────────────────────
@@ -530,6 +576,276 @@ program
 
     console.log();
     process.exit(issues.some(i => i.severity === 'CRITICAL') ? 1 : 0);
+  });
+
+// ── code-shield ──────────────────────────────────────────────────────────────
+const codeShield = program
+  .command('code-shield')
+  .description('Static checks on agent-generated code (eval, exec, secrets, dangerous shell/SQL)');
+
+const SEV_COLOR: Record<string, string> = {
+  LOW:      '\x1b[2m',   // dim
+  MEDIUM:   '\x1b[33m',  // yellow
+  HIGH:     '\x1b[31m',  // red
+  CRITICAL: '\x1b[31;1m',// bold red
+};
+const RESET = '\x1b[0m';
+
+function detectLanguage(filename: string): string {
+  const ext = path.extname(filename).toLowerCase();
+  if (['.py', '.pyw'].includes(ext)) return 'python';
+  if (['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx'].includes(ext)) return 'javascript';
+  if (['.sh', '.bash', '.zsh'].includes(ext)) return 'shell';
+  if (['.sql'].includes(ext)) return 'sql';
+  return 'any';
+}
+
+interface ShieldFinding {
+  rule: string; description: string; severity: string;
+  language: string; line: number; column: number;
+  snippet: string; cwe?: string;
+}
+interface ShieldResult {
+  worst: string | null;
+  findings: ShieldFinding[];
+  unique_findings: number;
+  scanned_chars: number;
+  latency_ms: number;
+}
+
+function printShieldResult(label: string, result: ShieldResult): void {
+  const head =
+    result.worst === null
+      ? `\x1b[2m✓ clean\x1b[0m  ${label}`
+      : `${SEV_COLOR[result.worst] ?? ''}● ${result.worst}${RESET}  ${label}` +
+        `  (${result.unique_findings} finding${result.unique_findings === 1 ? '' : 's'}, ${result.latency_ms}ms)`;
+  console.log(head);
+  for (const f of result.findings) {
+    const sev = `${SEV_COLOR[f.severity] ?? ''}${f.severity}${RESET}`;
+    console.log(`    ${sev}  ${f.rule}  ${f.line}:${f.column}`);
+    console.log(`    ${'\x1b[2m'}${f.description}${RESET}`);
+    console.log(`      ${'\x1b[2m'}${f.snippet}${RESET}`);
+  }
+}
+
+codeShield
+  .command('scan <file...>')
+  .description('Scan one or more files for unsafe code patterns')
+  .option('--language <lang>', 'Override language detection (python|javascript|shell|sql|any)')
+  .option('--fail-on <sev>', 'Exit non-zero when any finding reaches this severity (LOW|MEDIUM|HIGH|CRITICAL)', 'HIGH')
+  .option('--disable <rules>', 'Comma-separated rule ids to skip (e.g. sh.sudo,js.innerHTML)')
+  .action(async (files: string[], opts: Record<string, string>) => {
+    const rank: Record<string, number> = { LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+    const failOn = (opts.failOn || 'HIGH').toUpperCase();
+    if (!(failOn in rank)) {
+      console.error(`Unknown --fail-on value: ${opts.failOn}`);
+      process.exit(2);
+    }
+    const disabledRules = (opts.disable || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    let worstSeenRank = 0;
+    for (const f of files) {
+      let code: string;
+      try {
+        code = fs.readFileSync(f, 'utf8');
+      } catch (e) {
+        console.error(`\x1b[31m✗\x1b[0m cannot read ${f}: ${(e as Error).message}`);
+        process.exitCode = 2;
+        continue;
+      }
+      const language = opts.language || detectLanguage(f);
+      const body: Record<string, unknown> = { code, language };
+      if (disabledRules.length) body.disabled_rules = disabledRules;
+      try {
+        const result = (await request(
+          'POST',
+          `${gatewayUrl()}/api/v1/code-shield/scan`,
+          body,
+        )) as ShieldResult & { error?: string };
+        if ('error' in result && result.error) {
+          console.error(`\x1b[31m✗\x1b[0m ${f}: gateway error — ${result.error}`);
+          process.exitCode = 2;
+          continue;
+        }
+        printShieldResult(f, result);
+        if (result.worst && rank[result.worst] > worstSeenRank) {
+          worstSeenRank = rank[result.worst];
+        }
+      } catch (e) {
+        console.error(`\x1b[31m✗\x1b[0m ${f}: ${(e as Error).message}`);
+        process.exitCode = 2;
+      }
+    }
+
+    if (worstSeenRank >= rank[failOn]) {
+      console.log(
+        `\n\x1b[31m✗ exit 1: at least one finding meets --fail-on ${failOn}\x1b[0m`,
+      );
+      process.exit(1);
+    }
+  });
+
+codeShield
+  .command('rules')
+  .description('List built-in CodeShield rules and what each catches')
+  .action(async () => {
+    // The gateway doesn't expose a /rules endpoint yet; we hardcode the
+    // catalog summary here so this is usable offline as well. Stays in
+    // sync with packages/gateway-mcp/src/services/code-shield.ts.
+    const rules = [
+      ['py.exec',              'CRITICAL', 'python',     'exec(...) — arbitrary code execution'],
+      ['py.eval',              'CRITICAL', 'python',     'eval(...) — arbitrary expression eval'],
+      ['py.os.system',         'HIGH',     'python',     'os.system(...) shell command'],
+      ['py.subprocess.shell',  'HIGH',     'python',     'subprocess with shell=True'],
+      ['py.pickle.loads',      'HIGH',     'python',     'pickle.loads on untrusted input'],
+      ['js.eval',              'CRITICAL', 'javascript', 'eval(...) — arbitrary code execution'],
+      ['js.new-function',      'CRITICAL', 'javascript', 'new Function(...) — arbitrary code'],
+      ['js.child_process.exec','HIGH',     'javascript', 'child_process.exec / execSync'],
+      ['js.innerHTML',         'MEDIUM',   'javascript', 'innerHTML = var — DOM-based XSS'],
+      ['sh.rm-rf-root',        'CRITICAL', 'shell',      'rm -rf / or $HOME'],
+      ['sh.curl-pipe-sh',      'HIGH',     'shell',      'curl ... | sh — unverified install'],
+      ['sh.sudo',              'MEDIUM',   'shell',      'sudo invocation'],
+      ['sql.drop-table',       'HIGH',     'sql',        'DROP TABLE'],
+      ['sql.delete-no-where',  'HIGH',     'sql',        'DELETE FROM ... without WHERE'],
+      ['secret.aws-access-key','CRITICAL', 'any',        'AWS access key (AKIA...)'],
+      ['secret.openai-key',    'CRITICAL', 'any',        'OpenAI API key (sk-...)'],
+      ['secret.anthropic-key', 'CRITICAL', 'any',        'Anthropic key (sk-ant-...)'],
+      ['secret.github-token',  'CRITICAL', 'any',        'GitHub token (ghp_ / gho_ / ...)'],
+      ['secret.private-key',   'CRITICAL', 'any',        'PEM private key block'],
+    ];
+    printTable(
+      ['RULE', 'SEVERITY', 'LANGUAGE', 'DESCRIPTION'],
+      [24, 10, 12, 60],
+      rules.map(([id, sev, lang, desc]) => [
+        id,
+        `${SEV_COLOR[sev] ?? ''}${sev}${RESET}`,
+        lang,
+        desc,
+      ]),
+    );
+    console.log(
+      '\n\x1b[2mLive rule catalog: POST /api/v1/code-shield/scan with code:"" returns nothing;\nuse `agentguard code-shield scan <file>` for actual scans.\x1b[0m',
+    );
+  });
+
+// ── doctor ───────────────────────────────────────────────────────────────────
+program
+  .command('doctor')
+  .description('Health probe — gateway, auth, policies, alignment, code-shield, DB writes')
+  .action(async () => {
+    interface Check {
+      name: string;
+      ok: boolean;
+      note?: string;
+    }
+    const checks: Check[] = [];
+    const base = gatewayUrl();
+    const key = apiKey();
+
+    console.log(`\nProbing AEGIS at ${base}\n`);
+
+    // 1. /health — anonymous, must respond
+    try {
+      const h = await request('GET', `${base}/health`, undefined, { noAuth: true });
+      const ok = !!h && (h.status === 'ok' || h.timestamp || h.tier);
+      checks.push({
+        name: 'gateway /health',
+        ok,
+        note: ok ? `tier=${h.tier ?? 'unknown'}, version=${h.version ?? '?'}` : 'unexpected payload',
+      });
+    } catch (e) {
+      checks.push({ name: 'gateway /health', ok: false, note: (e as Error).message });
+      // Without the gateway up, the rest of the probes are moot.
+      summarize(checks);
+      process.exit(2);
+    }
+
+    // 2. API key present + working — try /api/v1/stats (auth-required)
+    if (!key) {
+      checks.push({
+        name: 'api key configured',
+        ok: false,
+        note: 'no AGENTGUARD_API_KEY env var and no api_key in config — run `agentguard configure --url <url> --bootstrap`',
+      });
+    } else {
+      try {
+        const s = await request('GET', `${base}/api/v1/stats`);
+        const ok = !!s && typeof s === 'object' && !('error' in s);
+        checks.push({
+          name: 'api key authenticates',
+          ok,
+          note: ok ? `keyed-routes reachable (${key.slice(0, 8)}…)` : `auth failed: ${JSON.stringify(s).slice(0, 100)}`,
+        });
+      } catch (e) {
+        checks.push({ name: 'api key authenticates', ok: false, note: (e as Error).message });
+      }
+    }
+
+    // 3. Policies loaded
+    try {
+      const p = await request('GET', `${base}/api/v1/policies`);
+      const arr = Array.isArray(p) ? p : Array.isArray(p?.policies) ? p.policies : [];
+      checks.push({
+        name: 'policies loaded',
+        ok: arr.length > 0,
+        note: `${arr.length} policy entr${arr.length === 1 ? 'y' : 'ies'} active`,
+      });
+    } catch (e) {
+      checks.push({ name: 'policies loaded', ok: false, note: (e as Error).message });
+    }
+
+    // 4. Code-shield endpoint — confirm scan path is wired
+    try {
+      const r = await request(
+        'POST',
+        `${base}/api/v1/code-shield/scan`,
+        { code: 'eval(x)', language: 'python' },
+      );
+      const ok = !!r && Array.isArray((r as any).findings);
+      checks.push({
+        name: 'code-shield reachable',
+        ok,
+        note: ok ? `worst=${r.worst ?? 'null'}, ${r.unique_findings} finding(s) on canary` : 'unexpected payload',
+      });
+    } catch (e) {
+      checks.push({ name: 'code-shield reachable', ok: false, note: (e as Error).message });
+    }
+
+    // 5. Alignment endpoint — best-effort, may not be configured if no LLM key
+    try {
+      const r = await request('GET', `${base}/api/v1/alignment/recent?limit=1`);
+      const ok = !!r && Array.isArray((r as any).items);
+      checks.push({
+        name: 'alignment endpoint reachable',
+        ok,
+        note: ok
+          ? `recent endpoint OK (${(r as any).items.length} item(s) buffered)`
+          : `${JSON.stringify(r).slice(0, 100)}`,
+      });
+    } catch (e) {
+      checks.push({ name: 'alignment endpoint reachable', ok: false, note: (e as Error).message });
+    }
+
+    summarize(checks);
+    process.exit(checks.some((c) => !c.ok) ? 1 : 0);
+
+    function summarize(rows: Check[]) {
+      for (const c of rows) {
+        const mark = c.ok ? '\x1b[32m✓\x1b[0m' : '\x1b[31m✗\x1b[0m';
+        console.log(`  ${mark} ${c.name}`);
+        if (c.note) console.log(`      \x1b[2m${c.note}\x1b[0m`);
+      }
+      const failed = rows.filter((r) => !r.ok).length;
+      console.log();
+      if (failed === 0) {
+        console.log('\x1b[32mAll checks passed.\x1b[0m');
+      } else {
+        console.log(`\x1b[31m${failed} of ${rows.length} check(s) failed.\x1b[0m`);
+      }
+    }
   });
 
 // ── admin (enterprise management) ────────────────────────────────────────────
