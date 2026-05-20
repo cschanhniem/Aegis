@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, FileText, Shield, ScrollText, Sparkles,
   CheckCircle, AlertTriangle, Settings, FlaskConical,
-  ShieldHalf, Compass,
+  ShieldHalf, Compass, ClipboardList,
   Menu, X,
 } from 'lucide-react'
 import { useTraceStream } from '@/hooks/useTraceStream'
@@ -23,6 +23,7 @@ const navigation = [
   { name: 'DSL',         href: '/dsl',         icon: ScrollText      },
   { name: 'Code Shield', href: '/code-shield', icon: ShieldHalf      },
   { name: 'Alignment',   href: '/alignment',   icon: Compass         },
+  { name: 'Audit Log',   href: '/audit-log',   icon: ClipboardList   },
   { name: 'Approvals',   href: '/approvals',   icon: CheckCircle     },
   { name: 'Violations',  href: '/violations',  icon: AlertTriangle   },
   { name: 'Playground',  href: '/playground',  icon: FlaskConical    },

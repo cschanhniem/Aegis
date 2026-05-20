@@ -1,0 +1,324 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { gw } from '@/lib/gateway'
+import { FileText, Download, ChevronLeft, ChevronRight } from 'lucide-react'
+
+const BORDER  = 'hsl(var(--border))'
+const TEXT    = 'hsl(var(--foreground))'
+const MUTED   = 'hsl(var(--muted-foreground))'
+const SURFACE = 'hsl(var(--card))'
+const BG      = 'hsl(var(--background))'
+
+// Action filters cover the canonical kinds the gateway emits.
+// "All actions" leaves the filter unset.
+const ACTION_FILTERS: { label: string; value: string }[] = [
+  { label: 'All actions', value: '' },
+  { label: 'judge.trace (alignment + code-shield)', value: 'judge.trace' },
+  { label: 'tenant.config.update', value: 'tenant.config.update' },
+  { label: 'tenant.dsl.update', value: 'tenant.dsl.update' },
+  { label: 'tenant.dsl.delete', value: 'tenant.dsl.delete' },
+  { label: 'policy.create', value: 'policy.create' },
+  { label: 'policy.update', value: 'policy.update' },
+  { label: 'policy.delete', value: 'policy.delete' },
+  { label: 'approval.decide', value: 'approval.decide' },
+  { label: 'retention.update', value: 'retention.update' },
+  { label: 'retention.purge', value: 'retention.purge' },
+  { label: 'auth.bootstrap', value: 'auth.bootstrap' },
+]
+
+const RESOURCE_FILTERS: { label: string; value: string }[] = [
+  { label: 'Any resource', value: '' },
+  { label: 'agent', value: 'agent' },
+  { label: 'tenant', value: 'tenant' },
+  { label: 'policy', value: 'policy' },
+  { label: 'retention', value: 'retention' },
+]
+
+const PAGE_SIZE = 50
+
+interface AuditEntry {
+  id: number
+  org_id: string | null
+  user_email: string | null
+  action: string
+  resource_type: string | null
+  resource_id: string | null
+  details: string | null
+  ip_address: string | null
+  created_at: string
+}
+
+function fmtTime(s: string): string {
+  try {
+    return new Date(s + (s.endsWith('Z') ? '' : 'Z')).toLocaleString('en-US', {
+      year: 'numeric', month: 'short', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    })
+  } catch {
+    return s
+  }
+}
+
+function csvEscape(v: unknown): string {
+  if (v === null || v === undefined) return ''
+  const s = typeof v === 'string' ? v : JSON.stringify(v)
+  // Wrap in quotes if it contains comma / quote / newline; double-up internal quotes.
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`
+  return s
+}
+
+export function AuditLogView() {
+  const [action, setAction] = useState<string>('')
+  const [resourceType, setResourceType] = useState<string>('')
+  const [from, setFrom] = useState<string>('')
+  const [to, setTo] = useState<string>('')
+  const [offset, setOffset] = useState<number>(0)
+
+  // Reset pagination whenever filters change.
+  useEffect(() => {
+    setOffset(0)
+  }, [action, resourceType, from, to])
+
+  const queryParams = useMemo(() => {
+    const sp = new URLSearchParams()
+    sp.set('limit', String(PAGE_SIZE))
+    sp.set('offset', String(offset))
+    if (action) sp.set('action', action)
+    if (resourceType) sp.set('resource_type', resourceType)
+    if (from) sp.set('from', from)
+    if (to) sp.set('to', to)
+    return sp.toString()
+  }, [action, resourceType, from, to, offset])
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['audit-log', queryParams],
+    queryFn: async () => {
+      const res = await gw(`admin/audit-log?${queryParams}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return (await res.json()) as { entries: AuditEntry[]; total: number }
+    },
+    refetchInterval: 30_000,
+  })
+
+  const entries = data?.entries ?? []
+  const total = data?.total ?? 0
+
+  function exportCsv() {
+    const headers = [
+      'id', 'created_at', 'org_id', 'user_email', 'action',
+      'resource_type', 'resource_id', 'ip_address', 'details',
+    ]
+    const lines = [headers.join(',')]
+    for (const e of entries) {
+      let detailsPretty = ''
+      try {
+        detailsPretty = e.details ? JSON.stringify(JSON.parse(e.details)) : ''
+      } catch {
+        detailsPretty = e.details ?? ''
+      }
+      lines.push([
+        csvEscape(e.id),
+        csvEscape(e.created_at),
+        csvEscape(e.org_id),
+        csvEscape(e.user_email),
+        csvEscape(e.action),
+        csvEscape(e.resource_type),
+        csvEscape(e.resource_id),
+        csvEscape(e.ip_address),
+        csvEscape(detailsPretty),
+      ].join(','))
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `aegis-audit-log-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(a.href)
+  }
+
+  const start = total === 0 ? 0 : offset + 1
+  const end = Math.min(offset + PAGE_SIZE, total)
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-semibold" style={{ color: TEXT }}>
+          Audit Log
+        </h1>
+        <p className="text-sm mt-1" style={{ color: MUTED }}>
+          Tamper-evident record of every config change, alignment / code-shield
+          verdict, approval decision, and admin action. The SOC 2 evidence path.
+        </p>
+      </div>
+
+      {/* Filters */}
+      <div
+        className="rounded-md p-3 grid grid-cols-1 md:grid-cols-4 gap-2 items-end"
+        style={{ background: SURFACE, border: `1px solid ${BORDER}` }}
+      >
+        <div>
+          <label className="text-[10px] uppercase tracking-wider block mb-1" style={{ color: MUTED }}>
+            Action
+          </label>
+          <select
+            value={action}
+            onChange={(e) => setAction(e.target.value)}
+            className="w-full text-sm px-2 py-1.5 rounded-md border"
+            style={{ background: BG, borderColor: BORDER, color: TEXT }}
+          >
+            {ACTION_FILTERS.map((f) => (
+              <option key={f.value} value={f.value}>{f.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider block mb-1" style={{ color: MUTED }}>
+            Resource type
+          </label>
+          <select
+            value={resourceType}
+            onChange={(e) => setResourceType(e.target.value)}
+            className="w-full text-sm px-2 py-1.5 rounded-md border"
+            style={{ background: BG, borderColor: BORDER, color: TEXT }}
+          >
+            {RESOURCE_FILTERS.map((f) => (
+              <option key={f.value} value={f.value}>{f.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider block mb-1" style={{ color: MUTED }}>
+            From (ISO date)
+          </label>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="w-full text-sm px-2 py-1.5 rounded-md border"
+            style={{ background: BG, borderColor: BORDER, color: TEXT }}
+          />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider block mb-1" style={{ color: MUTED }}>
+            To (ISO date)
+          </label>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="w-full text-sm px-2 py-1.5 rounded-md border"
+            style={{ background: BG, borderColor: BORDER, color: TEXT }}
+          />
+        </div>
+      </div>
+
+      {/* Status row */}
+      <div
+        className="flex items-center justify-between text-xs px-3 py-2 rounded-md border"
+        style={{ background: SURFACE, borderColor: BORDER, color: MUTED }}
+      >
+        <span className="inline-flex items-center gap-1.5">
+          <FileText className="h-3.5 w-3.5" />
+          {isLoading ? 'Loading…' : `Showing ${start}–${end} of ${total.toLocaleString()}`}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportCsv}
+            disabled={entries.length === 0}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded border disabled:opacity-40"
+            style={{ background: BG, borderColor: BORDER, color: TEXT }}
+            title="Export current page as CSV"
+          >
+            <Download className="h-3 w-3" /> CSV (this page)
+          </button>
+          <button
+            disabled={offset === 0}
+            onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
+            className="inline-flex items-center px-2 py-1 rounded border disabled:opacity-40"
+            style={{ background: BG, borderColor: BORDER, color: TEXT }}
+          >
+            <ChevronLeft className="h-3 w-3" />
+          </button>
+          <button
+            disabled={offset + PAGE_SIZE >= total}
+            onClick={() => setOffset(offset + PAGE_SIZE)}
+            className="inline-flex items-center px-2 py-1 rounded border disabled:opacity-40"
+            style={{ background: BG, borderColor: BORDER, color: TEXT }}
+          >
+            <ChevronRight className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+
+      {/* Entries table */}
+      {error && (
+        <div
+          className="rounded-md p-3 text-xs"
+          style={{ background: SURFACE, border: `1px solid ${BORDER}`, color: 'hsl(var(--status-drift))' }}
+        >
+          Could not load audit log: {(error as Error).message}. The endpoint
+          requires the admin role — make sure your API key has it.
+        </div>
+      )}
+
+      {!error && (
+        <div
+          className="rounded-md overflow-hidden"
+          style={{ background: SURFACE, border: `1px solid ${BORDER}` }}
+        >
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                <th className="text-left px-3 py-2 font-medium" style={{ color: MUTED }}>Time</th>
+                <th className="text-left px-3 py-2 font-medium" style={{ color: MUTED }}>Action</th>
+                <th className="text-left px-3 py-2 font-medium" style={{ color: MUTED }}>Resource</th>
+                <th className="text-left px-3 py-2 font-medium" style={{ color: MUTED }}>Org / User</th>
+                <th className="text-left px-3 py-2 font-medium" style={{ color: MUTED }}>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((e) => (
+                <tr key={e.id} style={{ borderTop: `1px solid ${BORDER}` }}>
+                  <td className="px-3 py-1.5 align-top font-mono" style={{ color: MUTED, whiteSpace: 'nowrap' }}>
+                    {fmtTime(e.created_at)}
+                  </td>
+                  <td className="px-3 py-1.5 align-top font-mono" style={{ color: TEXT }}>
+                    {e.action}
+                  </td>
+                  <td className="px-3 py-1.5 align-top" style={{ color: TEXT }}>
+                    <span style={{ color: MUTED }}>{e.resource_type ?? '—'}</span>
+                    {e.resource_id && (
+                      <span className="font-mono ml-1" style={{ color: TEXT }}>
+                        {e.resource_id.length > 12 ? e.resource_id.slice(0, 8) + '…' : e.resource_id}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-1.5 align-top" style={{ color: MUTED }}>
+                    {e.org_id ?? '—'}{e.user_email ? ` · ${e.user_email}` : ''}
+                  </td>
+                  <td className="px-3 py-1.5 align-top font-mono text-[11px]" style={{ color: MUTED, maxWidth: '50ch' }}>
+                    <span className="block truncate" title={e.details ?? undefined}>
+                      {e.details ?? ''}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {entries.length === 0 && !isLoading && (
+                <tr>
+                  <td colSpan={5} className="px-3 py-8 text-center" style={{ color: MUTED }}>
+                    No entries match the current filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
