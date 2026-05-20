@@ -348,7 +348,7 @@ export function DashboardOverview() {
           <TabsTrigger value="activity">Agent Activity</TabsTrigger>
           <TabsTrigger value="live">Live Feed</TabsTrigger>
           <TabsTrigger value="anomalies">Anomalies</TabsTrigger>
-          <TabsTrigger value="alignment">Alignment</TabsTrigger>
+          <TabsTrigger value="alignment">Recent Audits</TabsTrigger>
           <TabsTrigger value="code-shield">Code Scans</TabsTrigger>
           <TabsTrigger value="violations">Violations</TabsTrigger>
           <TabsTrigger value="approvals">Approval Stats</TabsTrigger>
@@ -414,10 +414,10 @@ export function DashboardOverview() {
         <TabsContent value="alignment" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Agent Alignment</CardTitle>
+              <CardTitle>Recent Alignment Audits</CardTitle>
               <CardDescription>
-                LlamaFirewall-style chain-of-thought audits — has the agent
-                drifted from its declared goal?
+                Verdicts logged from <code className="font-mono">/api/v1/alignment/check</code> calls.
+                To audit a proposed action interactively, use the <a href="/alignment" className="underline">Alignment</a> page in the sidebar.
               </CardDescription>
             </CardHeader>
             <CardContent>
