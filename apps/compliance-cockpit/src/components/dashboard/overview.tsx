@@ -20,6 +20,7 @@ import { ViolationChart } from './violation-chart'
 import { ApprovalStats } from './approval-stats'
 import { AgentActivity } from './agent-activity'
 import { AnomalyPanel } from './anomaly-panel'
+import { AlignmentPanel } from './alignment-panel'
 import { CostPanel } from './cost-panel'
 import { EvalPanel } from './eval-panel'
 import { JudgePanel } from './judge-panel'
@@ -346,6 +347,7 @@ export function DashboardOverview() {
           <TabsTrigger value="activity">Agent Activity</TabsTrigger>
           <TabsTrigger value="live">Live Feed</TabsTrigger>
           <TabsTrigger value="anomalies">Anomalies</TabsTrigger>
+          <TabsTrigger value="alignment">Alignment</TabsTrigger>
           <TabsTrigger value="violations">Violations</TabsTrigger>
           <TabsTrigger value="approvals">Approval Stats</TabsTrigger>
           <TabsTrigger value="costs">Costs</TabsTrigger>
@@ -403,6 +405,21 @@ export function DashboardOverview() {
             </CardHeader>
             <CardContent>
               <AnomalyPanel />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="alignment" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Agent Alignment</CardTitle>
+              <CardDescription>
+                LlamaFirewall-style chain-of-thought audits — has the agent
+                drifted from its declared goal?
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AlignmentPanel />
             </CardContent>
           </Card>
         </TabsContent>

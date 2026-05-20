@@ -359,7 +359,7 @@ async function main() {
   // Agent alignment auditor — LlamaFirewall-style CoT inspection.
   // Standalone for v0.3 preview; SDKs that capture chain-of-thought
   // call this pre-execution and pass alignment.* into /check.
-  app.use('/api/v1/alignment', requireAuth, requireFeature('judge'), new AlignmentAPI(logger, auditLog).router);
+  app.use('/api/v1/alignment', requireAuth, requireFeature('judge'), new AlignmentAPI(logger, auditLog, db).router);
 
   // Kill-switch endpoints (auth required)
   app.post('/api/v1/kill-switch/revoke', requireAuth, async (req, res) => {

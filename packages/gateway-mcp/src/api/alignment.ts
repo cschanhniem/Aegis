@@ -12,6 +12,7 @@
 import { Router, Request, Response } from 'express';
 import { Logger } from 'pino';
 import { z } from 'zod';
+import Database from 'better-sqlite3';
 import {
   AlignmentChecker,
   AlignmentConfig,
@@ -72,6 +73,7 @@ export class AlignmentAPI {
   constructor(
     private logger: Logger,
     private auditLog: AuditLogService,
+    private db: Database.Database,
   ) {
     this.router = Router();
     this.setupRoutes();
@@ -122,6 +124,72 @@ export class AlignmentAPI {
           'alignment check failed',
         );
         return res.status(502).json({ error: msg });
+      }
+    });
+
+    /**
+     * GET /api/v1/alignment/recent?limit=20
+     *
+     * Returns the most recent alignment checks scoped to the current
+     * org. Pulls from `admin_audit_log` where action='judge.trace' and
+     * the details blob's `kind` field is 'alignment' — same surface
+     * the POST endpoint writes to.
+     */
+    this.router.get('/recent', (req: Request, res: Response) => {
+      const limit = Math.min(100, Math.max(1, Number(req.query.limit ?? 20)));
+      const orgId = (req as any).orgId ?? 'default';
+      try {
+        const rows = this.db
+          .prepare(
+            `SELECT id, org_id, user_email, action, resource_id, details, created_at
+             FROM admin_audit_log
+             WHERE action = 'judge.trace'
+               AND org_id = ?
+               AND json_extract(details, '$.kind') = 'alignment'
+             ORDER BY id DESC
+             LIMIT ?`,
+          )
+          .all(orgId, limit) as Array<{
+            id: number;
+            org_id: string | null;
+            user_email: string | null;
+            resource_id: string | null;
+            details: string;
+            created_at: string;
+          }>;
+
+        const items = rows
+          .map((r) => {
+            try {
+              const d = JSON.parse(r.details) as {
+                kind?: string;
+                score?: number;
+                drifted?: boolean;
+                signals?: string[];
+                model?: string;
+                reason?: string;
+              };
+              return {
+                id: r.id,
+                agent_id: r.resource_id,
+                created_at: r.created_at,
+                score: typeof d.score === 'number' ? d.score : null,
+                drifted: Boolean(d.drifted),
+                signals: Array.isArray(d.signals) ? d.signals : [],
+                model: d.model ?? null,
+                reason: d.reason ?? null,
+                user_email: r.user_email,
+              };
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean);
+
+        res.json({ items, limit });
+      } catch (err) {
+        this.logger.error({ err }, 'alignment recent query failed');
+        res.status(500).json({ error: (err as Error).message });
       }
     });
   }
