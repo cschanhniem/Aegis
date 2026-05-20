@@ -349,7 +349,7 @@ export function DashboardOverview() {
           <TabsTrigger value="live">Live Feed</TabsTrigger>
           <TabsTrigger value="anomalies">Anomalies</TabsTrigger>
           <TabsTrigger value="alignment">Alignment</TabsTrigger>
-          <TabsTrigger value="code-shield">Code Shield</TabsTrigger>
+          <TabsTrigger value="code-shield">Code Scans</TabsTrigger>
           <TabsTrigger value="violations">Violations</TabsTrigger>
           <TabsTrigger value="approvals">Approval Stats</TabsTrigger>
           <TabsTrigger value="costs">Costs</TabsTrigger>
@@ -429,11 +429,10 @@ export function DashboardOverview() {
         <TabsContent value="code-shield" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Code Shield</CardTitle>
+              <CardTitle>Recent Code Scans</CardTitle>
               <CardDescription>
-                Static checks on agent-generated code — exec/eval, secrets,
-                destructive shell, dangerous SQL, all caught locally before
-                they run.
+                Findings logged from <code className="font-mono">/api/v1/code-shield/scan</code> calls.
+                To scan a snippet interactively, use the <a href="/code-shield" className="underline">Code Shield</a> page in the sidebar.
               </CardDescription>
             </CardHeader>
             <CardContent>
