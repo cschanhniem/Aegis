@@ -9,6 +9,23 @@ versioning follows [SemVer](https://semver.org/).
 In flight on `main`, slated for the next release.
 
 ### Added
+- **`agentguard code-shield`** CLI subcommand — `scan FILE...`
+  posts each file to the gateway and prints severity-coloured
+  findings; respects `--language`, `--disable RULE_IDS`, and
+  `--fail-on LOW|MEDIUM|HIGH|CRITICAL` for pre-commit hooks and
+  CI. `agentguard code-shield rules` lists the catalog offline.
+- **`agentguard doctor`** — five-step health probe (gateway up,
+  API key authenticates, policies loaded, code-shield reachable,
+  alignment endpoint reachable). Exit 2 distinguishes
+  "unreachable" from "reachable but unhealthy" (exit 1).
+- `agentguard configure` gains `--api-key` and `--bootstrap`
+  flags; the shared HTTP helper now picks up
+  `AGENTGUARD_API_KEY` from env or the `api_key` field in
+  `~/.agentguard/cli.json`.
+- **DSL builtin examples** — two new starter docs returned by
+  `GET /api/v1/dsl/examples`: `block-unsafe-code-gen` (blocks on
+  `code_shield.worst == CRITICAL`) and `pause-on-alignment-drift`
+  (pending when `alignment.drifted` or `alignment.score < 0.5`).
 - **Cockpit dark mode** — full dark palette behind an explicit
   `.dark` class and `prefers-color-scheme: dark`; three-state
   Light / System / Dark switch in the sidebar footer; no-flash

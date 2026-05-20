@@ -625,7 +625,9 @@ Every `Read`, `Write`, `Bash`, `Edit` call is now policy-checked and traced. HIG
 ### CLI
 
 ```bash
+agentguard configure --url <url> --bootstrap   # fetch API key, persist locally
 agentguard status                    # gateway health
+agentguard doctor                    # 5-step health probe (gateway, auth, policies, code-shield, alignment)
 agentguard traces list --agent X     # query traces
 agentguard costs                     # token/cost summary
 agentguard anomalies list            # behavioral anomaly events
@@ -633,7 +635,9 @@ agentguard http-proxy                # start HTTP forward proxy
 agentguard mcp-proxy --server ...    # start MCP stdio proxy
 agentguard judge batch               # auto-evaluate unscored traces via LLM
 agentguard judge stats               # judge score statistics & trends
-agentguard scan [dir] [--fix]         # pre-publish supply chain scan
+agentguard scan [dir] [--fix]        # pre-publish supply chain scan
+agentguard code-shield scan FILE...  # static checks on agent-generated code (pre-commit / CI)
+agentguard code-shield rules         # list the 19 built-in CodeShield rules
 agentguard kill-switch revoke <id>   # emergency agent shutdown
 agentguard admin orgs                # list organizations (multi-tenant)
 agentguard admin create-org          # create a new tenant organization
