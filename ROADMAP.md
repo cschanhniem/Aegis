@@ -84,8 +84,10 @@ Closing the "this catches things other guardrails miss" gap.
   `prefers-color-scheme: dark` media query, with a three-state
   Light / System / Dark switch in the sidebar footer and a no-flash
   inline bootstrap that runs before paint.
-- [ ] **Tray click → specific unprotected agent** instead of just
-  the welcome list, when the user clicks the count "3".
+- [x] **Tray click → specific unprotected agent** — when the tray
+  badge shows N unprotected processes, clicking the tray now
+  routes to `/welcome?pid=<top>` and the matching card auto-
+  expands + scrolls into view with a 2s highlight ring.
 
 ---
 
