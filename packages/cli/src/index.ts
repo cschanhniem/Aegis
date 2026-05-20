@@ -691,44 +691,65 @@ codeShield
 codeShield
   .command('rules')
   .description('List built-in CodeShield rules and what each catches')
-  .action(async () => {
-    // The gateway doesn't expose a /rules endpoint yet; we hardcode the
-    // catalog summary here so this is usable offline as well. Stays in
-    // sync with packages/gateway-mcp/src/services/code-shield.ts.
-    const rules = [
-      ['py.exec',              'CRITICAL', 'python',     'exec(...) — arbitrary code execution'],
-      ['py.eval',              'CRITICAL', 'python',     'eval(...) — arbitrary expression eval'],
-      ['py.os.system',         'HIGH',     'python',     'os.system(...) shell command'],
-      ['py.subprocess.shell',  'HIGH',     'python',     'subprocess with shell=True'],
-      ['py.pickle.loads',      'HIGH',     'python',     'pickle.loads on untrusted input'],
-      ['js.eval',              'CRITICAL', 'javascript', 'eval(...) — arbitrary code execution'],
-      ['js.new-function',      'CRITICAL', 'javascript', 'new Function(...) — arbitrary code'],
-      ['js.child_process.exec','HIGH',     'javascript', 'child_process.exec / execSync'],
-      ['js.innerHTML',         'MEDIUM',   'javascript', 'innerHTML = var — DOM-based XSS'],
-      ['sh.rm-rf-root',        'CRITICAL', 'shell',      'rm -rf / or $HOME'],
-      ['sh.curl-pipe-sh',      'HIGH',     'shell',      'curl ... | sh — unverified install'],
-      ['sh.sudo',              'MEDIUM',   'shell',      'sudo invocation'],
-      ['sql.drop-table',       'HIGH',     'sql',        'DROP TABLE'],
-      ['sql.delete-no-where',  'HIGH',     'sql',        'DELETE FROM ... without WHERE'],
-      ['secret.aws-access-key','CRITICAL', 'any',        'AWS access key (AKIA...)'],
-      ['secret.openai-key',    'CRITICAL', 'any',        'OpenAI API key (sk-...)'],
-      ['secret.anthropic-key', 'CRITICAL', 'any',        'Anthropic key (sk-ant-...)'],
-      ['secret.github-token',  'CRITICAL', 'any',        'GitHub token (ghp_ / gho_ / ...)'],
-      ['secret.private-key',   'CRITICAL', 'any',        'PEM private key block'],
+  .option('--offline', 'Skip gateway lookup; print the bundled fallback catalog')
+  .action(async (opts: { offline?: boolean }) => {
+    interface RuleRow {
+      id: string;
+      severity: string;
+      language: string;
+      description: string;
+    }
+    // Fallback catalog — used when --offline or the gateway is
+    // unreachable. Kept short and in lockstep with the gateway's
+    // services/code-shield.ts; the canonical source is the live
+    // GET /api/v1/code-shield/rules endpoint.
+    const FALLBACK: RuleRow[] = [
+      { id: 'py.exec',              severity: 'CRITICAL', language: 'python',     description: 'exec(...) — arbitrary code execution' },
+      { id: 'py.eval',              severity: 'CRITICAL', language: 'python',     description: 'eval(...) — arbitrary expression eval' },
+      { id: 'py.os.system',         severity: 'HIGH',     language: 'python',     description: 'os.system(...) shell command' },
+      { id: 'py.subprocess.shell',  severity: 'HIGH',     language: 'python',     description: 'subprocess with shell=True' },
+      { id: 'py.pickle.loads',      severity: 'HIGH',     language: 'python',     description: 'pickle.loads on untrusted input' },
+      { id: 'js.eval',              severity: 'CRITICAL', language: 'javascript', description: 'eval(...) — arbitrary code execution' },
+      { id: 'js.new-function',      severity: 'CRITICAL', language: 'javascript', description: 'new Function(...) — arbitrary code' },
+      { id: 'js.child_process.exec',severity: 'HIGH',     language: 'javascript', description: 'child_process.exec / execSync' },
+      { id: 'js.innerHTML',         severity: 'MEDIUM',   language: 'javascript', description: 'innerHTML = var — DOM-based XSS' },
+      { id: 'sh.rm-rf-root',        severity: 'CRITICAL', language: 'shell',      description: 'rm -rf / or $HOME' },
+      { id: 'sh.curl-pipe-sh',      severity: 'HIGH',     language: 'shell',      description: 'curl ... | sh — unverified install' },
+      { id: 'sh.sudo',              severity: 'MEDIUM',   language: 'shell',      description: 'sudo invocation' },
+      { id: 'sql.drop-table',       severity: 'HIGH',     language: 'sql',        description: 'DROP TABLE' },
+      { id: 'sql.delete-no-where',  severity: 'HIGH',     language: 'sql',        description: 'DELETE FROM ... without WHERE' },
+      { id: 'secret.aws-access-key',severity: 'CRITICAL', language: 'any',        description: 'AWS access key (AKIA...)' },
+      { id: 'secret.openai-key',    severity: 'CRITICAL', language: 'any',        description: 'OpenAI API key (sk-...)' },
+      { id: 'secret.anthropic-key', severity: 'CRITICAL', language: 'any',        description: 'Anthropic key (sk-ant-...)' },
+      { id: 'secret.github-token',  severity: 'CRITICAL', language: 'any',        description: 'GitHub token (ghp_ / gho_ / ...)' },
+      { id: 'secret.private-key',   severity: 'CRITICAL', language: 'any',        description: 'PEM private key block' },
     ];
+
+    let rules: RuleRow[] = FALLBACK;
+    let source = 'bundled fallback';
+    if (!opts.offline) {
+      try {
+        const resp = await request('GET', `${gatewayUrl()}/api/v1/code-shield/rules`);
+        if (resp && Array.isArray((resp as { rules?: RuleRow[] }).rules)) {
+          rules = (resp as { rules: RuleRow[] }).rules;
+          source = `live: ${gatewayUrl()}`;
+        }
+      } catch {
+        // fall through to FALLBACK with the offline note
+      }
+    }
+
     printTable(
       ['RULE', 'SEVERITY', 'LANGUAGE', 'DESCRIPTION'],
       [24, 10, 12, 60],
-      rules.map(([id, sev, lang, desc]) => [
-        id,
-        `${SEV_COLOR[sev] ?? ''}${sev}${RESET}`,
-        lang,
-        desc,
+      rules.map((r) => [
+        r.id,
+        `${SEV_COLOR[r.severity] ?? ''}${r.severity}${RESET}`,
+        r.language,
+        r.description,
       ]),
     );
-    console.log(
-      '\n\x1b[2mLive rule catalog: POST /api/v1/code-shield/scan with code:"" returns nothing;\nuse `agentguard code-shield scan <file>` for actual scans.\x1b[0m',
-    );
+    console.log(`\n\x1b[2m${rules.length} rule(s) · source: ${source}\x1b[0m`);
   });
 
 // ── doctor ───────────────────────────────────────────────────────────────────

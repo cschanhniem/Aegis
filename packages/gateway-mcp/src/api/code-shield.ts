@@ -11,7 +11,7 @@ import { Router, Request, Response } from 'express';
 import { Logger } from 'pino';
 import { z } from 'zod';
 import Database from 'better-sqlite3';
-import { CodeShield, CodeShieldLanguage } from '../services/code-shield';
+import { CodeShield, CodeShieldLanguage, DEFAULT_RULES } from '../services/code-shield';
 import { AuditLogService } from '../services/audit-log';
 
 const ScanRequestSchema = z.object({
@@ -70,6 +70,28 @@ export class CodeShieldAPI {
         this.logger.error({ err }, 'code-shield scan failed');
         res.status(500).json({ error: (err as Error).message });
       }
+    });
+
+    /**
+     * GET /api/v1/code-shield/rules
+     *
+     * Returns the full rule catalog. CLI / Cockpit / SDKs can read
+     * this to render an authoritative list without each surface
+     * keeping its own hardcoded copy that drifts over time.
+     */
+    this.router.get('/rules', (_req: Request, res: Response) => {
+      res.json({
+        count: DEFAULT_RULES.length,
+        rules: DEFAULT_RULES.map((r) => ({
+          id: r.id,
+          description: r.description,
+          severity: r.severity,
+          language: r.language,
+          cwe: r.cwe,
+          // We deliberately don't expose the regex source — keeps the
+          // contract about what each rule *catches*, not how.
+        })),
+      });
     });
 
     /**
