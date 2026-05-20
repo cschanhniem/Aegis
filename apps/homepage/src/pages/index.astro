@@ -82,6 +82,35 @@ import { sortedPosts as posts } from '@/data/posts';
           <span class="d-block">block</span>. Defaults can be tightened, never relaxed.
         </figcaption>
       </figure>
+      <div class="recently-shipped">
+        <p class="section-eyebrow inline">Recently shipped on main</p>
+        <ul class="shipped-list">
+          <li>
+            <strong>Code Shield</strong> — fast local regex scanner for
+            agent-generated code. 19 high-precision rules across Python,
+            JS, shell, SQL, and cross-language secrets. Sub-millisecond
+            per scan, drives the new
+            <code>code_shield.worst</code> DSL signal.
+          </li>
+          <li>
+            <strong>Closed-loop alignment</strong> — LangChain
+            <code>AlignmentCallback</code> verdicts now flow into the
+            synchronous <code>/check</code> on the same hop, so DSL
+            rules like
+            <code>{`{ alignment.drifted: true }`}</code> fire without
+            user-side wiring.
+          </li>
+          <li>
+            <strong>Alignment auditor</strong> — chain-of-thought drift
+            detection in the Cockpit, with a dedicated Alignment tab
+            and audit-trail evidence per verdict.
+          </li>
+        </ul>
+        <p class="section-foot">
+          See the full <a href="https://github.com/Justin0504/Aegis/blob/main/ROADMAP.md">roadmap</a>
+          and <a href="https://github.com/Justin0504/Aegis/blob/main/CHANGELOG.md">changelog</a>.
+        </p>
+      </div>
     </section>
 
     <hr />
@@ -187,6 +216,44 @@ import { sortedPosts as posts } from '@/data/posts';
       letter-spacing: 0.13em;
       margin: 0 0 0.7rem;
       font-weight: 500;
+    }
+    .section-eyebrow.inline {
+      margin: 0 0 0.4rem;
+    }
+
+    /* Recently shipped ───────────────────────────────── */
+    .recently-shipped {
+      margin: 2.4rem 0 0;
+      padding: 1.4rem 1.6rem;
+      border: 1px solid var(--hairline);
+      border-radius: 4px;
+      background: var(--surface, transparent);
+    }
+    .shipped-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .shipped-list li {
+      font-size: 0.96rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .shipped-list strong {
+      font-weight: 600;
+    }
+    .shipped-list code {
+      font-family: var(--font-mono, ui-monospace, "SF Mono", monospace);
+      font-size: 0.86em;
+      color: var(--muted);
+    }
+    .section-foot {
+      margin: 1.1rem 0 0;
+      font-size: 0.86rem;
+      color: var(--muted);
     }
     section h2 {
       font-size: 2.4rem;
