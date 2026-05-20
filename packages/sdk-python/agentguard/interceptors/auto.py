@@ -51,14 +51,30 @@ class AutoInstrument:
 
     def _build_check_payload(self, tool_name: str, arguments: dict) -> bytes:
         cfg = self._guard.config
-        return _json_mod.dumps({
-            "agent_id":                str(self._guard._agent_uuid),
+        agent_id = str(self._guard._agent_uuid)
+        payload: Dict[str, Any] = {
+            "agent_id":                agent_id,
             "tool_name":               tool_name,
             "arguments":               arguments,
             "environment":             getattr(cfg, 'environment', 'DEVELOPMENT'),
             "blocking":                True,
             "user_category_overrides": getattr(cfg, 'tool_categories', {}),
-        }).encode()
+        }
+        # If a LangChain AlignmentCallback (or any other observer) has
+        # buffered a fresh verdict for this agent, splice it in so the
+        # gateway's DSL rules can react on the same /check round-trip.
+        # Import is lazy so the interceptor doesn't depend on
+        # LangChain being installed.
+        try:
+            from ..integrations import _alignment_state
+            verdict = _alignment_state.consume(agent_id)
+        except ImportError:
+            verdict = None
+        if verdict:
+            alignment_payload = _alignment_state.to_check_payload(verdict)
+            if alignment_payload:
+                payload["alignment"] = alignment_payload
+        return _json_mod.dumps(payload).encode()
 
     def _raise_if_blocked(self, tool_name: str, result: dict) -> Optional[tuple]:
         """Returns (check_id, risk_level, category) if pending, raises if blocked."""

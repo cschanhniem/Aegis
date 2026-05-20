@@ -5,7 +5,7 @@ partners, and anyone wondering whether AEGIS is alive (it is — see
 [releases](https://github.com/Justin0504/Aegis/releases) and
 the commit graph).
 
-Last updated: 2026-05-20 · Current release: **v0.1.0**
+Last updated: 2026-05-20 · Current release: **v0.1.0** · On `main`: closed-loop alignment + CodeShield landed (see [CHANGELOG](CHANGELOG.md))
 
 ## Now (v0.1)
 
@@ -61,19 +61,24 @@ loop.
 
 Closing the "this catches things other guardrails miss" gap.
 
-- [ ] **Agent alignment auditor.** Inspect the agent's
+- [x] **Agent alignment auditor.** Inspect the agent's
   chain-of-thought trace for goal divergence (drift from the
-  declared task). LlamaFirewall has a version of this; AEGIS will
-  have one with first-class DSL integration and audit-trail
+  declared task). LlamaFirewall has a version of this; AEGIS now
+  has one with first-class DSL integration and audit-trail
   evidence. Surfaces as a new signal in the L3 layer + an
-  `alignment.score` field for the DSL evaluator.
+  `alignment.score` field for the DSL evaluator. _Closed-loop
+  bridge landed on `main`: LangChain callback verdicts flow into
+  `/check` automatically via an in-process 30 s buffer._
 - [ ] **PromptGuard-2-equivalent ML layer.** Currently L2 is an
   XGBoost classifier over 15 structural features. The v0.3 update
   adds an optional DeBERTa / ModernBERT jailbreak detector that
   runs in parallel and contributes to the cascade.
-- [ ] **CodeShield (Semgrep) integration.** For agents that
-  generate code, scan the generated output before it lands in a
-  PR / runs in a shell. New AEGIS category: `code-gen`.
+- [x] **CodeShield v1.** Fast, local-only regex scanner for
+  agent-generated code. 19 high-precision rules across Python /
+  JS / shell / SQL / secrets. Exposed at
+  `POST /api/v1/code-shield/scan`. Sub-millisecond per scan; no
+  LLM, no subprocess. The Semgrep-backed v2 (taint analysis,
+  AST-aware passes) is still on the roadmap for v0.4.
 - [ ] **Cockpit dark mode (proper).** Right now the Cockpit's
   warm-cream palette flips correctly via CSS variables but
   individual panels haven't all been audited for contrast in the

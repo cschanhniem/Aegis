@@ -1,6 +1,7 @@
 """
 LangChain integration — capture chain-of-thought, post to AEGIS for
-alignment auditing.
+alignment auditing, and feed the verdict back into the synchronous
+``/check`` blocking decision.
 
 Usage:
 
@@ -18,17 +19,16 @@ Usage:
 
 Each time the LangChain agent emits an action (thought + tool call),
 the callback POSTs the accumulated thought chain and the proposed
-action to `/api/v1/alignment/check`. The verdict shows up in the
-Cockpit's "Alignment" tab. Optionally log the score to stdout for
-local debugging.
+action to ``/api/v1/alignment/check``. The verdict shows up in the
+Cockpit's "Alignment" tab.
 
-Wiring the alignment verdict into the synchronous `/check` decision
-in the same hop would require bridging LangChain's sync callbacks
-with `agentguard.auto()`'s async interceptor — see the SDK
-follow-up in ROADMAP v0.3. For now this surface is observer-only;
-DSL rules that reference `alignment.*` will only fire when /check
-is called with the field explicitly populated (e.g. from your own
-agent wrapper).
+Closed loop: the callback also stores the verdict in a small in-
+process buffer keyed by ``agent_id``. When the SDK's
+auto-instrumentation interceptor next calls ``/check`` for the same
+agent, it picks up the fresh verdict (≤ 30s old, single-use) and
+attaches it under ``alignment`` so DSL rules like
+``alignment.score < 0.5`` will fire on the same hop that LangChain
+would otherwise have allowed. No extra wiring on the user side.
 """
 
 from __future__ import annotations
@@ -53,6 +53,8 @@ except ImportError as e:  # pragma: no cover
     raise ImportError(
         "AlignmentCallback requires httpx (a core SDK dep; reinstall agentguard-aegis)."
     ) from e
+
+from . import _alignment_state
 
 
 class AlignmentCallback(BaseCallbackHandler):
@@ -171,6 +173,10 @@ class AlignmentCallback(BaseCallbackHandler):
                 return
             result = resp.json()
             self.last_result = result
+            # Bridge to the auto-instrumentation /check path: drop
+            # the verdict into the shared buffer so the next
+            # synchronous /check for this agent picks it up.
+            _alignment_state.record(self.agent_id, result)
             if self.verbose:
                 drifted = "DRIFTED" if result.get("drifted") else "ok"
                 score = result.get("score")
