@@ -47,21 +47,29 @@ npm run build
 
 Outputs land in `src-tauri/target/release/bundle/`.
 
-## Building a release bundle (Phase A.2.4 — manual for now)
+## Building a release bundle
 
 ```bash
-# 1. Stage the sidecars
-apps/desktop/scripts/prepare-sidecars.sh
-# Produces: apps/desktop/sidecar-stage/{cockpit-static,gateway-bin,node-runtime}
+# Just the .app (faster, what you usually want for iterative testing)
+cd apps/desktop && cargo tauri build --bundles app
+#  → src-tauri/target/release/bundle/macos/AEGIS.app          (~388 MB)
 
-# 2. Uncomment the bundle.resources block in src-tauri/tauri.conf.json
-#    (it's annotated; Tauri's schema rejects globs that don't match any file,
-#    which is why we ship the config with the block stripped until step 1 runs)
-
-# 3. Run the actual bundle
-cd apps/desktop && cargo tauri build
-# Outputs land in src-tauri/target/release/bundle/
+# .dmg packager (pure hdiutil — no AppleScript / no Finder automation prompt)
+cd apps/desktop && bash scripts/make-dmg.sh
+#  → src-tauri/target/release/bundle/dmg/AEGIS_<version>_<arch>.dmg  (~171 MB)
 ```
+
+### Why a custom make-dmg.sh?
+
+Tauri's built-in `bundle_dmg.sh` calls `osascript` to set the Finder
+window layout (drag-to-Applications icon positions, background image,
+etc.). That AppleEvents call needs `System Settings → Privacy &
+Security → Automation → Terminal → Finder` to be granted on the
+build machine, which CI / non-interactive shells don't have. Our
+`make-dmg.sh` skips the prettification entirely and uses raw
+`hdiutil` — the resulting DMG mounts, contains AEGIS.app and an
+`/Applications` symlink, and drag-installs as users expect. Less
+pretty, more reliable.
 
 ## What still needs to happen
 

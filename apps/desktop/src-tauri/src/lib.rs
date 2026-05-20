@@ -15,6 +15,8 @@ use sidecars::{Sidecars, COCKPIT_URL};
 #[cfg(debug_assertions)]
 use sidecars::Sidecars;
 
+use std::sync::Arc;
+use std::time::Duration;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
@@ -50,6 +52,9 @@ pub fn run() {
             }
 
             // ── System tray ──────────────────────────────────────────────
+            // `label_status` is kept around in a shared handle so the
+            // background scanner task can rewrite it every 30 s with a live
+            // count of unprotected agent processes.
             let open_item = MenuItem::with_id(app, "open", "Open AEGIS", true, None::<&str>)?;
             let toggle_item = MenuItem::with_id(
                 app,
@@ -58,13 +63,18 @@ pub fn run() {
                 true,
                 None::<&str>,
             )?;
-            let separator_label =
-                MenuItem::with_id(app, "label_status", "Status: gateway not detected", false, None::<&str>)?;
+            let separator_label = Arc::new(MenuItem::with_id(
+                app,
+                "label_status",
+                "Scanning for agents…",
+                false,
+                None::<&str>,
+            )?);
             let quit_item = MenuItem::with_id(app, "quit", "Quit AEGIS", true, None::<&str>)?;
 
             let menu = Menu::with_items(
                 app,
-                &[&separator_label, &open_item, &toggle_item, &quit_item],
+                &[separator_label.as_ref(), &open_item, &toggle_item, &quit_item],
             )?;
 
             let _tray = TrayIconBuilder::with_id("main-tray")
@@ -97,6 +107,37 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+
+            // ── Background scanner: refresh tray badge every 30 s ──────────
+            // On macOS, set_title() puts text next to the menubar icon — that
+            // gives us the "360-style" badge without per-pixel icon work.
+            // Linux/Windows trays will skip the title (no-op).
+            let handle = app.handle().clone();
+            let status_item = Arc::clone(&separator_label);
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    let candidates = scanner::scan();
+                    let count = candidates.len();
+                    let label = if count == 0 {
+                        "No unprotected agents detected".to_string()
+                    } else if count == 1 {
+                        "1 unprotected agent detected".to_string()
+                    } else {
+                        format!("{count} unprotected agents detected")
+                    };
+                    let _ = status_item.set_text(&label);
+                    if let Some(tray) = handle.tray_by_id("main-tray") {
+                        // macOS-only: empty title clears the badge.
+                        let badge = if count == 0 {
+                            None
+                        } else {
+                            Some(count.to_string())
+                        };
+                        let _ = tray.set_title(badge.as_deref());
+                    }
+                    tokio::time::sleep(Duration::from_secs(30)).await;
+                }
+            });
 
             Ok(())
         })
