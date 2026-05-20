@@ -268,6 +268,50 @@ describe('DslEvaluator', () => {
       ]).evaluate(baseCtx)?.decision,
     ).toBe('pending');
   });
+
+  test('code_shield.worst comparator (block on CRITICAL)', () => {
+    const ctx: DslContext = {
+      ...baseCtx,
+      code_shield: { worst: 'CRITICAL', findings_count: 2, rules: ['py.exec'] },
+    };
+    expect(
+      ev([
+        {
+          name: 'block-critical-code',
+          when: { 'code_shield.worst': 'CRITICAL' },
+          then: { decision: 'block', reason: 'unsafe code generation' },
+        },
+      ]).evaluate(ctx)?.decision,
+    ).toBe('block');
+  });
+
+  test('code_shield.findings_count comparator', () => {
+    const ctx: DslContext = {
+      ...baseCtx,
+      code_shield: { worst: 'MEDIUM', findings_count: 4 },
+    };
+    expect(
+      ev([
+        {
+          name: 'pending-multiple-findings',
+          when: { 'code_shield.findings_count': { '>': 2 } },
+          then: { decision: 'pending' },
+        },
+      ]).evaluate(ctx)?.decision,
+    ).toBe('pending');
+  });
+
+  test('code_shield missing → rule does not match (no false positives)', () => {
+    expect(
+      ev([
+        {
+          name: 'block-on-shield',
+          when: { 'code_shield.worst': 'CRITICAL' },
+          then: { decision: 'block' },
+        },
+      ]).evaluate(baseCtx),
+    ).toBeNull();
+  });
 });
 
 // ── strictest helper ─────────────────────────────────────────────────────────

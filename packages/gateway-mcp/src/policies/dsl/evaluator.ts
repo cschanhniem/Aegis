@@ -45,6 +45,18 @@ export interface DslContext {
     reason?: string;
     [k: string]: unknown;
   };
+  /**
+   * Optional CodeShield signal — present when the caller ran
+   * /api/v1/code-shield/scan on generated code before invoking the
+   * tool. Rules can match on `code_shield.worst == "CRITICAL"` or
+   * `code_shield.findings_count > 0`.
+   */
+  code_shield?: {
+    worst?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | null;
+    findings_count?: number;
+    rules?: string[];
+    [k: string]: unknown;
+  };
   tool?: {
     name?: string;
     args?: Record<string, unknown>;

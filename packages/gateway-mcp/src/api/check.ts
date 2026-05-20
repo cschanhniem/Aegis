@@ -64,6 +64,17 @@ const CheckRequestSchema = z.object({
     signals:  z.array(z.string().max(40)).max(5).optional(),
     reason:   z.string().max(500).optional(),
   }).optional(),
+  /**
+   * Optional CodeShield evidence — only present when the caller is a
+   * code-generating agent and has run /api/v1/code-shield/scan on the
+   * code it's about to commit or exec. Drives DSL rules like
+   * `code_shield.worst == "CRITICAL"`.
+   */
+  code_shield: z.object({
+    worst:           z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).nullable().optional(),
+    findings_count:  z.number().int().nonnegative().optional(),
+    rules:           z.array(z.string().max(80)).max(64).optional(),
+  }).optional(),
 })
 
 // Risk levels that trigger human-review when blocking=true
@@ -275,6 +286,9 @@ export class CheckAPI {
             // Optional alignment evidence — only present if the caller
             // pre-computed it via /api/v1/alignment/check.
             alignment: body.alignment ?? undefined,
+            // Optional CodeShield evidence — only present if the caller
+            // pre-scanned generated code via /api/v1/code-shield/scan.
+            code_shield: body.code_shield ?? undefined,
             policy: {
               passed: validation.passed,
               riskLevel: validation.risk_level,
