@@ -21,6 +21,7 @@ import { ApprovalStats } from './approval-stats'
 import { AgentActivity } from './agent-activity'
 import { AnomalyPanel } from './anomaly-panel'
 import { AlignmentPanel } from './alignment-panel'
+import { CodeShieldPanel } from './code-shield-panel'
 import { CostPanel } from './cost-panel'
 import { EvalPanel } from './eval-panel'
 import { JudgePanel } from './judge-panel'
@@ -348,6 +349,7 @@ export function DashboardOverview() {
           <TabsTrigger value="live">Live Feed</TabsTrigger>
           <TabsTrigger value="anomalies">Anomalies</TabsTrigger>
           <TabsTrigger value="alignment">Alignment</TabsTrigger>
+          <TabsTrigger value="code-shield">Code Shield</TabsTrigger>
           <TabsTrigger value="violations">Violations</TabsTrigger>
           <TabsTrigger value="approvals">Approval Stats</TabsTrigger>
           <TabsTrigger value="costs">Costs</TabsTrigger>
@@ -420,6 +422,22 @@ export function DashboardOverview() {
             </CardHeader>
             <CardContent>
               <AlignmentPanel />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="code-shield" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Code Shield</CardTitle>
+              <CardDescription>
+                Static checks on agent-generated code — exec/eval, secrets,
+                destructive shell, dangerous SQL, all caught locally before
+                they run.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CodeShieldPanel />
             </CardContent>
           </Card>
         </TabsContent>

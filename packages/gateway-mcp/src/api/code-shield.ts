@@ -10,6 +10,7 @@
 import { Router, Request, Response } from 'express';
 import { Logger } from 'pino';
 import { z } from 'zod';
+import Database from 'better-sqlite3';
 import { CodeShield, CodeShieldLanguage } from '../services/code-shield';
 import { AuditLogService } from '../services/audit-log';
 
@@ -28,6 +29,7 @@ export class CodeShieldAPI {
   constructor(
     private logger: Logger,
     private auditLog: AuditLogService,
+    private db?: Database.Database,
   ) {
     this.router = Router();
     const shield = new CodeShield(logger);
@@ -66,6 +68,71 @@ export class CodeShieldAPI {
         res.json(result);
       } catch (err) {
         this.logger.error({ err }, 'code-shield scan failed');
+        res.status(500).json({ error: (err as Error).message });
+      }
+    });
+
+    /**
+     * GET /api/v1/code-shield/recent?limit=20
+     *
+     * Pulls the most recent code-shield findings from admin_audit_log
+     * (where kind='code_shield'), scoped to the caller's org. Mirrors
+     * /alignment/recent so the Cockpit can render a panel without a
+     * separate table.
+     */
+    this.router.get('/recent', (req: Request, res: Response) => {
+      if (!this.db) {
+        return res.status(503).json({ error: 'audit database unavailable' });
+      }
+      const limit = Math.min(100, Math.max(1, Number(req.query.limit ?? 20)));
+      const orgId = (req as any).orgId ?? 'default';
+      try {
+        const rows = this.db
+          .prepare(
+            `SELECT id, org_id, user_email, action, resource_id, details, created_at
+             FROM admin_audit_log
+             WHERE action = 'judge.trace'
+               AND org_id = ?
+               AND json_extract(details, '$.kind') = 'code_shield'
+             ORDER BY id DESC
+             LIMIT ?`,
+          )
+          .all(orgId, limit) as Array<{
+            id: number;
+            org_id: string | null;
+            user_email: string | null;
+            resource_id: string | null;
+            details: string;
+            created_at: string;
+          }>;
+
+        const items = rows
+          .map((r) => {
+            try {
+              const d = JSON.parse(r.details) as {
+                kind?: string;
+                worst?: string;
+                unique_findings?: number;
+                rules?: string[];
+              };
+              return {
+                id: r.id,
+                agent_id: r.resource_id,
+                created_at: r.created_at,
+                worst: d.worst ?? null,
+                findings_count: typeof d.unique_findings === 'number' ? d.unique_findings : 0,
+                rules: Array.isArray(d.rules) ? d.rules : [],
+                user_email: r.user_email,
+              };
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean);
+
+        res.json({ items, limit });
+      } catch (err) {
+        this.logger.error({ err }, 'code-shield recent query failed');
         res.status(500).json({ error: (err as Error).message });
       }
     });

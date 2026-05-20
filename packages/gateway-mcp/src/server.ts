@@ -364,7 +364,7 @@ async function main() {
 
   // CodeShield — fast local regex scanner for agent-generated code.
   // No LLM, no subprocess: every scan is sub-millisecond.
-  app.use('/api/v1/code-shield', requireAuth, new CodeShieldAPI(logger, auditLog).router);
+  app.use('/api/v1/code-shield', requireAuth, new CodeShieldAPI(logger, auditLog, db).router);
 
   // Kill-switch endpoints (auth required)
   app.post('/api/v1/kill-switch/revoke', requireAuth, async (req, res) => {
