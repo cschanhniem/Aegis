@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "bash -c 'cd \"$(git rev-parse --show-toplevel)\" && bash apps/desktop/scripts/prepare-sidecars.sh'",
+    "beforeBuildCommand": "node ../scripts/prepare-sidecars.mjs",
     "frontendDist": "frontend"
   },
   "app": {

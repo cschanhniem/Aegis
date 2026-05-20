@@ -206,10 +206,9 @@ jobs:
       - name: Install Tauri CLI
         run: cargo install tauri-cli --version "^2.0" --locked
 
-      - name: Stage sidecars (Git Bash)
-        shell: bash
+      - name: Stage sidecars
         working-directory: apps/desktop
-        run: bash scripts/prepare-sidecars.sh
+        run: node scripts/prepare-sidecars.mjs
 
       - name: Build .msi
         working-directory: apps/desktop
