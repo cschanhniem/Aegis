@@ -314,6 +314,54 @@ Per-tenant config is stored in `organizations.settings`, hot-reloads via
 an in-process ConfigBus, and every change is recorded in the admin audit
 log.
 
+### Agent Alignment Auditor
+
+For agents whose chain-of-thought you can see (LangChain / ReAct, CrewAI),
+AEGIS audits each proposed action against the **declared goal** of the
+current run. If the agent silently grew a hidden sub-task (`scope-expansion`)
+or its reasoning no longer matches the user's request (`drift`), the verdict
+shows up in the Cockpit's Alignment tab *and* feeds straight into the
+Policy DSL:
+
+```yaml
+rules:
+  - name: pause-on-drift
+    when:
+      any:
+        - alignment.score: { "<": 0.5 }
+        - alignment.drifted: true
+    then: { decision: pending, reason: "agent drifted from declared goal" }
+```
+
+**Closed loop on LangChain** — the `AlignmentCallback` records each verdict
+into a small in-process buffer; the SDK's auto-instrumentation reads it on
+the next `/check` so DSL rules fire on the *same* hop without any extra
+wiring in user code.
+
+### Code Shield
+
+Agents that write code now get a fast pre-execution scan. AEGIS runs 19
+curated regex rules across Python, JavaScript, shell, SQL, and cross-
+language secret formats — `exec` / `eval`, `subprocess(shell=True)`,
+`rm -rf /`, `DROP TABLE` without a `WHERE`, leaked AWS / OpenAI /
+GitHub keys, PEM private blocks, and friends. Sub-millisecond per scan,
+no LLM round-trip.
+
+```bash
+curl -X POST $GATEWAY/api/v1/code-shield/scan \
+  -H "X-API-Key: $KEY" \
+  -d '{"language": "python", "code": "exec(input())"}'
+# → { "worst": "CRITICAL", "findings": [...], "rules": ["py.exec"] }
+```
+
+The worst severity flows into the DSL too:
+
+```yaml
+- name: block-critical-codegen
+  when: { code_shield.worst: CRITICAL }
+  then: { decision: block, reason: "unsafe code generation" }
+```
+
 ### Behavioral Anomaly Detection
 
 AEGIS builds a behavioral profile for each agent and flags deviations in real time — no manual rules required.
