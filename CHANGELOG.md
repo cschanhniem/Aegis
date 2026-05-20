@@ -9,6 +9,31 @@ versioning follows [SemVer](https://semver.org/).
 In flight on `main`, slated for the next release.
 
 ### Added
+- **`/alignment` standalone Cockpit page** — interactive composer for
+  declared-goal + thought-chain + tool-call, runs through the same
+  `/api/v1/alignment/check` endpoint as the SDK callbacks. Three
+  starters cover on-task and two flavours of drift. Dashboard's
+  prior "Alignment" tab renamed to "Recent Audits" so the
+  interactive page and the passive findings panel don't collide.
+- **Framework-agnostic alignment helper** — `agentguard.integrations.
+  alignment.check(...)` mirrors the existing code_shield helper:
+  POSTs to `/api/v1/alignment/check`, validates inputs, buffers
+  the verdict for the closed-loop bridge. Pair with the JS-side
+  `alignmentCheck()` in `@justinnn/agentguard`. Reach for this
+  when you're not on LangChain or CrewAI.
+- **JS alignment helper + 15 tests** — `@justinnn/agentguard` now
+  exports `alignmentCheck` / `alignmentConsume` and the same
+  closed-loop bridge plumbs the verdict into the next `/check`.
+  JS SDK suite grew 17 → 32 tests.
+- **Demo seed populates Code Scans + (opt-in) Alignment tabs.**
+  `python demo/seed.py` now also hits `/code-shield/scan` for each
+  agent, so a fresh install's dashboard isn't empty on those two
+  tabs. Bootstrap API key automatically if none provided.
+  `--include-alignment` opts in to LLM-paid alignment seed.
+- **Framework-agnostic example** at
+  `packages/sdk-python/examples/custom_agent_alignment.py` —
+  hand-rolled 3-step ReAct loop that exercises both helpers on
+  drift / clean / code-gen patterns.
 - **`agentguard code-shield`** CLI subcommand — `scan FILE...`
   posts each file to the gateway and prints severity-coloured
   findings; respects `--language`, `--disable RULE_IDS`, and
