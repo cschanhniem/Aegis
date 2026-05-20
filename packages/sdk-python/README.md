@@ -72,6 +72,88 @@ agentguard.auto(
 - LlamaIndex
 - smolagents
 
+### Code Shield — static checks on agent-generated code
+
+```python
+from agentguard.integrations.code_shield import scan
+
+result = scan(
+    code="exec(user_input)",
+    language="python",
+    agent_id="my-agent",
+    gateway_url="http://localhost:8080",
+)
+# → {"worst": "CRITICAL", "findings": [...], "rules": ["py.exec"], ...}
+```
+
+Sub-millisecond, no LLM round-trip. 19 curated regex rules covering
+`eval` / `exec` / `subprocess` / `rm -rf` / hardcoded AWS·OpenAI·Anthropic·GitHub keys / PEM private blocks / dangerous SQL / DOM XSS.
+
+The verdict is also buffered in-process keyed by `agent_id`; the
+SDK's auto-instrumentation interceptor reads it on the next `/check`
+and splices it under `code_shield.*` so Policy DSL rules like
+`{ code_shield.worst: CRITICAL }` fire on the same hop.
+
+### Alignment — does the next tool call serve the declared goal?
+
+For agents whose chain-of-thought you can see, AEGIS audits each
+proposed action against a declared goal and tags drift signals.
+
+**LangChain / CrewAI** — drop in a callback, zero extra wiring:
+
+```python
+from agentguard.integrations.langchain import AlignmentCallback
+executor = AgentExecutor(
+    agent=agent, tools=tools,
+    callbacks=[AlignmentCallback(
+        gateway_url="http://localhost:8080",
+        agent_id="my-agent",
+        declared_goal="Summarise this week's customer-feedback survey.",
+    )],
+)
+```
+
+```python
+from agentguard.integrations.crewai import make_alignment_step_callback
+cb = make_alignment_step_callback(
+    gateway_url="http://localhost:8080",
+    agent_id="my-agent",
+    declared_goal="Summarise this week's customer-feedback survey.",
+)
+researcher = Agent(..., step_callback=cb)
+```
+
+**Any other framework** (autogen, pydantic-ai, custom loops) — the
+framework-agnostic helper:
+
+```python
+from agentguard.integrations.alignment import check
+
+verdict = check(
+    agent_id="my-agent",
+    declared_goal="Summarise this week's customer-feedback survey.",
+    thought_chain=["Thought: I should fetch the survey first."],
+    proposed_action={"tool_name": "execute_sql", "arguments": {...}},
+    gateway_url="http://localhost:8080",
+)
+# → {"score": 0.18, "drifted": True, "signals": ["scope-expansion"], ...}
+```
+
+Same closed-loop bridge as Code Shield — verdict auto-flows into the
+next `/check` payload under `alignment.*`.
+
+### Examples
+
+Runnable scripts in [`examples/`](./examples):
+
+| Script                          | Shows                                                |
+| ------------------------------- | ---------------------------------------------------- |
+| `quickstart_anthropic.py`       | One-line auto-instrumentation                        |
+| `code_shield_scan.py`           | Scan agent-generated code, get severity + findings   |
+| `langchain_alignment.py`        | ReAct chain-of-thought audit + closed-loop /check    |
+| `custom_agent_alignment.py`     | Framework-agnostic loop using both helpers           |
+| `policy_dsl_bootstrap.py`       | Install a Policy DSL from a builtin example          |
+
 ### Safety Controls
 - Pre-execution policy checks via `/api/v1/check`
 - Blocking mode with human approval polling
