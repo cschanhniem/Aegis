@@ -9,9 +9,9 @@ const TEXT    = 'hsl(var(--foreground))'
 const MUTED   = 'hsl(var(--muted-foreground))'
 const SURFACE = 'hsl(var(--card))'
 const BG      = 'hsl(var(--background))'
-const OK      = 'hsl(150 22% 32%)'
-const DRIFTED = 'hsl(0 50% 38%)'
-const ATTN    = 'hsl(36 60% 32%)'
+const OK      = 'hsl(var(--status-ok))'
+const DRIFTED = 'hsl(var(--status-drift))'
+const ATTN    = 'hsl(var(--status-attn))'
 
 interface AlignmentItem {
   id: number

@@ -13,11 +13,13 @@ const BG      = 'hsl(var(--background))'
 // Severity → palette. Same hues as the alignment panel for visual
 // consistency: oxblood for critical, mustard for medium/high, moss
 // for the (uncommon) LOW-only band.
+// HIGH stays its own brick hue between CRITICAL and MEDIUM; the
+// other three pull from the dark-mode-aware status vars.
 const SEV_COLOR: Record<string, string> = {
-  CRITICAL: 'hsl(0 50% 38%)',
-  HIGH:     'hsl(12 55% 35%)',
-  MEDIUM:   'hsl(36 60% 32%)',
-  LOW:      'hsl(150 22% 32%)',
+  CRITICAL: 'hsl(var(--status-drift))',
+  HIGH:     'hsl(12 55% 45%)',
+  MEDIUM:   'hsl(var(--status-attn))',
+  LOW:      'hsl(var(--status-ok))',
 }
 
 interface CodeShieldItem {

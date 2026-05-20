@@ -28,6 +28,11 @@
     /* Sidebar-specific surfaces — slightly deeper beige */
     --sidebar:              42 26% 83%;
     --sidebar-active:       42 24% 78%;
+    /* Semantic status colours used by alignment / code-shield /
+       trace panels. Lightness tuned for the light scheme. */
+    --status-ok:            150 22% 32%;
+    --status-attn:          36 60% 32%;
+    --status-drift:         0 50% 38%;
   }
 
   /*
@@ -61,6 +66,11 @@
     --ring:                 42 22% 90%;
     --sidebar:              220 4% 10%;
     --sidebar-active:       220 4% 16%;
+    /* Lift status colours toward the foreground in dark mode so
+       small score values stay legible on a near-black surface. */
+    --status-ok:            150 30% 60%;
+    --status-attn:          36 70% 60%;
+    --status-drift:         0 65% 62%;
   }
 
   /*
@@ -91,6 +101,9 @@
       --ring:                 42 22% 90%;
       --sidebar:              220 4% 10%;
       --sidebar-active:       220 4% 16%;
+      --status-ok:            150 30% 60%;
+      --status-attn:          36 70% 60%;
+      --status-drift:         0 65% 62%;
     }
   }
 }
