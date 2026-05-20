@@ -18,6 +18,11 @@
 [![CI](https://github.com/Justin0504/Aegis/actions/workflows/ci.yml/badge.svg)](https://github.com/Justin0504/Aegis/actions)
 [![arXiv](https://img.shields.io/badge/arXiv-2603.12621-b31b1b.svg)](https://arxiv.org/abs/2603.12621)
 
+[**Download** →](https://github.com/Justin0504/Aegis/releases/latest) ·
+[**Roadmap** →](./ROADMAP.md) ·
+[**Security** →](./SECURITY.md) ·
+[**Contributing** →](./CONTRIBUTING.md)
+
 </div>
 
 <br>

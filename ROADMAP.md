@@ -1,0 +1,136 @@
+# AEGIS Roadmap
+
+What's shipping when. Written for engineers, prospective design
+partners, and anyone wondering whether AEGIS is alive (it is — see
+[releases](https://github.com/Justin0504/Aegis/releases) and
+the commit graph).
+
+Last updated: 2026-05-20 · Current release: **v0.1.0**
+
+## Now (v0.1)
+
+What you get today, from the published .dmg.
+
+- **Self-contained desktop app** — gateway + Cockpit + Node runtime in
+  one 164 MB DMG. Drag, drop, launch. No Docker.
+- **Welcome onboarding** with a process scanner that flags any
+  running Python/Node agent that hasn't been routed through AEGIS.
+- **System-tray badge** showing live unprotected-agent count.
+- **Per-tenant Policy DSL** with fail-safe semantics — defaults can
+  be tightened, never relaxed.
+- **5 deployment templates**: dev, standard, strict, financial
+  (7-year retention, SOX), healthcare (6-year, HIPAA).
+- **Cost-aware L1 → L2 → L3 cascade**: rules → XGBoost → LLM judge.
+  99.9 % block rate at 1.1 ms median on a 5,525-call benchmark.
+- **14 framework SDKs**: Anthropic, OpenAI, LangChain, CrewAI,
+  Gemini, Bedrock, Mistral, LlamaIndex, smolagents, plus
+  Anthropic/OpenAI/Vercel AI/Mastra in JS, plus Go.
+- **MCP proxy** for Claude Desktop integrations.
+- **Tamper-evident audit trail**: SHA-256 hash chain + optional
+  Ed25519 signatures.
+
+Known limits at v0.1: macOS Apple Silicon only on the download path,
+unsigned binary (Gatekeeper warns once), no auto-update.
+
+---
+
+## Next (v0.2) — target: ~6 weeks out
+
+Closing the "this is a real product" gaps in the install + update
+loop.
+
+- [ ] **Apple Developer code signing + notarization.** Removes the
+  Gatekeeper warning. Tracking under `signing/macos-apple-dev`.
+- [ ] **macOS Intel build** — CI job already wired in
+  `.github/workflows/release.yml`; first run lands with v0.2.
+- [ ] **Windows .msi** — CI job exists, blocked on better-sqlite3
+  native build on `windows-latest`. Iterating from CI logs.
+- [ ] **Linux .AppImage + .deb** — CI wired, expected to go green
+  on first v0.2 tag push.
+- [ ] **Auto-update via tauri-plugin-updater** — see
+  [docs/AUTO-UPDATE.md](docs/AUTO-UPDATE.md). Blocked on
+  generating the signing keypair.
+- [ ] **Linux arm64** — Raspberry Pi 5, Graviton, etc.
+- [ ] **First-run telemetry (opt-in)** — anonymous "agent
+  instrumented" event so we know what frameworks people actually
+  use.
+
+---
+
+## After that (v0.3 / Q3 2026)
+
+Closing the "this catches things other guardrails miss" gap.
+
+- [ ] **Agent alignment auditor.** Inspect the agent's
+  chain-of-thought trace for goal divergence (drift from the
+  declared task). LlamaFirewall has a version of this; AEGIS will
+  have one with first-class DSL integration and audit-trail
+  evidence. Surfaces as a new signal in the L3 layer + an
+  `alignment.score` field for the DSL evaluator.
+- [ ] **PromptGuard-2-equivalent ML layer.** Currently L2 is an
+  XGBoost classifier over 15 structural features. The v0.3 update
+  adds an optional DeBERTa / ModernBERT jailbreak detector that
+  runs in parallel and contributes to the cascade.
+- [ ] **CodeShield (Semgrep) integration.** For agents that
+  generate code, scan the generated output before it lands in a
+  PR / runs in a shell. New AEGIS category: `code-gen`.
+- [ ] **Cockpit dark mode (proper).** Right now the Cockpit's
+  warm-cream palette flips correctly via CSS variables but
+  individual panels haven't all been audited for contrast in the
+  dark variant.
+- [ ] **Tray click → specific unprotected agent** instead of just
+  the welcome list, when the user clicks the count "3".
+
+---
+
+## v1.0 — target: end of 2026
+
+The "ready to be deployed somewhere that matters" line.
+
+- [ ] **SOC 2 Type II evidence pack export.** One button →
+  download every audit-log entry, every policy change, every
+  approval decision, signed + bundled, in the format auditors
+  expect.
+- [ ] **SSO via WorkOS** (SAML/OIDC) + RBAC across SSO identities,
+  not just API keys.
+- [ ] **Postgres adapter.** SQLite stays the default; enterprise
+  customers needing replication / high concurrency get a real
+  Postgres backend behind the same `DbAdapter` interface.
+- [ ] **Multi-region** deployment story. Today the gateway is one
+  process. v1.0 needs to survive a region outage.
+- [ ] **Marketplace pages** — Cisco AI Defense / Lakera-style
+  partnerships where AEGIS is the open-source bring-your-own-data
+  reference.
+- [ ] **First paying customer.** Tracked publicly, no specific
+  date.
+
+---
+
+## Out of scope (for now)
+
+We are explicitly **not** doing any of these in 2026. Logged here so
+people don't bring them up at every meetup.
+
+- **Browser extensions** — agents in the browser deserve their own
+  product; AEGIS is for SDK-instrumented agents.
+- **Closed-source SaaS-only**. AEGIS will remain MIT and
+  self-hostable. There may be a hosted version, but the core
+  gateway stays open.
+- **Embedded model retraining** — we score with policies and
+  judges, we don't fine-tune your model for you. Use Lakera Red /
+  PromptArmor for that.
+- **General observability** (LangFuse / Helicone / Arize) — AEGIS
+  is a *firewall*, not a tracing platform. Both layers coexist;
+  AEGIS does not aim to replace the observability vendors.
+
+---
+
+## How to influence this
+
+- **Open a discussion**: <https://github.com/Justin0504/Aegis/discussions>
+- **Email**: aojieyua@usc.edu — design-partner pitches especially welcome.
+- **Star the repo** if you want updates to land in your feed.
+
+Best signal you can send: file a real issue from a real workload,
+with reproducible steps. That moves things to the top of the queue
+faster than anything else.
