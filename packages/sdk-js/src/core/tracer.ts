@@ -117,6 +117,18 @@ export class AgentGuard {
         // Module not bundled — fine, just skip the splice.
       }
 
+      // Same closed-loop pattern for the alignment helper.
+      try {
+        const al = await import('../integrations/alignment-state.js');
+        const buffered = al.consume(this.agentId);
+        if (buffered) {
+          const payload = al.toCheckPayload(buffered);
+          if (payload) req.alignment = payload;
+        }
+      } catch {
+        // Module not bundled — skip.
+      }
+
       return await this.transport.check(req, this.config.blockingTimeoutMs);
     } catch (err) {
       if (this.config.debug) console.warn('[AgentGuard] Check request failed:', err);

@@ -44,6 +44,33 @@ export type {
 } from './integrations/code-shield.js';
 
 /**
+ * Alignment helper — audit a proposed tool call against the agent's
+ * declared goal via `/api/v1/alignment/check`. Same closed-loop
+ * bridge as code_shield: verdict flows into the next /check payload
+ * automatically.
+ */
+export {
+  check as alignmentCheck,
+  consumeBuffer as alignmentConsume,
+  PROVIDERS as ALIGNMENT_PROVIDERS,
+} from './integrations/alignment.js';
+export type {
+  AlignmentVerdict,
+  AlignmentProvider,
+  CheckOptions as AlignmentCheckOptions,
+  ProposedAction as AlignmentProposedAction,
+} from './integrations/alignment.js';
+
+/** Internal alignment buffer exports for tests (underscore-prefixed). */
+export {
+  record as _alignRecord,
+  consume as _alignConsume,
+  reset as _alignReset,
+  toCheckPayload as _alignToCheckPayload,
+  TTL_MS as _ALIGN_TTL_MS,
+} from './integrations/alignment-state.js';
+
+/**
  * Internal helpers re-exported only for the in-tree test suite. The
  * underscore prefix flags them as not part of the stable surface; do
  * not import these from user code. They may change shape between
