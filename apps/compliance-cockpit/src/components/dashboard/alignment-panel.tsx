@@ -42,6 +42,21 @@ function tint(score: number | null, drifted: boolean): string {
   return DRIFTED
 }
 
+/**
+ * Short band label so users glancing at a 0.62 don't have to
+ * remember the thresholds. Three bands: aligned / attention /
+ * drift. Drifted=true short-circuits everything to "drift" even
+ * if the numeric score is high — the boolean is the auditor's
+ * explicit verdict and outranks the score on its own.
+ */
+function bandLabel(score: number | null, drifted: boolean): string {
+  if (score === null) return '—'
+  if (drifted) return 'drift'
+  if (score >= 0.85) return 'aligned'
+  if (score >= 0.5) return 'attention'
+  return 'drift'
+}
+
 export function AlignmentPanel() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['alignment-recent'],
@@ -146,6 +161,12 @@ export function AlignmentPanel() {
                     style={{ color: tint(it.score, it.drifted) }}
                   >
                     {it.score !== null ? it.score.toFixed(2) : '—'}
+                  </span>
+                  <span
+                    className="text-[10px] uppercase tracking-wider"
+                    style={{ color: tint(it.score, it.drifted), opacity: 0.85 }}
+                  >
+                    {bandLabel(it.score, it.drifted)}
                   </span>
                   <span
                     className="text-[11px] inline-flex items-center gap-1"
