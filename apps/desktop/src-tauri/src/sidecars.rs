@@ -34,7 +34,7 @@ use tauri::{AppHandle, Manager};
 const GATEWAY_PORT: u16 = 18080;
 const COCKPIT_PORT: u16 = 13001;
 
-pub const COCKPIT_URL: &str = "http://127.0.0.1:13001";
+pub const COCKPIT_URL: &str = "http://127.0.0.1:13001/welcome";
 pub const GATEWAY_URL: &str = "http://127.0.0.1:18080";
 
 #[derive(Debug)]

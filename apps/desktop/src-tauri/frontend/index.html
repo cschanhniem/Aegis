@@ -77,6 +77,10 @@
     <script>
       // Cockpit sidecar URL — matches src-tauri/src/sidecars.rs COCKPIT_URL.
       const COCKPIT = 'http://127.0.0.1:13001';
+      // Open the Welcome flow first; it auto-redirects to "/" the moment
+      // the first trace lands, so returning users still land on the
+      // dashboard via that path. Saves an extra navigation step on first run.
+      const TARGET = COCKPIT + '/welcome';
       const MAX_TRIES = 60; // 60 × 500ms ≈ 30s headroom
       let tries = 0;
 
@@ -87,7 +91,7 @@
           if (res.ok || res.status === 404) {
             // 404 still proves the server is up; Next routes may not
             // expose `/` for an unauth probe. Either way, redirect.
-            window.location.replace(COCKPIT);
+            window.location.replace(TARGET);
             return;
           }
         } catch (_) {

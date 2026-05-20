@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-  LayoutDashboard, FileText, Shield, ScrollText,
+  LayoutDashboard, FileText, Shield, ScrollText, Sparkles,
   CheckCircle, AlertTriangle, Settings, FlaskConical,
   Menu, X,
 } from 'lucide-react'
@@ -13,6 +13,7 @@ import { useTraceStream } from '@/hooks/useTraceStream'
 import { BlockAlertToast } from '@/components/ui/block-alert-toast'
 
 const navigation = [
+  { name: 'Welcome',     href: '/welcome',     icon: Sparkles        },
   { name: 'Overview',    href: '/',            icon: LayoutDashboard },
   { name: 'Traces',      href: '/traces',      icon: FileText        },
   { name: 'Policies',    href: '/policies',    icon: Shield          },
