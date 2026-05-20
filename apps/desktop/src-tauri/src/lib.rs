@@ -100,9 +100,18 @@ pub fn run() {
                 })
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click { .. } = event {
-                        if let Some(app) = tray.app_handle().get_webview_window("main") {
-                            let _ = app.show();
-                            let _ = app.set_focus();
+                        if let Some(window) = tray.app_handle().get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                            // Jump straight to /welcome — the panel that
+                            // surfaces the unprotected-agent list and the
+                            // SDK snippets. Welcome auto-redirects to `/`
+                            // once a trace arrives, so this is harmless
+                            // for repeat users.
+                            let _ = window.eval(&format!(
+                                "window.location.href = '{}'",
+                                welcome_url(),
+                            ));
                         }
                     }
                 })
@@ -159,6 +168,19 @@ pub fn run() {
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {name}! AEGIS desktop is running.")
+}
+
+/// Resolve the welcome-page URL for the embedded (release) or external
+/// dev Cockpit. Used by the tray click handler.
+fn welcome_url() -> &'static str {
+    #[cfg(debug_assertions)]
+    {
+        "http://localhost:3000/welcome"
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        sidecars::COCKPIT_URL
+    }
 }
 
 /// Scan running processes for agent-shaped candidates that are NOT
