@@ -37,6 +37,7 @@ import { TenantConfigAPI } from './api/tenant-config';
 import { DslPolicyService } from './services/policy-dsl';
 import { PolicyDslAPI } from './api/policy-dsl';
 import { AlignmentAPI } from './api/alignment';
+import { CodeShieldAPI } from './api/code-shield';
 
 const VERSION = '2.0.0';
 
@@ -360,6 +361,10 @@ async function main() {
   // Standalone for v0.3 preview; SDKs that capture chain-of-thought
   // call this pre-execution and pass alignment.* into /check.
   app.use('/api/v1/alignment', requireAuth, requireFeature('judge'), new AlignmentAPI(logger, auditLog, db).router);
+
+  // CodeShield — fast local regex scanner for agent-generated code.
+  // No LLM, no subprocess: every scan is sub-millisecond.
+  app.use('/api/v1/code-shield', requireAuth, new CodeShieldAPI(logger, auditLog).router);
 
   // Kill-switch endpoints (auth required)
   app.post('/api/v1/kill-switch/revoke', requireAuth, async (req, res) => {
