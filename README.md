@@ -149,6 +149,8 @@ gateway, cascade, DSL, dashboard, audit trail, approvals — in one repo.
 | **5 ready-made deployment templates** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Behavioral anomaly detection (Isolation Forest + PPM)** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Cost-aware L1→L2→L3 cascade** | ❌ | ❌ | partial | ❌ | ✅ |
+| Chain-of-thought alignment auditor | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Static checks on agent-generated code | ❌ | ❌ | ✅ (Semgrep) | ❌ | ✅ (regex, sub-ms) |
 | Multi-framework SDK | API only | NVIDIA-centric | ✅ | ✅ | 14 frameworks |
 | **MCP server / proxy** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **HTTP proxy for closed-source agents** | ❌ | ❌ | ❌ | ❌ | ✅ |
