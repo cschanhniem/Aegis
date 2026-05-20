@@ -165,7 +165,10 @@ program
       console.log(`✓ Gateway is UP  —  ${data.timestamp ?? 'ok'}`);
     } catch (e: any) {
       console.error(`✗ Gateway unreachable: ${e.message}`);
-      process.exit(1);
+      // Exit 2 — environment failure, matches the convention used by
+      // `agentguard doctor`. Reserves exit 1 for "ran fine, gateway
+      // returned a problem we want to surface to scripts."
+      process.exit(2);
     }
   });
 
