@@ -120,6 +120,86 @@ export function DashboardOverview() {
     )
   }
 
+  // First-run empty state: no traces in the gateway yet. Send the user
+  // to /welcome where the SDK snippets + process scanner live.
+  const noData = stats !== undefined && (stats?.totalTraces ?? 0) === 0
+  if (noData) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Real-time monitoring of AI agent activities and compliance
+          </p>
+        </div>
+
+        <div
+          className="rounded-lg p-8 md:p-10 text-center space-y-4"
+          style={{
+            background: 'hsl(var(--card))',
+            border: `1px solid ${BORDER}`,
+          }}
+        >
+          <div
+            className="inline-flex items-center justify-center mx-auto"
+            style={{ color: MUTED }}
+          >
+            <span
+              className="relative inline-flex h-3 w-3"
+              aria-hidden="true"
+            >
+              <span
+                className="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping"
+                style={{ background: 'hsl(var(--primary))' }}
+              />
+              <span
+                className="relative inline-flex rounded-full h-3 w-3"
+                style={{ background: 'hsl(var(--primary))' }}
+              />
+            </span>
+            <span className="ml-2 text-xs uppercase tracking-widest">
+              Listening
+            </span>
+          </div>
+
+          <h2
+            className="text-2xl"
+            style={{
+              fontFamily: 'var(--font-serif), Georgia, serif',
+              color: 'hsl(var(--foreground))',
+              letterSpacing: '-0.012em',
+            }}
+          >
+            Nothing has come through AEGIS yet.
+          </h2>
+          <p className="text-sm max-w-xl mx-auto" style={{ color: MUTED }}>
+            The gateway is up and the dashboard is wired — it just hasn't
+            seen its first tool call. Visit the Welcome panel to plug your
+            agent in. The dashboard auto-fills the moment a trace lands.
+          </p>
+
+          <div className="pt-2">
+            <Link
+              href="/welcome"
+              className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-md"
+              style={{
+                background: 'hsl(var(--primary))',
+                color: 'hsl(var(--primary-foreground))',
+              }}
+            >
+              Open Welcome <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <p className="text-[11px] pt-3" style={{ color: MUTED, opacity: 0.7 }}>
+            Already wired up? Trigger any agent tool call — refresh here in
+            a few seconds.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-6">
