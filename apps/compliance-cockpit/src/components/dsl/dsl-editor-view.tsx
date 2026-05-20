@@ -93,6 +93,7 @@ export function DslEditorView() {
   const [editorText, setEditorText] = useState<string>(DEFAULT_JSON)
   const [savedDsl, setSavedDsl] = useState<unknown>(null)
   const [examples, setExamples] = useState<DslExample[]>([])
+  const [loadedExampleId, setLoadedExampleId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [dryRunCtx, setDryRunCtx] = useState<string>(SAMPLE_CONTEXT)
@@ -193,8 +194,39 @@ export function DslEditorView() {
     const ex = examples.find((e) => e.id === id)
     if (!ex) return
     setEditorText(JSON.stringify(ex.dsl, null, 2))
+    setLoadedExampleId(id)
     toast.info(`Loaded "${ex.name}" — review then Save to apply.`)
   }
+
+  // Examples are grouped by the dominant signal they exercise so the
+  // dropdown is browsable. Heuristic: scan the rule conditions for the
+  // first known signal prefix (alignment.*, code_shield.*, anomaly.*, etc.)
+  // and bucket by that. Falls back to "general" if nothing matches.
+  const groupedExamples = useMemo(() => {
+    const buckets: Record<string, DslExample[]> = {
+      'Agent alignment': [],
+      'Code Shield':     [],
+      'Behavioral anomaly': [],
+      'Classifier / tool': [],
+      'Tenant mode':     [],
+      'Other':           [],
+    }
+    for (const ex of examples) {
+      const serialized = JSON.stringify(ex.dsl)
+      if (serialized.includes('alignment.')) buckets['Agent alignment'].push(ex)
+      else if (serialized.includes('code_shield.')) buckets['Code Shield'].push(ex)
+      else if (serialized.includes('anomaly.')) buckets['Behavioral anomaly'].push(ex)
+      else if (serialized.includes('tenant.')) buckets['Tenant mode'].push(ex)
+      else if (serialized.includes('classifier.') || serialized.includes('tool.')) buckets['Classifier / tool'].push(ex)
+      else buckets['Other'].push(ex)
+    }
+    return Object.entries(buckets).filter(([, list]) => list.length > 0)
+  }, [examples])
+
+  const loadedExample = useMemo(
+    () => examples.find((e) => e.id === loadedExampleId) ?? null,
+    [examples, loadedExampleId],
+  )
 
   return (
     <div className="space-y-4">
@@ -214,19 +246,23 @@ export function DslEditorView() {
           <select
             onChange={(e) => {
               if (e.target.value) loadExample(e.target.value)
-              e.target.value = ''
             }}
+            value={loadedExampleId ?? ''}
             className="text-sm px-3 py-1.5 rounded-md border"
             style={{ background: PANEL, borderColor: BORDER, color: TEXT }}
-            defaultValue=""
+            title="Load a built-in DSL example"
           >
             <option value="" disabled>
-              <Sparkles className="inline h-3 w-3 mr-1" /> Load example…
+              Load example…
             </option>
-            {examples.map((ex) => (
-              <option key={ex.id} value={ex.id}>
-                {ex.name}
-              </option>
+            {groupedExamples.map(([group, list]) => (
+              <optgroup key={group} label={group}>
+                {list.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.name}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <button
@@ -273,6 +309,18 @@ export function DslEditorView() {
           <span style={{ color: RED }}>{parsed.error}</span>
         )}
       </div>
+
+      {loadedExample && (
+        <div
+          className="text-xs rounded-md border px-3 py-2 leading-relaxed"
+          style={{ background: PANEL, borderColor: BORDER, color: MUTED }}
+        >
+          <span style={{ color: TEXT, fontWeight: 500 }}>
+            {loadedExample.name}
+          </span>{' '}
+          — {loadedExample.description}
+        </div>
+      )}
 
       {/* Editor + Side panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
