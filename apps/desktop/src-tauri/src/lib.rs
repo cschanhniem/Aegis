@@ -8,6 +8,7 @@
 //! redirect the WebView at `http://127.0.0.1:13001` and reveal the
 //! window. Killed via Drop on app exit.
 
+mod scanner;
 mod sidecars;
 #[cfg(not(debug_assertions))]
 use sidecars::{Sidecars, COCKPIT_URL};
@@ -107,7 +108,7 @@ pub fn run() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![greet, gateway_url])
+        .invoke_handler(tauri::generate_handler![greet, gateway_url, list_candidate_agents])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -117,6 +118,13 @@ pub fn run() {
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {name}! AEGIS desktop is running.")
+}
+
+/// Scan running processes for agent-shaped candidates that are NOT
+/// already wired through AEGIS. Heuristic — see scanner.rs.
+#[tauri::command]
+fn list_candidate_agents() -> Vec<scanner::CandidateAgent> {
+    scanner::scan()
 }
 
 /// Tell the WebView which URL the embedded gateway is reachable at.

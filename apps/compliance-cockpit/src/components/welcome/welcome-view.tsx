@@ -2,8 +2,27 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Copy, Loader2, Sparkles, ArrowRight } from 'lucide-react'
+import { Check, Copy, Loader2, Sparkles, ArrowRight, Cpu, ShieldOff } from 'lucide-react'
 import { gw } from '@/lib/gateway'
+
+interface CandidateAgent {
+  pid: number
+  name: string
+  cmdline: string
+  cwd: string | null
+  matched: string[]
+  lang: 'Python' | 'JavaScript'
+}
+
+// Tauri exposes `window.__TAURI__.core.invoke('command_name', args?)`.
+// Outside Tauri (plain browser), the property is undefined — we silently
+// skip the scan and the section never renders.
+function tauriInvoke<T>(name: string): Promise<T> | null {
+  if (typeof window === 'undefined') return null
+  const tauri = (window as any).__TAURI__
+  if (!tauri?.core?.invoke) return null
+  return tauri.core.invoke(name) as Promise<T>
+}
 
 const BORDER  = 'hsl(var(--border))'
 const TEXT    = 'hsl(var(--foreground))'
@@ -181,6 +200,26 @@ export function WelcomeView() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [traceCount, setTraceCount] = useState<number | null>(null)
   const [polling, setPolling] = useState(true)
+  const [candidates, setCandidates] = useState<CandidateAgent[] | null>(null)
+  const [expandedPid, setExpandedPid] = useState<number | null>(null)
+
+  // Tauri-only: scan the host for agent-shaped processes that aren't yet
+  // protected. Re-run every 5s so newly-launched agents show up.
+  useEffect(() => {
+    const invoke = tauriInvoke<CandidateAgent[]>('list_candidate_agents')
+    if (!invoke) return // not running inside Tauri
+    let cancelled = false
+    const tick = () => {
+      tauriInvoke<CandidateAgent[]>('list_candidate_agents')
+        ?.then((rows) => {
+          if (!cancelled) setCandidates(rows)
+        })
+        .catch(() => {})
+    }
+    tick()
+    const t = setInterval(tick, 5000)
+    return () => { cancelled = true; clearInterval(t) }
+  }, [])
 
   // Poll for the first trace — auto-redirect to overview once it arrives.
   useEffect(() => {
@@ -277,6 +316,120 @@ export function WelcomeView() {
           </>
         )}
       </div>
+
+      {/* Detected processes (Tauri only) ─────────────────────────────────── */}
+      {candidates !== null && (
+        <section
+          className="rounded-md p-4"
+          style={{ background: SURFACE, border: `1px solid ${BORDER}` }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2
+                className="text-lg font-medium inline-flex items-center gap-2"
+                style={{ color: TEXT }}
+              >
+                <Cpu className="h-4 w-4" /> Detected on this machine
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: MUTED }}>
+                Best-effort scan of running Python &amp; Node processes whose
+                command line references an LLM/agent library and has{' '}
+                <em>not</em> yet been routed through AEGIS.
+              </p>
+            </div>
+            <span className="text-xs" style={{ color: MUTED }}>
+              {candidates.length === 0 ? 'nothing to flag' : `${candidates.length} unprotected`}
+            </span>
+          </div>
+
+          {candidates.length === 0 ? (
+            <p className="text-xs italic" style={{ color: MUTED }}>
+              No agent-shaped processes detected. (Start one with{' '}
+              <code className="font-mono">anthropic</code> or{' '}
+              <code className="font-mono">openai</code> imported and it'll
+              show up here within 5&nbsp;s.)
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {candidates.map((c) => {
+                const expanded = expandedPid === c.pid
+                return (
+                  <li
+                    key={c.pid}
+                    className="rounded p-3"
+                    style={{ background: BG, border: `1px solid ${BORDER}` }}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <ShieldOff className="h-3.5 w-3.5 flex-shrink-0" style={{ color: 'hsl(0 50% 45%)' }} />
+                          <span className="font-mono text-xs" style={{ color: MUTED }}>
+                            PID {c.pid}
+                          </span>
+                          <span
+                            className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded"
+                            style={{ background: SURFACE, color: MUTED }}
+                          >
+                            {c.lang}
+                          </span>
+                          <span className="text-xs" style={{ color: TEXT }}>
+                            uses {c.matched.slice(0, 3).join(', ')}
+                            {c.matched.length > 3 && ` +${c.matched.length - 3}`}
+                          </span>
+                        </div>
+                        <div
+                          className="text-[11px] font-mono mt-1 truncate"
+                          style={{ color: MUTED }}
+                          title={c.cmdline}
+                        >
+                          {c.cmdline}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setExpandedPid(expanded ? null : c.pid)}
+                        className="text-xs px-2.5 py-1 rounded border whitespace-nowrap transition-colors"
+                        style={{
+                          background: expanded ? PRIMARY : SURFACE,
+                          color: expanded ? ON_PRIM : TEXT,
+                          borderColor: expanded ? PRIMARY : BORDER,
+                        }}
+                      >
+                        {expanded ? 'Hide' : 'Protect this'}
+                      </button>
+                    </div>
+
+                    {expanded && (
+                      <div
+                        className="mt-3 pt-3 text-[12px] space-y-2"
+                        style={{ borderTop: `1px solid ${BORDER}` }}
+                      >
+                        <p style={{ color: MUTED }}>
+                          Add these two lines to the top of this process's
+                          entry script, then re-run it:
+                        </p>
+                        <pre
+                          className="px-3 py-2 rounded font-mono whitespace-pre overflow-x-auto"
+                          style={{ background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT }}
+                        >
+{c.lang === 'Python'
+  ? `import agentguard\nagentguard.auto("http://localhost:8080", agent_id="pid-${c.pid}")`
+  : `import agentguard from '@justinnn/agentguard'\nagentguard.auto('http://localhost:8080', { agentId: 'pid-${c.pid}' })`}
+                        </pre>
+                        {c.cwd && (
+                          <p style={{ color: MUTED }}>
+                            <span className="opacity-75">cwd:</span>{' '}
+                            <span className="font-mono">{c.cwd}</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+      )}
 
       {/* Language filter */}
       <div className="flex items-center gap-2">
