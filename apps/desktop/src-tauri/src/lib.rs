@@ -66,13 +66,6 @@ pub fn run() {
             // background scanner task can rewrite it every 30 s with a live
             // count of unprotected agent processes.
             let open_item = MenuItem::with_id(app, "open", "Open AEGIS", true, None::<&str>)?;
-            let toggle_item = MenuItem::with_id(
-                app,
-                "toggle_protection",
-                "Toggle protection (stub)",
-                true,
-                None::<&str>,
-            )?;
             // Shared scan summary — updated by the background scanner,
             // read by the tray click handler to pick a deep-link target.
             let scan_summary: Arc<Mutex<ScanSummary>> =
@@ -89,7 +82,7 @@ pub fn run() {
 
             let menu = Menu::with_items(
                 app,
-                &[separator_label.as_ref(), &open_item, &toggle_item, &quit_item],
+                &[separator_label.as_ref(), &open_item, &quit_item],
             )?;
 
             let _tray = TrayIconBuilder::with_id("main-tray")
@@ -103,10 +96,6 @@ pub fn run() {
                             let _ = window.show();
                             let _ = window.set_focus();
                         }
-                    }
-                    "toggle_protection" => {
-                        // TODO: wire to kill-switch endpoint once gateway sidecar lands
-                        println!("[tray] toggle_protection clicked");
                     }
                     "quit" => {
                         app.exit(0);
