@@ -58,9 +58,28 @@ Watch it trace tool calls, block SQL injection, detect PII, and pause for human 
 
 ---
 
-## Quick Start
+## Download
 
-**One command. 30 seconds. Full protection.**
+> **macOS · Apple Silicon (arm64)** —
+> [`AEGIS_0.1.0_aarch64.dmg`](https://github.com/Justin0504/Aegis/releases/latest)
+> · 164 MB · self-contained, no Docker, no `npm install`
+
+Drag `AEGIS.app` into Applications, launch from Spotlight, you're done.
+The first run opens a Welcome panel that detects unprotected Python/Node
+agents on your machine and gives you the one-line snippet to plug each
+into AEGIS.
+
+<sub>The .dmg is currently <strong>unsigned</strong> while we wait on an
+Apple Developer identity. Gatekeeper will warn on first launch — right-
+click <strong>AEGIS</strong> → <strong>Open</strong> → <strong>Open</strong>
+to bypass once. Intel x64, Windows, and Linux builds land in 0.2.x.</sub>
+
+---
+
+## Quick Start (developer / Docker path)
+
+For the source-based workflow (Linux/Windows, custom builds, hacking on
+the gateway):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash

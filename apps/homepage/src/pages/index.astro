@@ -48,15 +48,18 @@ import { sortedPosts as posts } from '@/data/posts';
       </div>
 
       <div class="project-actions">
-        <a class="cta" href="https://github.com/Justin0504/Aegis" target="_blank" rel="noopener">
-          View on GitHub →
+        <a class="cta" href="https://github.com/Justin0504/Aegis/releases/latest" target="_blank" rel="noopener">
+          Download for macOS →
         </a>
-        <a class="cta-secondary" href="https://github.com/Justin0504/Aegis#readme" target="_blank" rel="noopener">
-          Read the docs
+        <a class="cta-secondary" href="https://github.com/Justin0504/Aegis" target="_blank" rel="noopener">
+          View on GitHub
         </a>
       </div>
 
-      <pre class="install"><code>curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash</code></pre>
+      <details class="install-details">
+        <summary>Or build from source / use Docker</summary>
+        <pre class="install"><code>curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash</code></pre>
+      </details>
 
       <figure class="flow" aria-label="AEGIS request flow">
         <div class="flow-row">
@@ -264,8 +267,28 @@ import { sortedPosts as posts } from '@/data/posts';
       border-bottom-color: var(--text);
     }
 
+    .install-details {
+      margin-top: 0.4rem;
+    }
+    .install-details summary {
+      font-size: 0.82rem;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0.4rem 0;
+      list-style: none;
+    }
+    .install-details summary::-webkit-details-marker { display: none; }
+    .install-details summary::before {
+      content: '▸ ';
+      font-size: 0.7rem;
+      opacity: 0.6;
+      transition: transform 120ms ease;
+      display: inline-block;
+    }
+    .install-details[open] summary::before { content: '▾ '; }
+    .install-details summary:hover { color: var(--text); }
     .install {
-      margin: 0;
+      margin: 0.5rem 0 0;
       padding: 1rem 1.2rem;
       background: var(--surface);
       border: 1px solid var(--hairline);
