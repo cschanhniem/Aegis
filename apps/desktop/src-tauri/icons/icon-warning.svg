@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="6" fill="#eae3d2"/>
+  <!-- The shield, slightly transparent to keep visual weight balanced with the dot. -->
+  <path d="M12 6 L20 6 L22 10 L22 20 Q22 26 16 28 Q10 26 10 20 L10 10 Z" fill="#0a0a0a" opacity="0.5"/>
+  <!-- Warning dot: deep red-orange. Placed upper-right so it reads as a notification badge. -->
+  <circle cx="24" cy="8" r="6" fill="#c8421f"/>
+  <circle cx="24" cy="8" r="6" fill="none" stroke="#eae3d2" stroke-width="1.5"/>
+</svg>

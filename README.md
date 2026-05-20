@@ -8,6 +8,9 @@
 
 <br>
 
+[![Latest release](https://img.shields.io/github/v/release/Justin0504/Aegis?include_prereleases&label=release&color=0a0a0a)](https://github.com/Justin0504/Aegis/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Justin0504/Aegis/total?color=0a0a0a)](https://github.com/Justin0504/Aegis/releases)
+[![Stars](https://img.shields.io/github/stars/Justin0504/Aegis?style=flat&color=0a0a0a)](https://github.com/Justin0504/Aegis/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI](https://img.shields.io/pypi/v/agentguard-aegis?label=PyPI&color=blue)](https://pypi.org/project/agentguard-aegis/)
 [![npm](https://img.shields.io/badge/npm-%40justinnn%2Fagentguard-red)](https://www.npmjs.com/package/@justinnn/agentguard)

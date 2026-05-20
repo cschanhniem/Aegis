@@ -18,6 +18,7 @@ use sidecars::Sidecars;
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::{
+    image::Image,
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
     Manager, WindowEvent,
@@ -118,12 +119,20 @@ pub fn run() {
                 .build(app)?;
 
             // ── Background scanner: refresh tray badge every 30 s ──────────
-            // On macOS, set_title() puts text next to the menubar icon — that
-            // gives us the "360-style" badge without per-pixel icon work.
-            // Linux/Windows trays will skip the title (no-op).
+            // Three signals composed: text label in the menu, the numeric
+            // badge next to the icon (macOS only, via set_title), and the
+            // icon itself — swapped to a warning variant with a small red
+            // dot when any unprotected agent is detected.
+            // Both icons embedded at compile time so the spawned async task
+            // doesn't need to share a reference back to the App handle.
+            let icon_normal: Image<'static> = tauri::include_image!("./icons/icon.png");
+            let icon_warning: Image<'static> =
+                tauri::include_image!("./icons/icon-warning.png");
+
             let handle = app.handle().clone();
             let status_item = Arc::clone(&separator_label);
             tauri::async_runtime::spawn(async move {
+                let mut last_warning_state: Option<bool> = None;
                 loop {
                     let candidates = scanner::scan();
                     let count = candidates.len();
@@ -143,6 +152,19 @@ pub fn run() {
                             Some(count.to_string())
                         };
                         let _ = tray.set_title(badge.as_deref());
+
+                        // Only set_icon when the state actually flipped —
+                        // some platforms repaint the menu bar on every call.
+                        let want_warning = count > 0;
+                        if last_warning_state != Some(want_warning) {
+                            let img = if want_warning {
+                                icon_warning.clone()
+                            } else {
+                                icon_normal.clone()
+                            };
+                            let _ = tray.set_icon(Some(img));
+                            last_warning_state = Some(want_warning);
+                        }
                     }
                     tokio::time::sleep(Duration::from_secs(30)).await;
                 }
