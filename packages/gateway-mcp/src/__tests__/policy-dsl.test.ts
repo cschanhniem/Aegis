@@ -14,6 +14,7 @@ import {
   strictest,
   type DslContext,
 } from '../policies/dsl/evaluator';
+import { BUILTIN_DSL_EXAMPLES } from '../policies/dsl/builtin-examples';
 
 const silentLogger = pino({ level: 'silent' });
 
@@ -315,6 +316,65 @@ describe('DslEvaluator', () => {
 });
 
 // ── strictest helper ─────────────────────────────────────────────────────────
+
+describe('BUILTIN_DSL_EXAMPLES', () => {
+  test('every example compiles cleanly and ids are unique', () => {
+    const ids = new Set<string>();
+    for (const ex of BUILTIN_DSL_EXAMPLES) {
+      // No duplicates — Cockpit uses id as a React key.
+      expect(ids.has(ex.id)).toBe(false);
+      ids.add(ex.id);
+      expect(ex.name.length).toBeGreaterThan(0);
+      expect(ex.description.length).toBeGreaterThan(0);
+      // Compile through the same path the API uses.
+      const compiled = compileDsl(ex.dsl);
+      expect(compiled.rules.length).toBeGreaterThan(0);
+    }
+  });
+
+  test('code_shield example blocks on CRITICAL findings', () => {
+    const ex = BUILTIN_DSL_EXAMPLES.find((e) => e.id === 'block-unsafe-code-gen');
+    expect(ex).toBeDefined();
+    const evaluator = new DslEvaluator(compileDsl(ex!.dsl));
+    expect(
+      evaluator.evaluate({
+        code_shield: { worst: 'CRITICAL', findings_count: 1 },
+      } as DslContext)?.decision,
+    ).toBe('block');
+    expect(
+      evaluator.evaluate({
+        code_shield: { worst: 'HIGH', findings_count: 1 },
+      } as DslContext)?.decision,
+    ).toBe('pending');
+    expect(
+      evaluator.evaluate({
+        code_shield: { worst: 'LOW', findings_count: 1 },
+      } as DslContext),
+    ).toBeNull();
+  });
+
+  test('alignment example pauses on drift OR low score', () => {
+    const ex = BUILTIN_DSL_EXAMPLES.find((e) => e.id === 'pause-on-alignment-drift');
+    expect(ex).toBeDefined();
+    const evaluator = new DslEvaluator(compileDsl(ex!.dsl));
+    expect(
+      evaluator.evaluate({
+        alignment: { drifted: true, score: 0.9 },
+      } as DslContext)?.decision,
+    ).toBe('pending');
+    expect(
+      evaluator.evaluate({
+        alignment: { score: 0.3 },
+      } as DslContext)?.decision,
+    ).toBe('pending');
+    // High-trust alignment → rule does not fire.
+    expect(
+      evaluator.evaluate({
+        alignment: { drifted: false, score: 0.95 },
+      } as DslContext),
+    ).toBeNull();
+  });
+});
 
 describe('strictest', () => {
   test('block > pending > allow', () => {

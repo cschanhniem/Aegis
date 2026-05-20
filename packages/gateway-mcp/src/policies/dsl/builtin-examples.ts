@@ -130,4 +130,55 @@ export const BUILTIN_DSL_EXAMPLES: DslExample[] = [
       ],
     },
   },
+  {
+    id: 'block-unsafe-code-gen',
+    name: 'Block unsafe code generation',
+    description:
+      'Refuse to dispatch a tool call when CodeShield flagged the agent-generated code as CRITICAL (exec / eval / leaked secrets / rm -rf /). Findings come from POST /api/v1/code-shield/scan, populated by the Python SDK helper or any client that scans before dispatch.',
+    dsl: {
+      version: 1,
+      rules: [
+        {
+          name: 'block-on-critical-code',
+          when: { 'code_shield.worst': 'CRITICAL' },
+          then: {
+            decision: 'block',
+            reason: 'unsafe code generation flagged by CodeShield',
+          },
+        },
+        {
+          name: 'pending-on-high-code',
+          when: { 'code_shield.worst': 'HIGH' },
+          then: {
+            decision: 'pending',
+            reason: 'high-severity code finding — human review required',
+          },
+        },
+      ],
+    },
+  },
+  {
+    id: 'pause-on-alignment-drift',
+    name: 'Pause on agent alignment drift',
+    description:
+      'Hold tool calls for human review when the agent\'s chain-of-thought has drifted from its declared goal, or its alignment score is below 0.5. Signal comes from POST /api/v1/alignment/check, populated by the LangChain AlignmentCallback or a custom CoT capture.',
+    dsl: {
+      version: 1,
+      rules: [
+        {
+          name: 'pause-on-drift',
+          when: {
+            any: [
+              { 'alignment.drifted': true },
+              { 'alignment.score': { '<': 0.5 } },
+            ],
+          },
+          then: {
+            decision: 'pending',
+            reason: 'agent reasoning diverged from declared goal',
+          },
+        },
+      ],
+    },
+  },
 ];
