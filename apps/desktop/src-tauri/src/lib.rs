@@ -15,7 +15,7 @@ use sidecars::{Sidecars, COCKPIT_URL};
 #[cfg(debug_assertions)]
 use sidecars::Sidecars;
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{
     image::Image,
@@ -23,6 +23,15 @@ use tauri::{
     tray::{TrayIconBuilder, TrayIconEvent},
     Manager, WindowEvent,
 };
+
+/// Most-recent scan summary, shared between the background scanner
+/// and the tray click handler. The tray click reads `top_pid` to
+/// build a deep link like `/welcome?pid=12345`, which the Cockpit
+/// uses to scroll/highlight the specific unprotected process.
+#[derive(Default, Clone, Copy)]
+struct ScanSummary {
+    top_pid: Option<u32>,
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -64,6 +73,11 @@ pub fn run() {
                 true,
                 None::<&str>,
             )?;
+            // Shared scan summary — updated by the background scanner,
+            // read by the tray click handler to pick a deep-link target.
+            let scan_summary: Arc<Mutex<ScanSummary>> =
+                Arc::new(Mutex::new(ScanSummary::default()));
+
             let separator_label = Arc::new(MenuItem::with_id(
                 app,
                 "label_status",
@@ -99,20 +113,33 @@ pub fn run() {
                     }
                     _ => {}
                 })
-                .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click { .. } = event {
-                        if let Some(window) = tray.app_handle().get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                            // Jump straight to /welcome — the panel that
-                            // surfaces the unprotected-agent list and the
-                            // SDK snippets. Welcome auto-redirects to `/`
-                            // once a trace arrives, so this is harmless
-                            // for repeat users.
-                            let _ = window.eval(&format!(
-                                "window.location.href = '{}'",
-                                welcome_url(),
-                            ));
+                .on_tray_icon_event({
+                    let scan_summary = Arc::clone(&scan_summary);
+                    move |tray, event| {
+                        if let TrayIconEvent::Click { .. } = event {
+                            if let Some(window) =
+                                tray.app_handle().get_webview_window("main")
+                            {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                                // Jump straight to /welcome — the panel that
+                                // surfaces the unprotected-agent list and the
+                                // SDK snippets. If the background scanner has
+                                // found at least one unprotected agent, append
+                                // `?pid=<first>` so the page can scroll/highlight
+                                // the specific process.
+                                let summary = scan_summary
+                                    .lock()
+                                    .map(|s| *s)
+                                    .unwrap_or_default();
+                                let mut href = welcome_url().to_string();
+                                if let Some(pid) = summary.top_pid {
+                                    href.push_str(&format!("?pid={pid}"));
+                                }
+                                let _ = window.eval(&format!(
+                                    "window.location.href = '{href}'"
+                                ));
+                            }
                         }
                     }
                 })
@@ -131,11 +158,16 @@ pub fn run() {
 
             let handle = app.handle().clone();
             let status_item = Arc::clone(&separator_label);
+            let scan_summary_writer = Arc::clone(&scan_summary);
             tauri::async_runtime::spawn(async move {
                 let mut last_warning_state: Option<bool> = None;
                 loop {
                     let candidates = scanner::scan();
                     let count = candidates.len();
+                    let top_pid = candidates.first().map(|c| c.pid);
+                    if let Ok(mut s) = scan_summary_writer.lock() {
+                        *s = ScanSummary { top_pid };
+                    }
                     let label = if count == 0 {
                         "No unprotected agents detected".to_string()
                     } else if count == 1 {

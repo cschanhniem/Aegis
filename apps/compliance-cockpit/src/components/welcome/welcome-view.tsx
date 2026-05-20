@@ -202,6 +202,32 @@ export function WelcomeView() {
   const [polling, setPolling] = useState(true)
   const [candidates, setCandidates] = useState<CandidateAgent[] | null>(null)
   const [expandedPid, setExpandedPid] = useState<number | null>(null)
+  const [highlightPid, setHighlightPid] = useState<number | null>(null)
+
+  // Deep-link from the system tray. When the user clicks the AEGIS tray
+  // icon and there's at least one unprotected agent, the Tauri shell
+  // appends `?pid=<n>`. We pick that up, expand the matching card, and
+  // scroll it into view. The highlight ring fades after 2s.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const raw = new URLSearchParams(window.location.search).get('pid')
+    if (!raw) return
+    const pid = Number(raw)
+    if (!Number.isFinite(pid) || pid <= 0) return
+    setExpandedPid(pid)
+    setHighlightPid(pid)
+    const t = setTimeout(() => setHighlightPid(null), 2_000)
+    return () => clearTimeout(t)
+  }, [])
+
+  // Once candidates have loaded, scroll the highlighted PID into view.
+  useEffect(() => {
+    if (highlightPid === null || !candidates?.some((c) => c.pid === highlightPid)) return
+    const el = document.getElementById(`candidate-${highlightPid}`)
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [highlightPid, candidates])
 
   // Tauri-only: scan the host for agent-shaped processes that aren't yet
   // protected. Re-run every 5s so newly-launched agents show up.
@@ -353,11 +379,17 @@ export function WelcomeView() {
             <ul className="space-y-2">
               {candidates.map((c) => {
                 const expanded = expandedPid === c.pid
+                const highlighted = highlightPid === c.pid
                 return (
                   <li
                     key={c.pid}
-                    className="rounded p-3"
-                    style={{ background: BG, border: `1px solid ${BORDER}` }}
+                    id={`candidate-${c.pid}`}
+                    className="rounded p-3 transition-all"
+                    style={{
+                      background: BG,
+                      border: `1px solid ${highlighted ? PRIMARY : BORDER}`,
+                      boxShadow: highlighted ? `0 0 0 3px ${PRIMARY}33` : undefined,
+                    }}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
