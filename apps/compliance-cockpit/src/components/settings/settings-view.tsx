@@ -277,7 +277,8 @@ export function SettingsView() {
               </button>
             </div>
             <p className="text-[11px] mt-1" style={{ color: MUTED }}>
-              Also set via <code className="font-mono">GATEWAY_URL</code> env var when deploying
+              Server-side default: set <code className="font-mono">GATEWAY_URL</code> on the Cockpit process (not your SDK).
+              SDKs configure their own URL in <code className="font-mono">agentguard.auto(...)</code>.
             </p>
           </div>
 
