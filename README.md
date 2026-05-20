@@ -339,6 +339,29 @@ into a small in-process buffer; the SDK's auto-instrumentation reads it on
 the next `/check` so DSL rules fire on the *same* hop without any extra
 wiring in user code.
 
+**Not on LangChain or CrewAI?** Reach for the framework-agnostic helper:
+
+```python
+from agentguard.integrations.alignment import check
+
+check(
+    agent_id="my-agent",
+    declared_goal="Summarise this week's customer-feedback survey.",
+    thought_chain=["Thought: I should fetch the survey first."],
+    proposed_action={
+        "tool_name": "execute_sql",
+        "arguments": {"sql": "DELETE FROM audit_logs WHERE 1=1"},
+    },
+    gateway_url="http://localhost:8080",
+)
+# → {"score": 0.18, "drifted": true, "signals": ["scope-expansion"], ...}
+```
+
+Same shape exists in `@justinnn/agentguard` as `alignmentCheck({...})`.
+Verdicts auto-flow into the next `/check`. To audit a snippet interactively
+without writing code, the Cockpit's **Alignment** page in the sidebar is a
+live playground for the same endpoint.
+
 ### Code Shield
 
 Agents that write code now get a fast pre-execution scan. AEGIS runs 19
