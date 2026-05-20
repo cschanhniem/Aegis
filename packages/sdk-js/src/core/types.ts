@@ -44,6 +44,19 @@ export interface CheckRequest {
   tool_name: string;
   arguments: Record<string, unknown>;
   environment: string;
+  /** Optional CoT alignment verdict — DSL rules can match `alignment.drifted`. */
+  alignment?: {
+    score: number;
+    drifted?: boolean;
+    signals?: string[];
+    reason?: string;
+  };
+  /** Optional CodeShield scan summary — DSL rules can match `code_shield.worst`. */
+  code_shield?: {
+    worst: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | null;
+    findings_count?: number;
+    rules?: string[];
+  };
 }
 
 export interface CheckResponse {

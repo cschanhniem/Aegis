@@ -3,6 +3,7 @@ import { HttpTransport } from '../transport/http.js';
 import type {
   AgentGuardConfig,
   GatewayTrace,
+  CheckRequest,
   CheckResponse,
   RiskLevel,
   Environment,
@@ -94,15 +95,29 @@ export class AgentGuard {
    */
   async check(toolName: string, args: Record<string, unknown>): Promise<CheckResponse | null> {
     try {
-      return await this.transport.check(
-        {
-          agent_id: this.agentId,
-          tool_name: toolName,
-          arguments: args,
-          environment: this.config.environment,
-        },
-        this.config.blockingTimeoutMs
-      );
+      const req: CheckRequest = {
+        agent_id: this.agentId,
+        tool_name: toolName,
+        arguments: args,
+        environment: this.config.environment,
+      };
+
+      // Splice in any buffered CodeShield verdict so DSL rules like
+      // `{ code_shield.worst: CRITICAL }` can fire on the same hop.
+      // Lazy require so this stays optional and tree-shakeable; the
+      // state module has no side effects until something writes to it.
+      try {
+        const cs = await import('../integrations/code-shield-state.js');
+        const buffered = cs.consume(this.agentId);
+        if (buffered) {
+          const payload = cs.toCheckPayload(buffered);
+          if (payload) req.code_shield = payload;
+        }
+      } catch {
+        // Module not bundled — fine, just skip the splice.
+      }
+
+      return await this.transport.check(req, this.config.blockingTimeoutMs);
     } catch (err) {
       if (this.config.debug) console.warn('[AgentGuard] Check request failed:', err);
       return null;

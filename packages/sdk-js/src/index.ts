@@ -26,6 +26,24 @@ export type {
 } from './core/types.js';
 export { auto, AutoInstrument } from './interceptors/auto.js';
 
+/**
+ * CodeShield helper — scan agent-generated code before dispatch, get
+ * severity + findings, and have the verdict auto-attach to the next
+ * /check call for the same agent so DSL rules can react on-hop.
+ */
+export {
+  scan as codeShieldScan,
+  consumeBuffer as codeShieldConsume,
+  LANGUAGES as CODE_SHIELD_LANGUAGES,
+} from './integrations/code-shield.js';
+export type {
+  CodeShieldResult,
+  CodeShieldFinding,
+  CodeShieldLanguage,
+  ScanOptions as CodeShieldScanOptions,
+} from './integrations/code-shield.js';
+
 // Default export: the `auto` function for zero-code setup
 import { auto } from './interceptors/auto.js';
-export default { auto };
+import { scan as codeShieldScan } from './integrations/code-shield.js';
+export default { auto, codeShield: { scan: codeShieldScan } };
