@@ -26,7 +26,13 @@ function loadConfig(): { gateway_url: string; api_key?: string } {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
   } catch {
-    return { gateway_url: process.env.AGENTGUARD_URL ?? 'http://localhost:8080' };
+    // Canonical env: AEGIS_GATEWAY_URL. Legacy: AGENTGUARD_URL.
+    return {
+      gateway_url:
+        process.env.AEGIS_GATEWAY_URL ??
+        process.env.AGENTGUARD_URL ??
+        'http://localhost:8080',
+    };
   }
 }
 
@@ -35,7 +41,12 @@ function gatewayUrl(): string {
 }
 
 function apiKey(): string | undefined {
-  return process.env.AGENTGUARD_API_KEY || loadConfig().api_key;
+  // Canonical env: AEGIS_API_KEY. Legacy: AGENTGUARD_API_KEY.
+  return (
+    process.env.AEGIS_API_KEY ||
+    process.env.AGENTGUARD_API_KEY ||
+    loadConfig().api_key
+  );
 }
 
 // ── HTTP helper ─────────────────────────────────────────────────────────────
