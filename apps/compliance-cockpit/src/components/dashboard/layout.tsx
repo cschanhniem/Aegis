@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useTraceStream } from '@/hooks/useTraceStream'
 import { BlockAlertToast } from '@/components/ui/block-alert-toast'
+import { StatusBar } from '@/components/dashboard/status-bar'
 
 const navigation = [
   { name: 'Welcome',     href: '/welcome',     icon: Sparkles        },
@@ -204,7 +205,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Main content */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        <main className="flex-1 overflow-y-auto pt-14 md:pt-0">
+        {/* Live status bar — protected | traces | blocked | pending */}
+        <div className="pt-14 md:pt-0">
+          <StatusBar />
+        </div>
+        <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 py-6 md:px-8 md:py-8">
             {children}
           </div>
