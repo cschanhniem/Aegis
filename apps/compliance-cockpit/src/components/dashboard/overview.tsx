@@ -1,8 +1,10 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
+import { gw } from '@/lib/gateway'
 import {
   Card,
   CardContent,
@@ -100,6 +102,119 @@ function GlobalSearch() {
   )
 }
 
+function EmptyState() {
+  const queryClient = useQueryClient()
+  const [seeding, setSeeding] = useState(false)
+  const [seedError, setSeedError] = useState<string | null>(null)
+
+  async function seedDemo() {
+    setSeeding(true)
+    setSeedError(null)
+    try {
+      const res = await gw('seed', { method: 'POST' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error?.message ?? `HTTP ${res.status}`)
+      }
+      // Invalidate every dashboard query so the new traces flow in
+      // immediately rather than waiting for the 10s poll.
+      await queryClient.invalidateQueries()
+    } catch (e: any) {
+      setSeedError(e.message ?? 'Seed failed')
+    } finally {
+      setSeeding(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Real-time monitoring of AI agent activities and compliance
+        </p>
+      </div>
+
+      <div
+        className="rounded-lg p-8 md:p-10 text-center space-y-4"
+        style={{
+          background: 'hsl(var(--card))',
+          border: `1px solid ${BORDER}`,
+        }}
+      >
+        <div className="inline-flex items-center justify-center mx-auto" style={{ color: MUTED }}>
+          <span className="relative inline-flex h-3 w-3" aria-hidden="true">
+            <span
+              className="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping"
+              style={{ background: 'hsl(var(--primary))' }}
+            />
+            <span
+              className="relative inline-flex rounded-full h-3 w-3"
+              style={{ background: 'hsl(var(--primary))' }}
+            />
+          </span>
+          <span className="ml-2 text-xs uppercase tracking-widest">Listening</span>
+        </div>
+
+        <h2
+          className="text-2xl"
+          style={{
+            fontFamily: 'var(--font-serif), Georgia, serif',
+            color: 'hsl(var(--foreground))',
+            letterSpacing: '-0.012em',
+          }}
+        >
+          Nothing has come through AEGIS yet.
+        </h2>
+        <p className="text-sm max-w-xl mx-auto" style={{ color: MUTED }}>
+          The gateway is up and the dashboard is wired — it just hasn't seen
+          its first tool call. Plug your agent in, or load a few sample
+          traces to feel how the dashboard reacts.
+        </p>
+
+        <div className="pt-3 flex items-center justify-center gap-3 flex-wrap">
+          <Link
+            href="/welcome"
+            className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-md"
+            style={{
+              background: 'hsl(var(--primary))',
+              color: 'hsl(var(--primary-foreground))',
+            }}
+          >
+            Open Welcome <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+
+          <button
+            onClick={seedDemo}
+            disabled={seeding}
+            className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-md border"
+            style={{
+              background: 'transparent',
+              color: 'hsl(var(--foreground))',
+              borderColor: BORDER,
+              opacity: seeding ? 0.5 : 1,
+            }}
+          >
+            {seeding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            {seeding ? 'Seeding…' : 'See it with sample data'}
+          </button>
+        </div>
+
+        {seedError && (
+          <p className="text-xs pt-1" style={{ color: 'hsl(0 50% 38%)' }}>
+            {seedError}
+          </p>
+        )}
+
+        <p className="text-[11px] pt-3" style={{ color: MUTED, opacity: 0.7 }}>
+          Sample traces are seeded directly into your local SQLite DB.
+          Wipe them anytime by deleting <code>~/Library/Application Support/com.aojieyuan.aegis/aegis.db</code>.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export function DashboardOverview() {
   const { data: stats } = useQuery({
     queryKey: ['dashboard-stats'],
@@ -121,83 +236,11 @@ export function DashboardOverview() {
   }
 
   // First-run empty state: no traces in the gateway yet. Send the user
-  // to /welcome where the SDK snippets + process scanner live.
+  // to /welcome where the SDK snippets + process scanner live, OR offer
+  // a one-click "give me sample data so I can see what this looks like".
   const noData = stats !== undefined && (stats?.totalTraces ?? 0) === 0
   if (noData) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Real-time monitoring of AI agent activities and compliance
-          </p>
-        </div>
-
-        <div
-          className="rounded-lg p-8 md:p-10 text-center space-y-4"
-          style={{
-            background: 'hsl(var(--card))',
-            border: `1px solid ${BORDER}`,
-          }}
-        >
-          <div
-            className="inline-flex items-center justify-center mx-auto"
-            style={{ color: MUTED }}
-          >
-            <span
-              className="relative inline-flex h-3 w-3"
-              aria-hidden="true"
-            >
-              <span
-                className="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping"
-                style={{ background: 'hsl(var(--primary))' }}
-              />
-              <span
-                className="relative inline-flex rounded-full h-3 w-3"
-                style={{ background: 'hsl(var(--primary))' }}
-              />
-            </span>
-            <span className="ml-2 text-xs uppercase tracking-widest">
-              Listening
-            </span>
-          </div>
-
-          <h2
-            className="text-2xl"
-            style={{
-              fontFamily: 'var(--font-serif), Georgia, serif',
-              color: 'hsl(var(--foreground))',
-              letterSpacing: '-0.012em',
-            }}
-          >
-            Nothing has come through AEGIS yet.
-          </h2>
-          <p className="text-sm max-w-xl mx-auto" style={{ color: MUTED }}>
-            The gateway is up and the dashboard is wired — it just hasn't
-            seen its first tool call. Visit the Welcome panel to plug your
-            agent in. The dashboard auto-fills the moment a trace lands.
-          </p>
-
-          <div className="pt-2">
-            <Link
-              href="/welcome"
-              className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-md"
-              style={{
-                background: 'hsl(var(--primary))',
-                color: 'hsl(var(--primary-foreground))',
-              }}
-            >
-              Open Welcome <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          <p className="text-[11px] pt-3" style={{ color: MUTED, opacity: 0.7 }}>
-            Already wired up? Trigger any agent tool call — refresh here in
-            a few seconds.
-          </p>
-        </div>
-      </div>
-    )
+    return <EmptyState />
   }
 
   return (
