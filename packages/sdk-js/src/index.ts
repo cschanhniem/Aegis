@@ -43,6 +43,20 @@ export type {
   ScanOptions as CodeShieldScanOptions,
 } from './integrations/code-shield.js';
 
+/**
+ * Internal helpers re-exported only for the in-tree test suite. The
+ * underscore prefix flags them as not part of the stable surface; do
+ * not import these from user code. They may change shape between
+ * minor releases.
+ */
+export {
+  record as _csRecord,
+  consume as _csConsume,
+  reset as _csReset,
+  toCheckPayload as _csToCheckPayload,
+  TTL_MS as _CS_TTL_MS,
+} from './integrations/code-shield-state.js';
+
 // Default export: the `auto` function for zero-code setup
 import { auto } from './interceptors/auto.js';
 import { scan as codeShieldScan } from './integrations/code-shield.js';
