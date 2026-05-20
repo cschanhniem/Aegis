@@ -63,6 +63,23 @@ esac
 dim "  OS:   $OS"
 dim "  Arch: $ARCH"
 
+# macOS users almost always want the .dmg — it ships the gateway, the
+# Cockpit, and a Node runtime in one self-contained app. Surface that
+# path before walking them through git clone + Docker.
+if [ "$OS" = "Darwin" ] && [ -z "${AEGIS_FORCE_DOCKER:-}" ]; then
+  echo
+  warn "Detected macOS. The fastest install is the native .dmg:"
+  echo "  https://github.com/Justin0504/Aegis/releases/latest"
+  echo
+  echo "  - Apple Silicon (M1+): AEGIS_*_aarch64.dmg"
+  echo "  - Intel:                AEGIS_*_x64.dmg"
+  echo
+  dim "  Continuing with the Docker path below in 5s — Ctrl+C to abort"
+  dim "  (Skip this nudge by setting AEGIS_FORCE_DOCKER=1)"
+  sleep 5
+  echo
+fi
+
 for bin in git curl docker; do
   if ! command -v "$bin" >/dev/null 2>&1; then
     err "Required: $bin (not found in PATH)"
