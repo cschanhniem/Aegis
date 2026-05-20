@@ -23,6 +23,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       {children}
       <Toaster
         position="bottom-right"
+        richColors
+        duration={5000}
         toastOptions={{
           style: {
             fontFamily: 'var(--font-geist-sans), system-ui, sans-serif',
