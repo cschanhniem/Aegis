@@ -51,6 +51,19 @@ const CheckRequestSchema = z.object({
    * Highest priority, overrides auto-classification.
    */
   user_category_overrides: z.record(z.string()).optional(),
+  /**
+   * Optional agent-alignment evidence captured by an SDK that has
+   * chain-of-thought visibility (LangChain/CrewAI/ReAct). If present,
+   * the score + drift flag are fed into the DSL evaluator so rules
+   * can match on `alignment.score < 0.5` etc. Compute it via
+   * POST /api/v1/alignment/check upstream of /check.
+   */
+  alignment: z.object({
+    score:    z.number().min(0).max(1),
+    drifted:  z.boolean().optional(),
+    signals:  z.array(z.string().max(40)).max(5).optional(),
+    reason:   z.string().max(500).optional(),
+  }).optional(),
 })
 
 // Risk levels that trigger human-review when blocking=true
@@ -259,6 +272,9 @@ export class CheckAPI {
                   decision: anomalyResult.decision,
                 }
               : undefined,
+            // Optional alignment evidence — only present if the caller
+            // pre-computed it via /api/v1/alignment/check.
+            alignment: body.alignment ?? undefined,
             policy: {
               passed: validation.passed,
               riskLevel: validation.risk_level,
