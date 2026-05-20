@@ -16,7 +16,6 @@
 [![npm](https://img.shields.io/badge/npm-%40justinnn%2Fagentguard-red)](https://www.npmjs.com/package/@justinnn/agentguard)
 [![Docker](https://img.shields.io/badge/ghcr.io-aegis--gateway-0db7ed)](https://github.com/Justin0504/Aegis/pkgs/container/aegis-gateway)
 [![CI](https://github.com/Justin0504/Aegis/actions/workflows/ci.yml/badge.svg)](https://github.com/Justin0504/Aegis/actions)
-[![arXiv](https://img.shields.io/badge/arXiv-2603.12621-b31b1b.svg)](https://arxiv.org/abs/2603.12621)
 
 [**Download** →](https://github.com/Justin0504/Aegis/releases/latest) ·
 [**Roadmap** →](./ROADMAP.md) ·
