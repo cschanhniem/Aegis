@@ -79,10 +79,11 @@ Closing the "this catches things other guardrails miss" gap.
   `POST /api/v1/code-shield/scan`. Sub-millisecond per scan; no
   LLM, no subprocess. The Semgrep-backed v2 (taint analysis,
   AST-aware passes) is still on the roadmap for v0.4.
-- [ ] **Cockpit dark mode (proper).** Right now the Cockpit's
-  warm-cream palette flips correctly via CSS variables but
-  individual panels haven't all been audited for contrast in the
-  dark variant.
+- [x] **Cockpit dark mode (proper).** `globals.css` now defines a
+  full dark palette behind both an explicit `.dark` class and the
+  `prefers-color-scheme: dark` media query, with a three-state
+  Light / System / Dark switch in the sidebar footer and a no-flash
+  inline bootstrap that runs before paint.
 - [ ] **Tray click → specific unprotected agent** instead of just
   the welcome list, when the user clicks the count "3".
 

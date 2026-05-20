@@ -12,6 +12,7 @@ import {
 import { useTraceStream } from '@/hooks/useTraceStream'
 import { BlockAlertToast } from '@/components/ui/block-alert-toast'
 import { StatusBar } from '@/components/dashboard/status-bar'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 const navigation = [
   { name: 'Welcome',     href: '/welcome',     icon: Sparkles        },
@@ -127,6 +128,7 @@ function SidebarContent({ pathname, connected, lastUpdate, notifPermission, requ
             {notifPermission === 'denied' ? 'Notifications blocked' : 'Enable notifications'}
           </button>
         )}
+        <ThemeToggle />
         <p className="text-[11px]" style={{ color: MUTED, opacity: 0.85 }}>v{process.env.APP_VERSION}</p>
       </div>
     </>

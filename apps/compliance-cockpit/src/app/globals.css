@@ -29,11 +29,75 @@
     --sidebar:              42 26% 83%;
     --sidebar-active:       42 24% 78%;
   }
+
+  /*
+   * Dark mode — ink-and-paper inverted. Background is a near-black
+   * with a faint warm tint so the beige-grade serif type still feels
+   * tied to the light scheme; everything that was black-on-beige is
+   * now cream-on-near-black. The destructive / chart accents stay in
+   * the same hue but desaturate one notch so they don't burn at
+   * night.
+   */
+  :root.dark,
+  :root[data-theme="dark"] {
+    --background:           220 4% 8%;
+    --foreground:           42 22% 90%;
+    --card:                 220 4% 11%;
+    --card-foreground:      42 22% 90%;
+    --popover:              220 4% 11%;
+    --popover-foreground:   42 22% 90%;
+    --primary:              42 22% 90%;
+    --primary-foreground:   220 6% 10%;
+    --secondary:            220 4% 16%;
+    --secondary-foreground: 42 22% 90%;
+    --muted:                220 4% 14%;
+    --muted-foreground:     42 8% 68%;
+    --accent:               42 22% 90%;
+    --accent-foreground:    220 6% 10%;
+    --destructive:          0 50% 56%;
+    --destructive-foreground: 220 6% 10%;
+    --border:               220 4% 22%;
+    --input:                220 4% 22%;
+    --ring:                 42 22% 90%;
+    --sidebar:              220 4% 10%;
+    --sidebar-active:       220 4% 16%;
+  }
+
+  /*
+   * Auto-pick the OS preference when the user hasn't manually
+   * toggled. Manual toggles set .dark explicitly on <html>, so this
+   * media query won't fight it.
+   */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light):not([data-theme="light"]) {
+      --background:           220 4% 8%;
+      --foreground:           42 22% 90%;
+      --card:                 220 4% 11%;
+      --card-foreground:      42 22% 90%;
+      --popover:              220 4% 11%;
+      --popover-foreground:   42 22% 90%;
+      --primary:              42 22% 90%;
+      --primary-foreground:   220 6% 10%;
+      --secondary:            220 4% 16%;
+      --secondary-foreground: 42 22% 90%;
+      --muted:                220 4% 14%;
+      --muted-foreground:     42 8% 68%;
+      --accent:               42 22% 90%;
+      --accent-foreground:    220 6% 10%;
+      --destructive:          0 50% 56%;
+      --destructive-foreground: 220 6% 10%;
+      --border:               220 4% 22%;
+      --input:                220 4% 22%;
+      --ring:                 42 22% 90%;
+      --sidebar:              220 4% 10%;
+      --sidebar-active:       220 4% 16%;
+    }
+  }
 }
 
 @layer base {
   * { @apply border-border; }
-  html { color-scheme: light; }
+  html { color-scheme: light dark; }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -63,8 +127,8 @@
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(36 12% 80%); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(36 12% 70%); }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.45); }
 
 @keyframes trace-slide-in {
   from { opacity: 0; transform: translateY(-8px); }

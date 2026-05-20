@@ -40,7 +40,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={`${inter.variable} ${instrumentSerif.variable} ${GeistMono.variable} ${plusJakarta.variable}`}
+      suppressHydrationWarning
     >
+      <head>
+        {/*
+         * No-flash theme bootstrap. Runs before paint, reads the user's
+         * saved preference from localStorage, and sets the .dark class
+         * on <html> if they explicitly chose dark — or if they're on
+         * 'system' and the OS prefers dark. Anything that depends on
+         * CSS variables now renders correctly on first paint.
+         */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                try {
+                  var stored = localStorage.getItem('aegis:theme');
+                  var sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  var apply = stored === 'dark' || ((stored === 'system' || !stored) && sysDark);
+                  if (apply) document.documentElement.classList.add('dark');
+                  else if (stored === 'light') document.documentElement.classList.add('light');
+                } catch (_) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body style={{ fontFamily: 'var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
         <Providers>{children}</Providers>
       </body>

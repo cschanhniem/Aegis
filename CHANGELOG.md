@@ -9,6 +9,30 @@ versioning follows [SemVer](https://semver.org/).
 In flight on `main`, slated for the next release.
 
 ### Added
+- **Cockpit dark mode** — full dark palette behind an explicit
+  `.dark` class and `prefers-color-scheme: dark`; three-state
+  Light / System / Dark switch in the sidebar footer; no-flash
+  inline bootstrap so the right theme is applied before first
+  paint.
+- **CodeShield** — fast, local-only static scanner for code that
+  an agent is about to commit or execute. 19 curated regex rules
+  across Python, JavaScript, shell, SQL, and cross-language secret
+  formats. Sub-millisecond scans, no LLM round-trip. Exposed at
+  `POST /api/v1/code-shield/scan` (with `GET /recent` for the
+  Cockpit panel), and the worst severity flows into the Policy
+  DSL via `code_shield.*`.
+- **Closed-loop alignment** — the LangChain `AlignmentCallback`
+  now drops each verdict into an in-process buffer keyed by
+  `agent_id`. The SDK's auto-instrumentation interceptor reads
+  from the buffer when it next calls `/check` for the same agent
+  and splices the verdict in under `alignment`. Policy DSL rules
+  like `alignment.score < 0.5` now fire on the same hop as the
+  tool call, with no extra wiring in user code. Verdicts expire
+  after 30 s and are consumed once.
+- **Tray deep-link** — clicking the AEGIS tray icon when at least
+  one unprotected agent is detected now lands on
+  `/welcome?pid=<top>` and the matching card auto-expands +
+  scrolls into view with a 2 s highlight ring.
 - Public roadmap at `ROADMAP.md`; nav bar in the README links to
   Download / Roadmap / Security / Contributing.
 - CI build jobs for **macOS Intel (x64)**, **Linux x64**, and
