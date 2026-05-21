@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Shield, ShieldAlert } from 'lucide-react'
+import { Shield, ShieldAlert, Link2 } from 'lucide-react'
 import { gw } from '@/lib/gateway'
 
 const BORDER  = 'hsl(var(--border))'
@@ -20,9 +20,16 @@ interface Stats {
   tracesTrend: number
 }
 
+interface IntegritySummary {
+  total: number
+  ok: number
+  broken: number
+}
+
 export function StatusBar() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [reachable, setReachable] = useState(true)
+  const [integrity, setIntegrity] = useState<IntegritySummary | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -43,6 +50,33 @@ export function StatusBar() {
     }
     tick()
     const id = setInterval(tick, 10_000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [])
+
+  // Integrity bulk-verify is heavier than /stats (full chain walk over
+  // every agent's history) — poll on a much slower cadence. 60s is a
+  // sweet spot: short enough that a Cockpit watcher sees a breach
+  // within a minute, long enough that a 50-agent deployment doesn't
+  // burn CPU on every dashboard tick.
+  useEffect(() => {
+    let cancelled = false
+    const tick = async () => {
+      try {
+        const res = await gw('integrity/verify-all')
+        if (cancelled) return
+        if (!res.ok) return
+        const data = await res.json()
+        setIntegrity({
+          total: data.total_agents ?? 0,
+          ok: data.ok_agents ?? 0,
+          broken: data.broken_agents ?? 0,
+        })
+      } catch {
+        /* leave previous value sticky on transient failures */
+      }
+    }
+    tick()
+    const id = setInterval(tick, 60_000)
     return () => { cancelled = true; clearInterval(id) }
   }, [])
 
@@ -95,6 +129,30 @@ export function StatusBar() {
                 value={fmt(pending)}
                 tint={PENDING}
               />
+            </>
+          )}
+
+          {integrity && integrity.total > 0 && (
+            <>
+              <span className="opacity-50">·</span>
+              <a
+                href="/audit-log"
+                className="inline-flex items-baseline gap-1 hover:underline"
+                title="Open /audit-log to drill in"
+                style={{ color: 'inherit' }}
+              >
+                <Link2
+                  className="h-3 w-3 self-center -mt-0.5"
+                  style={{ color: integrity.broken === 0 ? OK : ALERT }}
+                />
+                <span
+                  className="font-medium tabular-nums"
+                  style={{ color: integrity.broken === 0 ? OK : ALERT }}
+                >
+                  {integrity.ok}/{integrity.total}
+                </span>
+                <span style={{ color: MUTED }}>chains</span>
+              </a>
             </>
           )}
         </>
