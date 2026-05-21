@@ -556,6 +556,31 @@ Every trace is:
 - **SHA-256 hash-chained** — each trace commits to the previous, tamper-evident
 - **Immutable** — any modification breaks the chain, detectable by any third party
 
+**Verify it yourself** — the chain is reachable from three surfaces so
+nobody has to take our word for it:
+
+```bash
+# 1. From the CLI — fits a cron job or CI gate.
+agentguard integrity verify <agent-id>
+# → ✓ agent <id>  (142 traces, 3ms) · latest abc12345…
+
+# 2. From the REST API — for your own audit pipelines.
+curl -H "X-API-Key: $KEY" \
+  "$GATEWAY/api/v1/integrity/verify?agent_id=<agent-id>"
+# → { "ok": true, "total": 142, "latest_trace_id": "...", ... }
+
+# 3. From the Cockpit — Audit Log page has an inline "Verify chain"
+#    widget. Click any agent_id in the table to verify on the spot.
+```
+
+Linkage verification catches insertions, deletions, and reorders in
+the trace chain. Single-row content tamper detection (a separate
+pre-redaction canonical hash field) is on the roadmap for v0.4 —
+today, that threat model is covered by the optional Ed25519
+signature path. The two are complementary: hash chain detects
+in-place edits that nobody bothers to re-sign; signatures detect
+edits that don't have your private key.
+
 This isn't just logging. It is a **tamper-evident audit record** for reviewing how your AI agents operated within policy.
 
 ---

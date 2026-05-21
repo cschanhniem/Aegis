@@ -5,7 +5,7 @@ partners, and anyone wondering whether AEGIS is alive (it is — see
 [releases](https://github.com/Justin0504/Aegis/releases) and
 the commit graph).
 
-Last updated: 2026-05-20 · Current release: **v0.1.0** · On `main`: closed-loop alignment + CodeShield landed (see [CHANGELOG](CHANGELOG.md))
+Last updated: 2026-05-20 · Current release: **v0.1.0** · On `main`: audit-chain integrity verify + audit-log attribution & filters + closed-loop alignment + CodeShield landed (see [CHANGELOG](CHANGELOG.md))
 
 ## Now (v0.1)
 
@@ -88,6 +88,34 @@ Closing the "this catches things other guardrails miss" gap.
   badge shows N unprotected processes, clicking the tray now
   routes to `/welcome?pid=<top>` and the matching card auto-
   expands + scrolls into view with a 2s highlight ring.
+- [x] **Audit-chain linkage verification** — three surfaces all
+  hit `GET /api/v1/integrity/verify`: `agentguard integrity
+  verify <id>` for cron/CI; the REST endpoint for ad-hoc pipelines;
+  the Cockpit `/audit-log` page's inline widget for live reviewer
+  use. Linkage checks insertion / deletion / reorder of trace rows.
+- [x] **Audit-log attribution + filters.** Every audit row now
+  records the API key name + prefix so SOC 2 reviewers can answer
+  "which actor changed this." The `/audit-log` page filters by
+  action, resource type, resource id, free-text on the JSON
+  details, and date range; CSV export ships the visible page.
+
+---
+
+## v0.4 (scoped)
+
+- [ ] **Single-row content-tamper detection.** Today's integrity
+  verify is linkage-only because PII redaction happens before
+  insert (the stored row no longer hashes back to the SDK's
+  pre-redaction hash). v0.4 adds a separate canonical hash field
+  (e.g. `content_hash_unredacted`) so reviewers can prove a row's
+  content has not been mutated since insert.
+- [ ] **CodeShield (Semgrep) v2.** v0.3 ships 19 curated regex
+  rules at <1ms per scan; v0.4 adds an optional Semgrep-backed
+  pass that catches taint flows the regex layer can't, behind a
+  feature flag so the latency profile stays optional.
+- [ ] **Cockpit dark mode pass over remaining tabs** (Costs / Eval
+  / Live Feed) — only `/dsl`, `/code-shield`, `/alignment`,
+  `/audit-log` are fully audited today.
 
 ---
 

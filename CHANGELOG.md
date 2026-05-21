@@ -9,6 +9,24 @@ versioning follows [SemVer](https://semver.org/).
 In flight on `main`, slated for the next release.
 
 ### Added
+- **Audit-chain integrity verification** — three surfaces:
+  - CLI: `agentguard integrity verify <agent-id>` (exits 0 on
+    intact chain, 1 on break, 2 on gateway error).
+  - REST: `GET /api/v1/integrity/verify?agent_id=...`.
+  - Cockpit: `/audit-log` page has an inline "Verify chain"
+    widget; clicking any `resource_type=agent` row's id auto-fills
+    the widget and smooth-scrolls back to it.
+  Linkage check only in this release (catches insertion / deletion /
+  reorder of trace rows). Per-row content-tamper detection is v0.4 —
+  the gateway's PII redaction happens before insert, so re-hashing
+  stored rows can't match the SDK's pre-redaction hash. Optional
+  Ed25519 signature path covers the residual threat model today.
+- **Audit-log attribution + search** — every audit row now records
+  the calling API key as `name (prefix)` so SOC 2 reviewers can
+  answer "which actor changed this." The `/audit-log` page filters
+  by action, resource type, resource id, free-text on the JSON
+  details (debounced 350ms server-side LIKE), and date range; CSV
+  export ships the visible page.
 - **`/alignment` standalone Cockpit page** — interactive composer for
   declared-goal + thought-chain + tool-call, runs through the same
   `/api/v1/alignment/check` endpoint as the SDK callbacks. Three
