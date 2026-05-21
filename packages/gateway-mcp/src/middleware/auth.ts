@@ -25,8 +25,38 @@ declare global {
       orgId?: string;
       keyScopes?: string[];
       keyRateLimit?: number;
+      /** Human-readable name from org_api_keys.name; populated by auth middleware. */
+      keyName?: string;
+      /** First 12 chars of the API key for audit-trail attribution. */
+      keyPrefix?: string;
     }
   }
+}
+
+/**
+ * Build the (user_email, user_id) pair the audit log expects, given
+ * a request that has been through the auth middleware. API keys
+ * don't map to a real user — but they have a human-readable name
+ * and a prefix, which together are the right SOC 2 attribution for
+ * service-account writes: an auditor can revoke that key and the
+ * trail tells them which key did what.
+ *
+ *   "default-key (aegis_a1b2c3…)"  → SOC 2-readable
+ *
+ * If no auth info on the request (open route or legacy bootstrap),
+ * the pair is undefined → audit row stays null on those columns.
+ */
+export function auditActor(req: Request): { user_email?: string; user_id?: string } {
+  const name = req.keyName;
+  const prefix = req.keyPrefix;
+  if (!name && !prefix) return {};
+  const formatted = name && prefix
+    ? `${name} (${prefix})`
+    : (name ?? prefix);
+  return {
+    user_email: formatted,
+    user_id: prefix,  // stable id when the name gets renamed
+  };
 }
 
 /**
@@ -52,7 +82,7 @@ export function createAuthMiddleware(db: Database.Database) {
     if (apiKey.startsWith('aegis_')) {
       const hash = createHash('sha256').update(apiKey).digest('hex');
       const row = db.prepare(`
-        SELECT id, org_id, scopes, rate_limit, expires_at, revoked_at
+        SELECT id, org_id, name, key_prefix, scopes, rate_limit, expires_at, revoked_at
         FROM org_api_keys
         WHERE key_hash = ?
       `).get(hash) as any;
@@ -63,6 +93,8 @@ export function createAuthMiddleware(db: Database.Database) {
           req.orgId = row.org_id;
           req.keyScopes = JSON.parse(row.scopes);
           req.keyRateLimit = row.rate_limit;
+          req.keyName = row.name;
+          req.keyPrefix = row.key_prefix;
           // Update last_used_at
           db.prepare('UPDATE org_api_keys SET last_used_at = datetime("now") WHERE id = ?').run(row.id);
           return next();
@@ -77,6 +109,10 @@ export function createAuthMiddleware(db: Database.Database) {
     if (row && apiKey === row.value) {
       req.orgId = 'default';
       req.keyScopes = ['*'];
+      // Legacy dashboard key — attribute as "dashboard" so audit
+      // rows show *something* instead of null.
+      req.keyName = 'dashboard';
+      req.keyPrefix = apiKey.slice(0, 8);
       return next();
     }
 

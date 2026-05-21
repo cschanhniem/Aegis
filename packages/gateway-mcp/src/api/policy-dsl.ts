@@ -28,9 +28,14 @@ const DryRunRequestSchema = z.object({
 });
 
 function ctxFromReq(req: Request) {
+  // Use the auth-middleware-stamped key info as the actor identity.
+  // org_api_keys.name + key_prefix → human-readable + stable id.
+  const name = req.keyName;
+  const prefix = req.keyPrefix;
+  const formatted = name && prefix ? `${name} (${prefix})` : (name ?? prefix);
   return {
-    userEmail: (req as any).userEmail as string | undefined,
-    userId: (req as any).userId as string | undefined,
+    userEmail: formatted as string | undefined,
+    userId: prefix as string | undefined,
     ipAddress: req.ip,
   };
 }

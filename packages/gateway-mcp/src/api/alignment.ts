@@ -19,6 +19,7 @@ import {
   AlignmentProvider,
 } from '../services/alignment-checker';
 import { AuditLogService } from '../services/audit-log';
+import { auditActor } from '../middleware/auth';
 
 const RequestSchema = z.object({
   agent_id: z.string().min(1).max(128),
@@ -100,9 +101,11 @@ export class AlignmentAPI {
         const result = await checker.check(parsed.data as any);
 
         // Audit log every check — alignment scores are evidence that
-        // belongs in the compliance trail.
+        // belongs in the compliance trail. auditActor stamps the
+        // API key name/prefix so SOC 2 reviewers see *who* called.
         this.auditLog.log({
           org_id: (req as any).orgId,
+          ...auditActor(req),
           action: 'judge.trace',
           resource_type: 'agent',
           resource_id: parsed.data.agent_id,

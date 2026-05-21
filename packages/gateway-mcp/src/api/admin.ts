@@ -8,6 +8,7 @@ import { Logger } from 'pino';
 import Database from 'better-sqlite3';
 import { RBACService, Role } from '../services/rbac';
 import { AuditLogService } from '../services/audit-log';
+import { auditActor } from '../middleware/auth';
 import { RetentionService } from '../services/retention';
 import { UsageMeteringService } from '../services/usage-metering';
 import { SLAMetricsService } from '../services/sla-metrics';
@@ -46,6 +47,7 @@ export class AdminAPI {
         const keyResult = this.rbac.createApiKey(orgId, { name: 'Default Key' });
 
         this.auditLog.log({
+          ...auditActor(req),
           action: 'org.create',
           resource_type: 'organization',
           resource_id: orgId,
@@ -90,6 +92,7 @@ export class AdminAPI {
 
         this.auditLog.log({
           org_id: req.params.orgId,
+          ...auditActor(req),
           action: plan ? 'org.update' : 'org.settings',
           resource_type: 'organization',
           resource_id: req.params.orgId,
@@ -227,6 +230,7 @@ export class AdminAPI {
         this.retention.updatePolicy(req.params.id, retention_days, enabled ?? true);
 
         this.auditLog.log({
+          ...auditActor(req),
           action: 'retention.update',
           resource_type: 'retention',
           resource_id: req.params.id,
@@ -243,6 +247,7 @@ export class AdminAPI {
         const result = this.retention.runPurge();
 
         this.auditLog.log({
+          ...auditActor(req),
           action: 'retention.purge',
           resource_type: 'retention',
           details: result,

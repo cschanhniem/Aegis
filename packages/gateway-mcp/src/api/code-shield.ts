@@ -13,6 +13,7 @@ import { z } from 'zod';
 import Database from 'better-sqlite3';
 import { CodeShield, CodeShieldLanguage, DEFAULT_RULES } from '../services/code-shield';
 import { AuditLogService } from '../services/audit-log';
+import { auditActor } from '../middleware/auth';
 
 const ScanRequestSchema = z.object({
   code: z.string().min(1).max(200_000),
@@ -52,6 +53,7 @@ export class CodeShieldAPI {
         if (result.findings.length > 0) {
           this.auditLog.log({
             org_id: (req as any).orgId,
+            ...auditActor(req),
             action: 'judge.trace',
             resource_type: 'agent',
             resource_id: parsed.data.agent_id ?? 'unknown',
