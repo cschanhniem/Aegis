@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { gw } from '@/lib/gateway'
-import { FileText, Download, ChevronLeft, ChevronRight } from 'lucide-react'
+import { FileText, Download, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react'
+import { IntegrityWidget } from './integrity-widget'
 
 const BORDER  = 'hsl(var(--border))'
 const TEXT    = 'hsl(var(--foreground))'
@@ -154,6 +155,11 @@ export function AuditLogView() {
   const start = total === 0 ? 0 : offset + 1
   const end = Math.min(offset + PAGE_SIZE, total)
 
+  // When a row's resource_type='agent' is clicked, drop that agent_id
+  // into the IntegrityWidget so the reviewer can verify with one tap
+  // instead of copy-pasting.
+  const [verifyTarget, setVerifyTarget] = useState<string>('')
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -166,6 +172,12 @@ export function AuditLogView() {
           verdict, approval decision, and admin action. The SOC 2 evidence path.
         </p>
       </div>
+
+      {/* Integrity widget */}
+      <IntegrityWidget
+        initialAgentId={verifyTarget}
+        onAgentIdChange={setVerifyTarget}
+      />
 
       {/* Filters */}
       <div
@@ -328,9 +340,28 @@ export function AuditLogView() {
                   <td className="px-3 py-1.5 align-top" style={{ color: TEXT }}>
                     <span style={{ color: MUTED }}>{e.resource_type ?? '—'}</span>
                     {e.resource_id && (
-                      <span className="font-mono ml-1" style={{ color: TEXT }}>
-                        {e.resource_id.length > 12 ? e.resource_id.slice(0, 8) + '…' : e.resource_id}
-                      </span>
+                      e.resource_type === 'agent' ? (
+                        // Click an agent row to feed the IntegrityWidget
+                        // above; saves the auditor a copy-paste.
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVerifyTarget(e.resource_id!)
+                            // Bring widget into view if user scrolled down.
+                            window.scrollTo({ top: 0, behavior: 'smooth' })
+                          }}
+                          title="Click to verify this agent's chain"
+                          className="font-mono ml-1 inline-flex items-center gap-1 underline decoration-dotted underline-offset-2"
+                          style={{ color: TEXT, background: 'transparent', cursor: 'pointer' }}
+                        >
+                          <ShieldCheck className="h-3 w-3" style={{ color: MUTED }} />
+                          {e.resource_id.length > 12 ? e.resource_id.slice(0, 8) + '…' : e.resource_id}
+                        </button>
+                      ) : (
+                        <span className="font-mono ml-1" style={{ color: TEXT }}>
+                          {e.resource_id.length > 12 ? e.resource_id.slice(0, 8) + '…' : e.resource_id}
+                        </span>
+                      )
                     )}
                   </td>
                   <td className="px-3 py-1.5 align-top" style={{ color: MUTED }}>
