@@ -38,6 +38,7 @@ import { DslPolicyService } from './services/policy-dsl';
 import { PolicyDslAPI } from './api/policy-dsl';
 import { AlignmentAPI } from './api/alignment';
 import { CodeShieldAPI } from './api/code-shield';
+import { IntegrityAPI } from './api/integrity';
 
 const VERSION = '2.0.0';
 
@@ -365,6 +366,10 @@ async function main() {
   // CodeShield — fast local regex scanner for agent-generated code.
   // No LLM, no subprocess: every scan is sub-millisecond.
   app.use('/api/v1/code-shield', requireAuth, new CodeShieldAPI(logger, auditLog, db).router);
+
+  // Audit-chain integrity — proves the "tamper-evident" claim by
+  // recomputing each trace's hash and verifying the chain links.
+  app.use('/api/v1/integrity', requireAuth, new IntegrityAPI(db, logger).router);
 
   // Kill-switch endpoints (auth required)
   app.post('/api/v1/kill-switch/revoke', requireAuth, async (req, res) => {

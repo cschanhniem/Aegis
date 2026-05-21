@@ -1,0 +1,143 @@
+/**
+ * Audit-chain integrity verification.
+ *
+ * The README and the comparison table prominently advertise
+ * "tamper-evident audit trail (hash chain + Ed25519)." Until this
+ * service shipped there was no callable surface to prove that
+ * claim — the integrity_hash and previous_hash columns existed
+ * on every trace row but nothing on the gateway walked them.
+ *
+ * `verifyAgentChain` walks all traces for one agent in
+ * sequence_number order and returns a precise verdict:
+ *
+ *   - { ok: true,  total: N, latest_trace_id, ... }    — chain intact
+ *   - { ok: false, total: N, broken_at: { ... }, ... } — first break
+ *
+ * Scope (v0.3): **linkage verification only**.
+ *   - link_broken — a row's previous_hash doesn't equal the prior
+ *                   row's integrity_hash. This catches insertions,
+ *                   deletions, and reorderings.
+ *
+ * Why not recompute the per-row hash? The gateway does PII
+ * redaction on input_context / thought_chain / tool_call /
+ * observation **before** inserting, but the integrity_hash was
+ * computed by the SDK on the pre-redaction content. Recomputing
+ * from the stored (redacted) row would always disagree with the
+ * stored hash — that's not tampering, it's the PII contract.
+ *
+ * Per-row content-tamper detection (a separate canonical
+ * pre-redaction hash field) is on the roadmap for v0.4. Linkage
+ * already catches every attack vector that doesn't require full
+ * DB write access (insertion / deletion / reorder); a full-write
+ * attacker can cascade hash updates and defeat any chain — the
+ * Ed25519 signature path (optional, off by default) is the
+ * defense for that threat model.
+ */
+
+import Database from 'better-sqlite3';
+import type { Logger } from 'pino';
+
+export type IntegrityBreakReason = 'link_broken';
+
+export interface IntegrityBreak {
+  reason: IntegrityBreakReason;
+  sequence_number: number;
+  trace_id: string;
+  expected: string;
+  actual: string;
+}
+
+export interface IntegrityReport {
+  ok: boolean;
+  agent_id: string;
+  total: number;
+  /** id (trace_id) of the latest trace in the chain — useful for
+   *  printing "as of trace X" in audit reports. */
+  latest_trace_id: string | null;
+  /** First detected break, or undefined if the chain is intact.
+   *  We stop at the first break — once linkage is gone the
+   *  remaining checks would all be on suspect data. */
+  broken_at?: IntegrityBreak;
+  /** Wall-clock ms the verification took. */
+  latency_ms: number;
+}
+
+export class IntegrityService {
+  constructor(
+    private db: Database.Database,
+    private logger?: Logger,
+  ) {}
+
+  verifyAgentChain(agent_id: string): IntegrityReport {
+    const started = Date.now();
+
+    // Pull just the columns we need for linkage: id, sequence, the
+    // two hash columns. We do not re-read the content payloads —
+    // PII redaction happens on insert, so the stored content does
+    // not hash back to the SDK-computed integrity_hash.
+    const rows = this.db
+      .prepare(
+        `SELECT trace_id, sequence_number, integrity_hash, previous_hash
+         FROM traces
+         WHERE agent_id = ?
+         ORDER BY sequence_number ASC`,
+      )
+      .all(agent_id) as Array<{
+        trace_id: string;
+        sequence_number: number;
+        integrity_hash: string;
+        previous_hash: string | null;
+      }>;
+
+    if (rows.length === 0) {
+      return {
+        ok: true,
+        agent_id,
+        total: 0,
+        latest_trace_id: null,
+        latency_ms: Date.now() - started,
+      };
+    }
+
+    let prevHash: string | null = null;
+    for (const row of rows) {
+      // Linkage: previous_hash must equal prior row's integrity_hash.
+      // First row may have previous_hash = null, "", or any genesis
+      // value — we accept anything for sequence 0; only enforce for
+      // subsequent rows. An attacker who inserts a row in the middle
+      // breaks the next row's link; an attacker who deletes a row
+      // leaves a gap that the *following* row's previous_hash no
+      // longer matches.
+      if (prevHash !== null && (row.previous_hash ?? '') !== prevHash) {
+        this.logger?.warn(
+          { agent_id, sequence_number: row.sequence_number },
+          'integrity: link_broken detected',
+        );
+        return {
+          ok: false,
+          agent_id,
+          total: rows.length,
+          latest_trace_id: row.trace_id,
+          broken_at: {
+            reason: 'link_broken',
+            sequence_number: row.sequence_number,
+            trace_id: row.trace_id,
+            expected: prevHash,
+            actual: row.previous_hash ?? '',
+          },
+          latency_ms: Date.now() - started,
+        };
+      }
+
+      prevHash = row.integrity_hash;
+    }
+
+    return {
+      ok: true,
+      agent_id,
+      total: rows.length,
+      latest_trace_id: rows[rows.length - 1].trace_id,
+      latency_ms: Date.now() - started,
+    };
+  }
+}

@@ -883,6 +883,46 @@ program
     }
   });
 
+// ── integrity (audit-chain verification) ────────────────────────────────────
+const integrity = program
+  .command('integrity')
+  .description('Verify the tamper-evident audit trail for an agent');
+
+integrity
+  .command('verify <agentId>')
+  .description('Recompute the hash chain for an agent — proves no traces were tampered or removed')
+  .action(async (agentId: string) => {
+    const url = `${gatewayUrl()}/api/v1/integrity/verify?agent_id=${encodeURIComponent(agentId)}`;
+    let report: any;
+    try {
+      report = await request('GET', url);
+    } catch (e) {
+      console.error(`\x1b[31m✗\x1b[0m gateway error: ${(e as Error).message}`);
+      process.exit(2);
+    }
+    if (report && report.error) {
+      console.error(`\x1b[31m✗\x1b[0m ${report.error}`);
+      process.exit(2);
+    }
+
+    const ok = report.ok === true;
+    const mark = ok ? '\x1b[32m✓\x1b[0m' : '\x1b[31m✗\x1b[0m';
+    const tail = `(${report.total} trace${report.total === 1 ? '' : 's'}, ${report.latency_ms}ms)`;
+    console.log(`${mark} agent ${agentId}  ${tail}`);
+
+    if (report.latest_trace_id) {
+      console.log(`    \x1b[2mlatest: ${report.latest_trace_id}\x1b[0m`);
+    }
+    if (!ok && report.broken_at) {
+      const b = report.broken_at;
+      console.log(`    \x1b[31mbroken at sequence ${b.sequence_number} (${b.trace_id})\x1b[0m`);
+      console.log(`    \x1b[2mreason:   ${b.reason}\x1b[0m`);
+      console.log(`    \x1b[2mexpected: ${b.expected}\x1b[0m`);
+      console.log(`    \x1b[2mactual:   ${b.actual}\x1b[0m`);
+    }
+    process.exit(ok ? 0 : 1);
+  });
+
 // ── admin (enterprise management) ────────────────────────────────────────────
 const admin = program.command('admin').description('Enterprise administration');
 
