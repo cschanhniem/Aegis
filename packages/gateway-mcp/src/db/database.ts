@@ -217,6 +217,13 @@ export async function initializeDatabase(dbPath: string): Promise<Database.Datab
     // Anomaly detection
     `ALTER TABLE traces ADD COLUMN anomaly_score REAL DEFAULT 0`,
     `ALTER TABLE traces ADD COLUMN anomaly_signals TEXT`,
+    // v0.4: post-redaction content hash for single-row tamper detection.
+    // SDK's integrity_hash is computed pre-redaction so the gateway can't
+    // independently verify it; this column is SHA-256 of the canonical
+    // serialization of the four content fields *as stored*, computed at
+    // INSERT time. IntegrityService recomputes it at verify time and
+    // flags any mismatch as content_tamper.
+    `ALTER TABLE traces ADD COLUMN content_hash TEXT`,
   ];
 
   for (const sql of migrations) {

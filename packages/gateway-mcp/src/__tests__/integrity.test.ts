@@ -13,6 +13,7 @@ import pino from 'pino';
 import Database from 'better-sqlite3';
 import { calculateTraceHash } from '@agentguard/core-schema';
 import { IntegrityService } from '../services/integrity';
+import { computeContentHash } from '../api/traces';
 
 const silent = pino({ level: 'silent' });
 
@@ -23,7 +24,7 @@ interface SeedTrace {
   result: string;
 }
 
-function makeDbWithTraces(agent_id: string, seeds: SeedTrace[]) {
+function makeDbWithTraces(agent_id: string, seeds: SeedTrace[], opts: { skipContentHash?: boolean } = {}) {
   const db = new Database(':memory:');
   db.exec(`
     CREATE TABLE traces (
@@ -37,7 +38,8 @@ function makeDbWithTraces(agent_id: string, seeds: SeedTrace[]) {
       tool_call TEXT NOT NULL,
       observation TEXT NOT NULL,
       integrity_hash TEXT NOT NULL,
-      previous_hash TEXT
+      previous_hash TEXT,
+      content_hash TEXT
     );
   `);
 
@@ -61,16 +63,19 @@ function makeDbWithTraces(agent_id: string, seeds: SeedTrace[]) {
       version: '1.0.0',
     } as any;
     const integrity_hash = calculateTraceHash(trace);
+    const content_hash = opts.skipContentHash
+      ? null
+      : computeContentHash(input_context, thought_chain, tool_call, observation);
 
     db.prepare(
       `INSERT INTO traces
-       (trace_id, agent_id, timestamp, sequence_number, input_context, thought_chain, tool_call, observation, integrity_hash, previous_hash)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (trace_id, agent_id, timestamp, sequence_number, input_context, thought_chain, tool_call, observation, integrity_hash, previous_hash, content_hash)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(
       s.trace_id, agent_id, '2026-05-20T00:00:00Z', s.sequence_number,
       JSON.stringify(input_context), JSON.stringify(thought_chain),
       JSON.stringify(tool_call), JSON.stringify(observation),
-      integrity_hash, prevHash,
+      integrity_hash, prevHash, content_hash,
     );
 
     prevHash = integrity_hash;
@@ -138,6 +143,59 @@ describe('IntegrityService.verifyAgentChain', () => {
     expect(r.broken_at?.reason).toBe('link_broken');
     expect(r.broken_at?.trace_id).toBe('t3');
     expect(r.broken_at?.actual).toBe('fake-prior-hash');
+  });
+
+  test('v0.4 content_tamper — observation column mutated after insert is caught', () => {
+    const db = makeDbWithTraces('agent-A', [
+      { trace_id: 't1', sequence_number: 1, tool_name: 'web_search', result: 'clean' },
+      { trace_id: 't2', sequence_number: 2, tool_name: 'read_file',  result: 'clean' },
+    ]);
+    // Tamper: edit observation directly. Don't touch content_hash —
+    // exactly the attack the v0.4 column was added to catch.
+    db.prepare(
+      `UPDATE traces SET observation = ? WHERE trace_id = 't2'`,
+    ).run(JSON.stringify({ raw_output: 'TAMPERED', duration_ms: 1 }));
+
+    const r = new IntegrityService(db, silent).verifyAgentChain('agent-A');
+    expect(r.ok).toBe(false);
+    expect(r.broken_at?.reason).toBe('content_tamper');
+    expect(r.broken_at?.trace_id).toBe('t2');
+  });
+
+  test('v0.4 content_tamper precedes link check for the same row', () => {
+    // If both content_tamper AND link_broken would trip on the same
+    // row, content_tamper wins — it's the more specific diagnosis.
+    const db = makeDbWithTraces('agent-A', [
+      { trace_id: 't1', sequence_number: 1, tool_name: 'web_search', result: 'ok' },
+      { trace_id: 't2', sequence_number: 2, tool_name: 'read_file',  result: 'ok' },
+    ]);
+    db.prepare(
+      `UPDATE traces SET observation = ?, previous_hash = 'bogus' WHERE trace_id = 't2'`,
+    ).run(JSON.stringify({ raw_output: 'TAMPERED', duration_ms: 1 }));
+
+    const r = new IntegrityService(db, silent).verifyAgentChain('agent-A');
+    expect(r.broken_at?.reason).toBe('content_tamper');
+  });
+
+  test('legacy rows (content_hash = NULL) skip the content check', () => {
+    // Pre-v0.4 traces inserted before this column existed have
+    // content_hash = NULL. They should not be flagged as tampered;
+    // linkage still applies.
+    const db = makeDbWithTraces(
+      'agent-A',
+      [
+        { trace_id: 't1', sequence_number: 1, tool_name: 'web_search', result: 'ok' },
+        { trace_id: 't2', sequence_number: 2, tool_name: 'read_file',  result: 'ok' },
+      ],
+      { skipContentHash: true },
+    );
+    // Modify a content field. Pre-v0.4 row has content_hash = NULL,
+    // so the content check is skipped; chain stays ok.
+    db.prepare(`UPDATE traces SET observation = ? WHERE trace_id = 't1'`)
+      .run(JSON.stringify({ raw_output: 'no v0.4 hash on this row', duration_ms: 1 }));
+
+    const r = new IntegrityService(db, silent).verifyAgentChain('agent-A');
+    expect(r.ok).toBe(true);
   });
 
   test('latency_ms is reported and non-negative', () => {

@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import Database from 'better-sqlite3';
 import { Logger } from 'pino';
 import { z } from 'zod';
+import { createHash } from 'crypto';
 import {
   AgentActionTraceSchema,
   TraceQuerySchema,
@@ -11,6 +12,26 @@ import {
 import { calculateCost } from '../services/cost';
 import { redactObjectPii } from '../services/pii';
 import { emitTraceSpan } from '../services/otel';
+
+/**
+ * SHA-256 of the four content fields *as stored* (post-redaction).
+ * Used by IntegrityService for single-row content-tamper detection.
+ * Canonical form: deterministic JSON of {input_context, thought_chain,
+ * tool_call, observation} — each is the same object we stringify into
+ * its column, so verifier and producer share one source of truth.
+ */
+export function computeContentHash(
+  input_context: unknown,
+  thought_chain: unknown,
+  tool_call: unknown,
+  observation: unknown,
+): string {
+  return createHash('sha256')
+    .update(
+      JSON.stringify({ input_context, thought_chain, tool_call, observation }),
+    )
+    .digest('hex');
+}
 
 export class TraceAPI {
   public readonly router: Router;
@@ -343,6 +364,17 @@ export class TraceAPI {
       this.logger.warn({ trace_id: String(trace.trace_id), pii_count: piiDetected }, 'PII redacted from trace');
     }
 
+    // v0.4: hash the post-redaction content for single-row tamper
+    // detection. IntegrityService recomputes this from the stored
+    // row at verify time; mismatch → someone edited the row's
+    // content but didn't update content_hash.
+    const contentHash = computeContentHash(
+      redactedInput,
+      redactedThought,
+      redactedTool,
+      redactedObs,
+    );
+
     this.db.prepare(`
       INSERT INTO traces (
         trace_id, parent_trace_id, agent_id, timestamp, sequence_number,
@@ -351,7 +383,7 @@ export class TraceAPI {
         safety_validation, approval_status, approved_by,
         environment, version, tags,
         model, input_tokens, output_tokens, cost_usd,
-        session_id, pii_detected
+        session_id, pii_detected, content_hash
       ) VALUES (
         ?, ?, ?, ?, ?,
         ?, ?, ?, ?,
@@ -359,7 +391,7 @@ export class TraceAPI {
         ?, ?, ?,
         ?, ?, ?,
         ?, ?, ?, ?,
-        ?, ?
+        ?, ?, ?
       )
     `).run(
       String(trace.trace_id),
@@ -386,6 +418,7 @@ export class TraceAPI {
       costUsd,
       sessionId,
       piiDetected,
+      contentHash,
     );
 
     // Emit OTEL span async, non-blocking

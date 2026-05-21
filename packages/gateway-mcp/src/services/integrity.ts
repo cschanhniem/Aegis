@@ -36,8 +36,9 @@
 
 import Database from 'better-sqlite3';
 import type { Logger } from 'pino';
+import { computeContentHash } from '../api/traces';
 
-export type IntegrityBreakReason = 'link_broken';
+export type IntegrityBreakReason = 'link_broken' | 'content_tamper';
 
 export interface IntegrityBreak {
   reason: IntegrityBreakReason;
@@ -71,13 +72,16 @@ export class IntegrityService {
   verifyAgentChain(agent_id: string): IntegrityReport {
     const started = Date.now();
 
-    // Pull just the columns we need for linkage: id, sequence, the
-    // two hash columns. We do not re-read the content payloads —
-    // PII redaction happens on insert, so the stored content does
-    // not hash back to the SDK-computed integrity_hash.
+    // Pull linkage + content_hash columns. linkage check uses
+    // integrity_hash + previous_hash; the v0.4 content-tamper check
+    // recomputes SHA-256 over the four stored payloads and compares
+    // to the stored content_hash. Rows pre-v0.4 have content_hash =
+    // NULL — those skip the content check (verified true, with a
+    // note in the row).
     const rows = this.db
       .prepare(
-        `SELECT trace_id, sequence_number, integrity_hash, previous_hash
+        `SELECT trace_id, sequence_number, integrity_hash, previous_hash,
+                content_hash, input_context, thought_chain, tool_call, observation
          FROM traces
          WHERE agent_id = ?
          ORDER BY sequence_number ASC`,
@@ -87,6 +91,11 @@ export class IntegrityService {
         sequence_number: number;
         integrity_hash: string;
         previous_hash: string | null;
+        content_hash: string | null;
+        input_context: string;
+        thought_chain: string;
+        tool_call: string;
+        observation: string;
       }>;
 
     if (rows.length === 0) {
@@ -101,6 +110,39 @@ export class IntegrityService {
 
     let prevHash: string | null = null;
     for (const row of rows) {
+      // v0.4 content-tamper check — runs first because it bounds
+      // the row in question more tightly than linkage (which would
+      // also flag this row's content change as a "next row link
+      // break"; the content_tamper reason is more informative).
+      if (row.content_hash) {
+        const recomputed = computeContentHash(
+          JSON.parse(row.input_context),
+          JSON.parse(row.thought_chain),
+          JSON.parse(row.tool_call),
+          JSON.parse(row.observation),
+        );
+        if (recomputed !== row.content_hash) {
+          this.logger?.warn(
+            { agent_id, sequence_number: row.sequence_number },
+            'integrity: content_tamper detected',
+          );
+          return {
+            ok: false,
+            agent_id,
+            total: rows.length,
+            latest_trace_id: row.trace_id,
+            broken_at: {
+              reason: 'content_tamper',
+              sequence_number: row.sequence_number,
+              trace_id: row.trace_id,
+              expected: row.content_hash,
+              actual: recomputed,
+            },
+            latency_ms: Date.now() - started,
+          };
+        }
+      }
+
       // Linkage: previous_hash must equal prior row's integrity_hash.
       // First row may have previous_hash = null, "", or any genesis
       // value — we accept anything for sequence 0; only enforce for
