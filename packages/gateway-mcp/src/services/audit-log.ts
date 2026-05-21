@@ -75,6 +75,9 @@ export class AuditLogService {
     org_id?: string;
     action?: string;
     resource_type?: string;
+    resource_id?: string;
+    /** Substring search across action / resource_id / details. */
+    q?: string;
     from?: string;
     to?: string;
     limit?: number;
@@ -86,8 +89,17 @@ export class AuditLogService {
     if (opts.org_id)        { where += ' AND org_id = ?';        params.push(opts.org_id); }
     if (opts.action)        { where += ' AND action = ?';        params.push(opts.action); }
     if (opts.resource_type) { where += ' AND resource_type = ?'; params.push(opts.resource_type); }
+    if (opts.resource_id)   { where += ' AND resource_id = ?';   params.push(opts.resource_id); }
     if (opts.from)          { where += ' AND created_at >= ?';   params.push(opts.from); }
     if (opts.to)            { where += ' AND created_at <= ?';   params.push(opts.to); }
+    if (opts.q && opts.q.trim()) {
+      // Substring match across the three columns most relevant to an
+      // ops query: the action, the resource id, and the JSON details
+      // blob. Parameter is bound once, used three times.
+      where += ' AND (action LIKE ? OR resource_id LIKE ? OR details LIKE ?)';
+      const needle = `%${opts.q.trim()}%`;
+      params.push(needle, needle, needle);
+    }
 
     const limit = Math.min(opts.limit ?? 50, 200);
     const offset = opts.offset ?? 0;

@@ -206,9 +206,12 @@ export class AdminAPI {
     // ── Audit Log ──────────────────────────────────────────────────────────
     this.router.get('/audit-log', (req: Request, res: Response) => {
       try {
-        const { org_id, action, resource_type, from, to, limit, offset } = req.query as Record<string, string>;
+        const {
+          org_id, action, resource_type, resource_id, q,
+          from, to, limit, offset,
+        } = req.query as Record<string, string>;
         const result = this.auditLog.query({
-          org_id, action, resource_type, from, to,
+          org_id, action, resource_type, resource_id, q, from, to,
           limit: limit ? parseInt(limit, 10) : undefined,
           offset: offset ? parseInt(offset, 10) : undefined,
         });

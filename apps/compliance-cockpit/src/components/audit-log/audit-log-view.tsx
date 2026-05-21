@@ -72,6 +72,9 @@ function csvEscape(v: unknown): string {
 export function AuditLogView() {
   const [action, setAction] = useState<string>('')
   const [resourceType, setResourceType] = useState<string>('')
+  const [resourceId, setResourceId] = useState<string>('')
+  const [searchQ, setSearchQ] = useState<string>('')
+  const [searchInput, setSearchInput] = useState<string>('')
   const [from, setFrom] = useState<string>('')
   const [to, setTo] = useState<string>('')
   const [offset, setOffset] = useState<number>(0)
@@ -79,7 +82,13 @@ export function AuditLogView() {
   // Reset pagination whenever filters change.
   useEffect(() => {
     setOffset(0)
-  }, [action, resourceType, from, to])
+  }, [action, resourceType, resourceId, searchQ, from, to])
+
+  // Debounce free-text search so we don't fetch on every keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQ(searchInput.trim()), 350)
+    return () => clearTimeout(t)
+  }, [searchInput])
 
   const queryParams = useMemo(() => {
     const sp = new URLSearchParams()
@@ -87,10 +96,12 @@ export function AuditLogView() {
     sp.set('offset', String(offset))
     if (action) sp.set('action', action)
     if (resourceType) sp.set('resource_type', resourceType)
+    if (resourceId.trim()) sp.set('resource_id', resourceId.trim())
+    if (searchQ) sp.set('q', searchQ)
     if (from) sp.set('from', from)
     if (to) sp.set('to', to)
     return sp.toString()
-  }, [action, resourceType, from, to, offset])
+  }, [action, resourceType, resourceId, searchQ, from, to, offset])
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['audit-log', queryParams],
@@ -158,7 +169,7 @@ export function AuditLogView() {
 
       {/* Filters */}
       <div
-        className="rounded-md p-3 grid grid-cols-1 md:grid-cols-4 gap-2 items-end"
+        className="rounded-md p-3 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2 items-end"
         style={{ background: SURFACE, border: `1px solid ${BORDER}` }}
       >
         <div>
@@ -193,7 +204,31 @@ export function AuditLogView() {
         </div>
         <div>
           <label className="text-[10px] uppercase tracking-wider block mb-1" style={{ color: MUTED }}>
-            From (ISO date)
+            Resource ID
+          </label>
+          <input
+            value={resourceId}
+            onChange={(e) => setResourceId(e.target.value)}
+            placeholder="agent-uuid…"
+            className="w-full text-sm px-2 py-1.5 rounded-md border font-mono"
+            style={{ background: BG, borderColor: BORDER, color: TEXT }}
+          />
+        </div>
+        <div className="md:col-span-1 lg:col-span-1">
+          <label className="text-[10px] uppercase tracking-wider block mb-1" style={{ color: MUTED }}>
+            Search (action / id / details)
+          </label>
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="substring…"
+            className="w-full text-sm px-2 py-1.5 rounded-md border"
+            style={{ background: BG, borderColor: BORDER, color: TEXT }}
+          />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider block mb-1" style={{ color: MUTED }}>
+            From
           </label>
           <input
             type="date"
@@ -205,7 +240,7 @@ export function AuditLogView() {
         </div>
         <div>
           <label className="text-[10px] uppercase tracking-wider block mb-1" style={{ color: MUTED }}>
-            To (ISO date)
+            To
           </label>
           <input
             type="date"
