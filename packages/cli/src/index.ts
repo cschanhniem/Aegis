@@ -889,6 +889,40 @@ const integrity = program
   .description('Verify the tamper-evident audit trail for an agent');
 
 integrity
+  .command('verify-all')
+  .description('Verify every agent\'s chain in one sweep — the "are any chains broken right now" question')
+  .action(async () => {
+    let report: any;
+    try {
+      report = await request('GET', `${gatewayUrl()}/api/v1/integrity/verify-all`);
+    } catch (e) {
+      console.error(`\x1b[31m✗\x1b[0m gateway error: ${(e as Error).message}`);
+      process.exit(2);
+    }
+    if (report && report.error) {
+      console.error(`\x1b[31m✗\x1b[0m ${report.error}`);
+      process.exit(2);
+    }
+    const ok = report.broken_agents === 0;
+    const mark = ok ? '\x1b[32m✓\x1b[0m' : '\x1b[31m✗\x1b[0m';
+    console.log(
+      `${mark} ${report.ok_agents}/${report.total_agents} chains intact  ` +
+      `\x1b[2m(${report.latency_ms}ms)\x1b[0m`,
+    );
+    if (report.agents.length > 0) {
+      for (const a of report.agents) {
+        const m = a.ok ? '  \x1b[32m✓\x1b[0m' : '  \x1b[31m✗\x1b[0m';
+        const id = a.agent_id.length > 24 ? a.agent_id.slice(0, 8) + '…' : a.agent_id;
+        const tail = a.ok
+          ? `\x1b[2m${a.total} traces\x1b[0m`
+          : `\x1b[31m${a.broken_at?.reason} @ seq ${a.broken_at?.sequence_number}\x1b[0m`;
+        console.log(`${m}  ${id.padEnd(28)}  ${tail}`);
+      }
+    }
+    process.exit(ok ? 0 : 1);
+  });
+
+integrity
   .command('verify <agentId>')
   .description('Recompute the hash chain for an agent — proves no traces were tampered or removed')
   .action(async (agentId: string) => {

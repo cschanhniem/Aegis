@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { gw } from '@/lib/gateway'
-import { ShieldCheck, ShieldAlert, Loader2, KeyRound } from 'lucide-react'
+import { ShieldCheck, ShieldAlert, Loader2, KeyRound, ListChecks } from 'lucide-react'
 
 const BORDER  = 'hsl(var(--border))'
 const TEXT    = 'hsl(var(--foreground))'
@@ -36,11 +36,30 @@ interface Props {
   onAgentIdChange?: (id: string) => void
 }
 
+interface BulkReport {
+  total_agents: number
+  ok_agents: number
+  broken_agents: number
+  agents: Array<{
+    agent_id: string
+    ok: boolean
+    total: number
+    broken_at?: {
+      reason: string
+      sequence_number: number
+      trace_id: string
+    }
+  }>
+  latency_ms: number
+}
+
 export function IntegrityWidget({ initialAgentId = '', onAgentIdChange }: Props) {
   const [agentId, setAgentId] = useState<string>(initialAgentId)
   const [report, setReport] = useState<IntegrityReport | null>(null)
+  const [bulk, setBulk] = useState<BulkReport | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
+  const [bulkVerifying, setBulkVerifying] = useState(false)
 
   function setId(id: string) {
     setAgentId(id)
@@ -55,6 +74,7 @@ export function IntegrityWidget({ initialAgentId = '', onAgentIdChange }: Props)
     setVerifying(true)
     setError(null)
     setReport(null)
+    setBulk(null)
     try {
       const res = await gw(`integrity/verify?agent_id=${encodeURIComponent(id)}`)
       const data = await res.json()
@@ -64,6 +84,23 @@ export function IntegrityWidget({ initialAgentId = '', onAgentIdChange }: Props)
       setError((e as Error).message)
     } finally {
       setVerifying(false)
+    }
+  }
+
+  async function verifyAll() {
+    setBulkVerifying(true)
+    setError(null)
+    setReport(null)
+    setBulk(null)
+    try {
+      const res = await gw('integrity/verify-all')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`)
+      setBulk(data as BulkReport)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBulkVerifying(false)
     }
   }
 
@@ -91,7 +128,7 @@ export function IntegrityWidget({ initialAgentId = '', onAgentIdChange }: Props)
         </div>
         <button
           onClick={verify}
-          disabled={verifying || !agentId.trim()}
+          disabled={verifying || bulkVerifying || !agentId.trim()}
           className="text-sm px-3 py-1.5 rounded-md inline-flex items-center gap-1.5 disabled:opacity-40"
           style={{ background: ACCENT, color: ON_PRIM }}
         >
@@ -102,11 +139,83 @@ export function IntegrityWidget({ initialAgentId = '', onAgentIdChange }: Props)
           )}
           Verify
         </button>
+        <button
+          onClick={verifyAll}
+          disabled={verifying || bulkVerifying}
+          className="text-sm px-3 py-1.5 rounded-md border inline-flex items-center gap-1.5 disabled:opacity-40"
+          style={{ background: BG, borderColor: BORDER, color: TEXT }}
+          title="Verify every agent's chain in one sweep"
+        >
+          {bulkVerifying ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <ListChecks className="h-3.5 w-3.5" />
+          )}
+          Verify all
+        </button>
       </div>
 
       {error && (
         <div className="mt-2 text-xs" style={{ color: DRIFT }}>
           {error}
+        </div>
+      )}
+
+      {bulk && (
+        <div className="mt-3 text-xs space-y-2">
+          <div className="inline-flex items-center gap-2">
+            {bulk.broken_agents === 0 ? (
+              <>
+                <ShieldCheck className="h-4 w-4" style={{ color: OK }} />
+                <span style={{ color: OK, fontWeight: 500 }}>
+                  All {bulk.total_agents} chain{bulk.total_agents === 1 ? '' : 's'} intact
+                </span>
+              </>
+            ) : (
+              <>
+                <ShieldAlert className="h-4 w-4" style={{ color: DRIFT }} />
+                <span style={{ color: DRIFT, fontWeight: 500 }}>
+                  {bulk.broken_agents} of {bulk.total_agents} chain{bulk.total_agents === 1 ? '' : 's'} broken
+                </span>
+              </>
+            )}
+            <span style={{ color: MUTED }}>· {bulk.latency_ms}ms</span>
+          </div>
+
+          {bulk.agents.length > 0 && (
+            <table className="w-full text-[11px]" style={{ borderTop: `1px solid ${BORDER}` }}>
+              <tbody>
+                {bulk.agents.map((a) => (
+                  <tr key={a.agent_id} style={{ borderTop: `1px solid ${BORDER}` }}>
+                    <td className="px-1 py-1 align-top w-4">
+                      {a.ok ? (
+                        <ShieldCheck className="h-3 w-3" style={{ color: OK }} />
+                      ) : (
+                        <ShieldAlert className="h-3 w-3" style={{ color: DRIFT }} />
+                      )}
+                    </td>
+                    <td className="px-1 py-1 align-top">
+                      <button
+                        type="button"
+                        onClick={() => setId(a.agent_id)}
+                        className="font-mono underline decoration-dotted underline-offset-2"
+                        style={{ color: TEXT, background: 'transparent', cursor: 'pointer' }}
+                        title="Drop this agent_id into the input above"
+                      >
+                        {a.agent_id.length > 24 ? a.agent_id.slice(0, 8) + '…' : a.agent_id}
+                      </button>
+                    </td>
+                    <td className="px-1 py-1 align-top tabular-nums" style={{ color: MUTED }}>
+                      {a.total} trace{a.total === 1 ? '' : 's'}
+                    </td>
+                    <td className="px-1 py-1 align-top" style={{ color: a.ok ? MUTED : DRIFT }}>
+                      {a.ok ? 'ok' : `${a.broken_at?.reason} @ seq ${a.broken_at?.sequence_number}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 

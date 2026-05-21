@@ -34,5 +34,21 @@ export class IntegrityAPI {
         res.status(500).json({ error: (err as Error).message });
       }
     });
+
+    /**
+     * GET /verify-all → BulkIntegrityReport across every distinct
+     * agent_id in the traces table. The bulk path is what a SOC 2
+     * reviewer with 50 agents actually wants: "how many chains are
+     * broken right now" answered in one request.
+     */
+    this.router.get('/verify-all', (_req: Request, res: Response) => {
+      try {
+        const report = this.svc.verifyAllAgents();
+        res.json(report);
+      } catch (err) {
+        this.logger.error({ err }, 'bulk integrity verification failed');
+        res.status(500).json({ error: (err as Error).message });
+      }
+    });
   }
 }

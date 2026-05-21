@@ -207,3 +207,110 @@ describe('IntegrityService.verifyAgentChain', () => {
     expect(r.latency_ms).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('IntegrityService.verifyAllAgents', () => {
+  test('empty DB → totals=0, no agents', () => {
+    const db = makeDbWithTraces('agent-noop', []);
+    const r = new IntegrityService(db, silent).verifyAllAgents();
+    expect(r.total_agents).toBe(0);
+    expect(r.ok_agents).toBe(0);
+    expect(r.broken_agents).toBe(0);
+    expect(r.agents).toEqual([]);
+  });
+
+  test('all chains intact → ok_agents = total_agents', () => {
+    // We need multiple distinct agent_ids. Build a small fixture
+    // with two agents, each with two clean traces.
+    const db = makeDbWithTraces('agent-A', [
+      { trace_id: 'a1', sequence_number: 1, tool_name: 'web_search', result: 'ok' },
+      { trace_id: 'a2', sequence_number: 2, tool_name: 'read_file',  result: 'ok' },
+    ]);
+    // Seed a second agent in the same db.
+    {
+      const seeds: SeedTrace[] = [
+        { trace_id: 'b1', sequence_number: 1, tool_name: 'web_search', result: 'ok' },
+        { trace_id: 'b2', sequence_number: 2, tool_name: 'send_email', result: 'ok' },
+      ];
+      let prevHash: string | null = null;
+      for (const s of seeds) {
+        const input_context = { prompt: `step ${s.sequence_number}` };
+        const thought_chain = { raw_tokens: '', parsed_steps: [] };
+        const tool_call = { tool_name: s.tool_name, function: s.tool_name, arguments: {}, timestamp: '2026-05-20T00:00:00Z' };
+        const observation = { raw_output: s.result, duration_ms: 1 };
+        const trace = {
+          trace_id: s.trace_id, agent_id: 'agent-B',
+          timestamp: '2026-05-20T00:00:00Z',
+          sequence_number: s.sequence_number,
+          input_context, thought_chain, tool_call, observation,
+          previous_hash: prevHash ?? undefined,
+          environment: 'PRODUCTION', version: '1.0.0',
+        } as any;
+        const integrity_hash = calculateTraceHash(trace);
+        const content_hash = computeContentHash(input_context, thought_chain, tool_call, observation);
+        db.prepare(
+          `INSERT INTO traces (trace_id, agent_id, timestamp, sequence_number, input_context, thought_chain, tool_call, observation, integrity_hash, previous_hash, content_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ).run(
+          s.trace_id, 'agent-B', '2026-05-20T00:00:00Z', s.sequence_number,
+          JSON.stringify(input_context), JSON.stringify(thought_chain),
+          JSON.stringify(tool_call), JSON.stringify(observation),
+          integrity_hash, prevHash, content_hash,
+        );
+        prevHash = integrity_hash;
+      }
+    }
+
+    const r = new IntegrityService(db, silent).verifyAllAgents();
+    expect(r.total_agents).toBe(2);
+    expect(r.ok_agents).toBe(2);
+    expect(r.broken_agents).toBe(0);
+    // All ok → sorted by total desc, agent ids both have 2 traces;
+    // ordering between them is unspecified beyond stable.
+  });
+
+  test('mixed clean/broken → broken sort first', () => {
+    const db = makeDbWithTraces('agent-clean', [
+      { trace_id: 'c1', sequence_number: 1, tool_name: 'web_search', result: 'ok' },
+      { trace_id: 'c2', sequence_number: 2, tool_name: 'send_email', result: 'ok' },
+    ]);
+    // Add a second agent with tampered observation.
+    db.prepare(
+      `INSERT INTO traces (trace_id, agent_id, timestamp, sequence_number, input_context, thought_chain, tool_call, observation, integrity_hash, previous_hash, content_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      'x1', 'agent-broken', '2026-05-20T00:00:00Z', 1,
+      JSON.stringify({ prompt: 'x' }), JSON.stringify({ raw_tokens: '', parsed_steps: [] }),
+      JSON.stringify({ tool_name: 'noop', function: 'noop', arguments: {}, timestamp: '2026-05-20T00:00:00Z' }),
+      JSON.stringify({ raw_output: 'pre-tamper', duration_ms: 1 }),
+      'integ-x', null,
+      // Compute a content_hash for the ORIGINAL observation, then we
+      // immediately rewrite observation to simulate tamper:
+      computeContentHash(
+        { prompt: 'x' },
+        { raw_tokens: '', parsed_steps: [] },
+        { tool_name: 'noop', function: 'noop', arguments: {}, timestamp: '2026-05-20T00:00:00Z' },
+        { raw_output: 'pre-tamper', duration_ms: 1 },
+      ),
+    );
+    db.prepare(`UPDATE traces SET observation = ? WHERE trace_id = 'x1'`)
+      .run(JSON.stringify({ raw_output: 'TAMPERED', duration_ms: 1 }));
+
+    const r = new IntegrityService(db, silent).verifyAllAgents();
+    expect(r.total_agents).toBe(2);
+    expect(r.ok_agents).toBe(1);
+    expect(r.broken_agents).toBe(1);
+    // Broken-first sort: agent-broken is first.
+    expect(r.agents[0].agent_id).toBe('agent-broken');
+    expect(r.agents[0].ok).toBe(false);
+    expect(r.agents[0].broken_at?.reason).toBe('content_tamper');
+    expect(r.agents[1].agent_id).toBe('agent-clean');
+    expect(r.agents[1].ok).toBe(true);
+  });
+
+  test('latency_ms is reported on bulk path', () => {
+    const db = makeDbWithTraces('agent-A', [
+      { trace_id: 't1', sequence_number: 1, tool_name: 'web_search', result: 'ok' },
+    ]);
+    const r = new IntegrityService(db, silent).verifyAllAgents();
+    expect(typeof r.latency_ms).toBe('number');
+    expect(r.latency_ms).toBeGreaterThanOrEqual(0);
+  });
+});

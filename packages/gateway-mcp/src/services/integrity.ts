@@ -63,11 +63,74 @@ export interface IntegrityReport {
   latency_ms: number;
 }
 
+export interface BulkIntegrityReport {
+  /** Number of distinct agents inspected. */
+  total_agents: number;
+  /** Count of agents whose chain is intact. */
+  ok_agents: number;
+  /** Count of agents with a detected break (subset of total). */
+  broken_agents: number;
+  /** Per-agent verdict, sorted broken-first then by total DESC. */
+  agents: Array<{
+    agent_id: string;
+    ok: boolean;
+    total: number;
+    /** Set only when ok=false. */
+    broken_at?: IntegrityBreak;
+  }>;
+  /** Wall-clock ms for the entire sweep. */
+  latency_ms: number;
+}
+
 export class IntegrityService {
   constructor(
     private db: Database.Database,
     private logger?: Logger,
   ) {}
+
+  /**
+   * Run verifyAgentChain for every distinct agent_id in the traces
+   * table. Returns a summary with per-agent breakdown sorted
+   * broken-first — the operator's "what's wrong, exactly" answer.
+   *
+   * For a 50-agent deployment this typically completes in single-
+   * digit ms total (linkage is O(N) over each agent's history; the
+   * content hash recompute is the dominant cost and is itself
+   * O(content size)). No batching needed at v0.4 scale; revisit
+   * when individual agents have ≫ 100k traces.
+   */
+  verifyAllAgents(): BulkIntegrityReport {
+    const started = Date.now();
+    const agentIds = (this.db
+      .prepare(`SELECT DISTINCT agent_id FROM traces ORDER BY agent_id ASC`)
+      .all() as Array<{ agent_id: string }>).map((r) => r.agent_id);
+
+    const agents = agentIds.map((id) => {
+      const r = this.verifyAgentChain(id);
+      return {
+        agent_id: id,
+        ok: r.ok,
+        total: r.total,
+        broken_at: r.broken_at,
+      };
+    });
+
+    // Sort: broken first, then by trace count desc — the surface
+    // an operator would scan top-to-bottom.
+    agents.sort((a, b) => {
+      if (a.ok !== b.ok) return a.ok ? 1 : -1;
+      return b.total - a.total;
+    });
+
+    const broken = agents.filter((a) => !a.ok).length;
+    return {
+      total_agents: agents.length,
+      ok_agents: agents.length - broken,
+      broken_agents: broken,
+      agents,
+      latency_ms: Date.now() - started,
+    };
+  }
 
   verifyAgentChain(agent_id: string): IntegrityReport {
     const started = Date.now();
