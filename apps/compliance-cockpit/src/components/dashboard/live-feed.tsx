@@ -5,9 +5,18 @@ import { useRef, useEffect, useState } from 'react'
 import { CheckCircle, AlertCircle, Shield, Clock } from 'lucide-react'
 import { traceSummary } from '@/lib/trace-summary'
 
-const TEXT   = 'hsl(30 10% 15%)'
-const MUTED  = 'hsl(var(--muted-foreground))'
-const BORDER = 'hsl(var(--border))'
+const TEXT    = 'hsl(var(--foreground))'
+const MUTED   = 'hsl(var(--muted-foreground))'
+const BORDER  = 'hsl(var(--border))'
+const SURFACE = 'hsl(var(--card))'
+const SOFT    = 'hsl(var(--muted))'
+const STRIPE  = 'hsl(var(--secondary))'
+// Terminal-status accents flip via the semantic --status-* vars added
+// for the alignment + code-shield panels. Keeps the BLOCK/ERROR/OK
+// row prefix readable on either theme.
+const OK_C    = 'hsl(var(--status-ok))'
+const ATTN_C  = 'hsl(var(--status-attn))'
+const ALERT_C = 'hsl(var(--status-drift))'
 
 const TOOL_COLORS: Record<string, string> = {
   web_search:   'hsl(210 20% 48%)',
@@ -63,8 +72,8 @@ export function LiveFeed() {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full" style={{ background: 'hsl(150 18% 44%)', boxShadow: '0 0 0 3px hsl(150 18% 44% / 0.2)' }} />
-          <span className="text-xs font-medium" style={{ color: 'hsl(150 18% 40%)' }}>Live</span>
+          <span className="w-2 h-2 rounded-full" style={{ background: OK_C, boxShadow: `0 0 0 3px ${OK_C}33` }} />
+          <span className="text-xs font-medium" style={{ color: OK_C }}>Live</span>
         </div>
         <span className="text-[10px]" style={{ color: MUTED }}>{traces.length} events</span>
       </div>
@@ -74,7 +83,7 @@ export function LiveFeed() {
         onScroll={handleScroll}
         className="rounded-lg border overflow-y-auto font-mono"
         style={{
-          background: 'hsl(36 14% 96%)',
+          background: SURFACE,
           borderColor: BORDER,
           height: 380,
         }}
@@ -86,7 +95,7 @@ export function LiveFeed() {
             const isBlocked = t.approval_status === 'REJECTED'
             const dur = t.observation?.duration_ms
             const ts = new Date(t.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
-            const toolColor = TOOL_COLORS[tool] || 'hsl(30 10% 38%)'
+            const toolColor = TOOL_COLORS[tool] || MUTED
 
             return (
               <div
@@ -94,23 +103,23 @@ export function LiveFeed() {
                 className="flex items-center gap-2 py-1 px-2 rounded text-[11px] leading-relaxed"
                 style={{
                   animation: i >= traces.length - 3 ? 'trace-slide-in 0.3s ease-out' : undefined,
-                  background: i % 2 === 0 ? 'transparent' : 'hsl(36 12% 93%)',
+                  background: i % 2 === 0 ? 'transparent' : STRIPE,
                 }}
               >
-                <span className="flex-shrink-0" style={{ color: 'hsl(30 8% 42%)' }}>{ts}</span>
+                <span className="flex-shrink-0" style={{ color: MUTED }}>{ts}</span>
                 {isBlocked ? (
-                  <span className="flex-shrink-0 font-bold" style={{ color: 'hsl(0 30% 40%)' }}>BLOCK</span>
+                  <span className="flex-shrink-0 font-bold" style={{ color: ALERT_C }}>BLOCK</span>
                 ) : hasError ? (
-                  <span className="flex-shrink-0 font-bold" style={{ color: 'hsl(0 25% 42%)' }}>ERROR</span>
+                  <span className="flex-shrink-0 font-bold" style={{ color: ATTN_C }}>ERROR</span>
                 ) : (
-                  <span className="flex-shrink-0 font-bold" style={{ color: 'hsl(150 22% 32%)' }}>{'  OK '}</span>
+                  <span className="flex-shrink-0 font-bold" style={{ color: OK_C }}>{'  OK '}</span>
                 )}
                 <span className="truncate font-medium" style={{ color: TEXT }}>{traceSummary(t)}</span>
-                <span className="flex-shrink-0" style={{ color: 'hsl(30 8% 45%)' }}>
+                <span className="flex-shrink-0" style={{ color: MUTED }}>
                   {(t.agent_id ?? '').substring(0, 10)}
                 </span>
                 {dur != null && dur > 0 && (
-                  <span className="ml-auto flex-shrink-0" style={{ color: 'hsl(30 8% 42%)' }}>{Math.round(dur)}ms</span>
+                  <span className="ml-auto flex-shrink-0" style={{ color: MUTED }}>{Math.round(dur)}ms</span>
                 )}
               </div>
             )
@@ -122,7 +131,7 @@ export function LiveFeed() {
         <button
           onClick={() => { setAutoScroll(true); if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }}
           className="text-[11px] px-3 py-1 rounded-full"
-          style={{ background: 'hsl(38 20% 46% / 0.12)', color: 'hsl(38 20% 42%)' }}
+          style={{ background: SOFT, color: TEXT, border: `1px solid ${BORDER}` }}
         >
           Scroll to latest
         </button>

@@ -4,17 +4,24 @@ import { useQuery } from '@tanstack/react-query'
 import { DollarSign, Cpu, TrendingUp, BarChart2 } from 'lucide-react'
 
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 const BORDER = 'hsl(var(--border))'
+// Muted background tints used for inline progress bars + cards.
+// Pull from the theme's secondary/muted surface so they auto-flip
+// instead of staying beige on dark mode.
+const SOFT   = 'hsl(var(--secondary))'
+const SOFT_2 = 'hsl(var(--muted))'
 
-// Monochrome palette for model bars
+// Monochrome palette for model bars. Mid-lightness band (40–82)
+// reads on both light and dark backgrounds; the extreme dark end
+// would disappear on dark bg, the extreme light end on light bg.
 const BAR_COLORS = [
-  'hsl(0 0% 35%)',
-  'hsl(0 0% 48%)',
-  'hsl(0 0% 58%)',
+  'hsl(0 0% 42%)',
+  'hsl(0 0% 52%)',
+  'hsl(0 0% 60%)',
   'hsl(0 0% 68%)',
-  'hsl(0 0% 76%)',
-  'hsl(0 0% 84%)',
+  'hsl(0 0% 75%)',
+  'hsl(0 0% 82%)',
 ]
 
 function fmt$(n: number) {
@@ -91,7 +98,7 @@ export function CostPanel() {
           { label: 'Avg per Trace',  value: fmt$(totalCost / Math.max(rows.reduce((s: number, r: any) => s + (r.trace_count ?? 0), 0), 1)),
             icon: TrendingUp, color: 'hsl(0 0% 42%)' },
         ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} style={{ border: `1px solid ${BORDER}`, background: '#fff', borderRadius: '10px', padding: '14px 16px' }}>
+          <div key={label} style={{ border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', borderRadius: '10px', padding: '14px 16px' }}>
             <div className="flex items-center gap-2 mb-1">
               <Icon className="h-3.5 w-3.5" style={{ color }} />
               <span className="text-[11px] font-medium" style={{ color: MUTED }}>{label}</span>
@@ -120,7 +127,7 @@ export function CostPanel() {
                       <span className="font-semibold" style={{ color: TEXT }}>{fmt$(m.cost)}</span>
                     </div>
                   </div>
-                  <div style={{ height: '6px', background: 'hsl(36 14% 92%)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ height: '6px', background: SOFT_2, borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '3px',
                       transition: 'width 0.4s ease' }} />
                   </div>
@@ -132,7 +139,7 @@ export function CostPanel() {
       )}
 
       {/* Token breakdown */}
-      <div style={{ border: `1px solid ${BORDER}`, borderRadius: '10px', padding: '14px 16px', background: 'hsl(36 14% 98%)' }}>
+      <div style={{ border: `1px solid ${BORDER}`, borderRadius: '10px', padding: '14px 16px', background: SOFT }}>
         <p className="text-[11px] font-semibold mb-3" style={{ color: MUTED }}>Token Breakdown</p>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -146,14 +153,14 @@ export function CostPanel() {
         </div>
         {totalTokens > 0 && (
           <div className="mt-3">
-            <div style={{ height: '8px', background: 'hsl(var(--secondary))', borderRadius: '4px', overflow: 'hidden', display: 'flex' }}>
+            <div style={{ height: '8px', background: SOFT_2, borderRadius: '4px', overflow: 'hidden', display: 'flex' }}>
               <div style={{ height: '100%', width: `${(totalInput / totalTokens) * 100}%`,
-                background: 'hsl(0 0% 38%)', transition: 'width 0.4s ease' }} />
+                background: 'hsl(0 0% 48%)', transition: 'width 0.4s ease' }} />
               <div style={{ height: '100%', flex: 1, background: 'hsl(0 0% 72%)' }} />
             </div>
             <div className="flex justify-between mt-1">
-              <span className="text-[9px]" style={{ color: 'hsl(0 0% 38%)' }}>● Input</span>
-              <span className="text-[9px]" style={{ color: 'hsl(0 0% 58%)' }}>Output ●</span>
+              <span className="text-[9px]" style={{ color: 'hsl(0 0% 48%)' }}>● Input</span>
+              <span className="text-[9px]" style={{ color: 'hsl(0 0% 60%)' }}>Output ●</span>
             </div>
           </div>
         )}

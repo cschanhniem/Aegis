@@ -113,9 +113,13 @@ Closing the "this catches things other guardrails miss" gap.
   rules at <1ms per scan; v0.4 adds an optional Semgrep-backed
   pass that catches taint flows the regex layer can't, behind a
   feature flag so the latency profile stays optional.
-- [ ] **Cockpit dark mode pass over remaining tabs** (Costs / Eval
-  / Live Feed) — only `/dsl`, `/code-shield`, `/alignment`,
-  `/audit-log` are fully audited today.
+- [x] **Cockpit dark mode pass over remaining tabs** (Costs / Eval
+  / Live Feed) — text colors now pull from `--foreground`; beige
+  surface tints replaced by `--card` / `--muted` / `--secondary`;
+  BLOCK/ERROR/OK row prefixes in Live Feed reuse the semantic
+  `--status-*` vars so they read on both themes. Tool-color palette
+  (web_search / read_file / execute_sql / send_request) was already
+  mid-lightness band so it stays.
 
 ---
 

@@ -4,10 +4,15 @@ import { useQuery } from '@tanstack/react-query'
 import { ThumbsUp, ThumbsDown, Star } from 'lucide-react'
 
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 const BORDER = 'hsl(var(--border))'
-const GREEN  = 'hsl(0 0% 35%)'
-const RED    = 'hsl(0 0% 62%)'
+// Variable names retained for legacy clarity; the panel intentionally
+// uses a subtle monochrome (not literal green/red) so thumbs feel
+// quiet next to traffic-light statuses elsewhere. Mid-lightness band
+// reads on both light and dark backgrounds.
+const GREEN  = 'hsl(0 0% 50%)'
+const RED    = 'hsl(0 0% 64%)'
+const SOFT_2 = 'hsl(var(--muted))'
 
 function pct(n: number, total: number) {
   if (!total) return 0
@@ -59,7 +64,7 @@ export function EvalPanel() {
       {/* Summary chips */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Scored',      value: String(scored),               icon: Star,       color: 'hsl(0 0% 40%)' },
+          { label: 'Scored',      value: String(scored),               icon: Star,       color: 'hsl(0 0% 55%)' },
           { label: 'Good',        value: `${thumbsUp} (${upPct}%)`,   icon: ThumbsUp,   color: GREEN },
           { label: 'Bad',         value: `${thumbsDown} (${downPct}%)`, icon: ThumbsDown, color: RED },
         ].map(({ label, value, icon: Icon, color }) => (
@@ -111,7 +116,7 @@ export function EvalPanel() {
                       </span>
                     </div>
                   </div>
-                  <div style={{ height: '6px', background: 'hsl(36 14% 92%)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ height: '6px', background: SOFT_2, borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${goodPct}%`, background: GREEN, borderRadius: '3px', transition: 'width 0.4s ease' }} />
                   </div>
                 </div>
