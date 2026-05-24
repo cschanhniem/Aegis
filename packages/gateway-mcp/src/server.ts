@@ -39,6 +39,7 @@ import { PolicyDslAPI } from './api/policy-dsl';
 import { AlignmentAPI } from './api/alignment';
 import { CodeShieldAPI } from './api/code-shield';
 import { IntegrityAPI } from './api/integrity';
+import { EvidencePackAPI } from './api/evidence-pack';
 
 const VERSION = '2.0.0';
 
@@ -370,6 +371,10 @@ async function main() {
   // Audit-chain integrity — proves the "tamper-evident" claim by
   // recomputing each trace's hash and verifying the chain links.
   app.use('/api/v1/integrity', requireAuth, new IntegrityAPI(db, logger).router);
+
+  // SOC 2 evidence pack — one-shot export of audit log + policies +
+  // tenant config + integrity verdict, scoped to the requester's org.
+  app.use('/api/v1/evidence-pack', requireAuth, new EvidencePackAPI(db, logger, auditLog).router);
 
   // Kill-switch endpoints (auth required)
   app.post('/api/v1/kill-switch/revoke', requireAuth, async (req, res) => {

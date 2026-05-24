@@ -9,6 +9,18 @@ versioning follows [SemVer](https://semver.org/).
 In flight on `main`, slated for the next release.
 
 ### Added
+- **SOC 2 evidence pack export** — `GET /api/v1/evidence-pack/export`
+  and `agentguard evidence-pack --out <file>` return one canonical
+  JSON bundle containing: every `admin_audit_log` row scoped to the
+  caller's org, every policy, the current tenant config, the bulk
+  integrity verdict across all agents, and per-agent trace
+  anchors (count + first/last seen + latest trace_id). Org-scoped
+  so multi-tenant deployments can't cross-export. Each export
+  itself writes an audit row (`kind=evidence_pack_export`) so the
+  chain-of-custody question is answerable later. JSON-only by
+  design — zero new deps, grep-able, and one canonical hash input
+  for the v1.0.x Ed25519 signing path that's already reserved in
+  the format.
 - **Audit-chain integrity verification** — three surfaces:
   - CLI: `agentguard integrity verify <agent-id>` (exits 0 on
     intact chain, 1 on break, 2 on gateway error).

@@ -883,6 +883,40 @@ program
     }
   });
 
+// ── evidence-pack (SOC 2 export) ─────────────────────────────────────────────
+program
+  .command('evidence-pack')
+  .description('Download a one-shot SOC 2 evidence pack (audit log + policies + tenant config + integrity verdict)')
+  .option('-o, --out <file>', 'Write the pack to this file (default: ./aegis-evidence-<timestamp>.json)')
+  .action(async (opts: { out?: string }) => {
+    const url = `${gatewayUrl()}/api/v1/evidence-pack/export`;
+    let raw: any;
+    try {
+      raw = await request('GET', url);
+    } catch (e) {
+      console.error(`\x1b[31m✗\x1b[0m gateway error: ${(e as Error).message}`);
+      process.exit(2);
+    }
+    if (raw && typeof raw === 'object' && 'error' in raw) {
+      console.error(`\x1b[31m✗\x1b[0m ${raw.error}`);
+      process.exit(2);
+    }
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const target = opts.out || `./aegis-evidence-${stamp}.json`;
+    fs.writeFileSync(target, JSON.stringify(raw, null, 2));
+    const stat = fs.statSync(target);
+    const kb = (stat.size / 1024).toFixed(1);
+    console.log(`\x1b[32m✓\x1b[0m wrote ${target}  \x1b[2m(${kb} KB)\x1b[0m`);
+    if (raw.meta) {
+      console.log(`    \x1b[2morg: ${raw.meta.org_id} · generated_at: ${raw.meta.generated_at}\x1b[0m`);
+      console.log(
+        `    \x1b[2maudit rows: ${(raw.audit_log ?? []).length} · ` +
+          `agents: ${raw.integrity?.total_agents ?? 0} · ` +
+          `broken chains: ${raw.integrity?.broken_agents ?? 0}\x1b[0m`,
+      );
+    }
+  });
+
 // ── integrity (audit-chain verification) ────────────────────────────────────
 const integrity = program
   .command('integrity')

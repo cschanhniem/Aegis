@@ -5,7 +5,7 @@ partners, and anyone wondering whether AEGIS is alive (it is — see
 [releases](https://github.com/Justin0504/Aegis/releases) and
 the commit graph).
 
-Last updated: 2026-05-20 · Current release: **v0.1.0** · On `main`: audit-chain integrity verify + audit-log attribution & filters + closed-loop alignment + CodeShield landed (see [CHANGELOG](CHANGELOG.md))
+Last updated: 2026-05-24 · Current release: **v0.1.0** · On `main`: SOC 2 evidence-pack export + bulk integrity verify + content-hash tamper detection + audit-log attribution & filters + closed-loop alignment + CodeShield (see [CHANGELOG](CHANGELOG.md))
 
 ## Now (v0.1)
 
@@ -127,10 +127,14 @@ Closing the "this catches things other guardrails miss" gap.
 
 The "ready to be deployed somewhere that matters" line.
 
-- [ ] **SOC 2 Type II evidence pack export.** One button →
-  download every audit-log entry, every policy change, every
-  approval decision, signed + bundled, in the format auditors
-  expect.
+- [x] **SOC 2 Type II evidence pack export (v1).** `GET
+  /api/v1/evidence-pack/export` (also `agentguard evidence-pack
+  --out`) returns one canonical JSON with audit log + policies +
+  tenant config + bulk integrity verdict + per-agent trace
+  anchors. Org-scoped so multi-tenant deployments don't leak.
+  Auditors get a single, frozen, grep-able artifact. The reserved
+  `signature` field for Ed25519 detached signing lands in v1.0.x
+  to complete the "auditor-can-verify-the-bundle" loop.
 - [ ] **SSO via WorkOS** (SAML/OIDC) + RBAC across SSO identities,
   not just API keys.
 - [ ] **Postgres adapter.** SQLite stays the default; enterprise
