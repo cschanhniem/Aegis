@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { gw } from '@/lib/gateway'
 import { FileText, Download, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react'
 import { IntegrityWidget } from './integrity-widget'
+import { EvidencePackWidget } from './evidence-pack-widget'
 
 const BORDER  = 'hsl(var(--border))'
 const TEXT    = 'hsl(var(--foreground))'
@@ -173,11 +174,16 @@ export function AuditLogView() {
         </p>
       </div>
 
-      {/* Integrity widget */}
-      <IntegrityWidget
-        initialAgentId={verifyTarget}
-        onAgentIdChange={setVerifyTarget}
-      />
+      {/* Two-column row of compliance affordances: integrity verify
+          (read-only check) + evidence-pack download (frozen snapshot
+          for auditor handoff). Stacks on mobile. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <IntegrityWidget
+          initialAgentId={verifyTarget}
+          onAgentIdChange={setVerifyTarget}
+        />
+        <EvidencePackWidget />
+      </div>
 
       {/* Filters */}
       <div
