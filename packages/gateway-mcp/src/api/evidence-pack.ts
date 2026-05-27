@@ -14,6 +14,7 @@ import { Router, Request, Response } from 'express';
 import { Logger } from 'pino';
 import Database from 'better-sqlite3';
 import { EvidencePackService } from '../services/evidence-pack';
+export { EvidencePackService };
 import { AuditLogService } from '../services/audit-log';
 import { auditActor } from '../middleware/auth';
 
@@ -28,6 +29,36 @@ export class EvidencePackAPI {
   ) {
     this.router = Router();
     this.svc = new EvidencePackService(db, logger);
+
+    /** GET /public-key → key_id + PEM. Auditors can fetch this
+     *  out-of-band to compare against the bundled pubkey. No
+     *  org scoping; the signing identity is gateway-wide. */
+    this.router.get('/public-key', (_req: Request, res: Response) => {
+      try {
+        res.json(this.svc.getPublicKey());
+      } catch (err) {
+        this.logger.error({ err }, 'evidence-pack public-key fetch failed');
+        res.status(500).json({ error: (err as Error).message });
+      }
+    });
+
+    /** POST /verify → { ok: boolean } over a pack object posted in
+     *  the body. Server-side check uses the gateway's own canonical
+     *  form so an auditor running against this endpoint gets the
+     *  same answer as the offline CLI. */
+    this.router.post('/verify', (req: Request, res: Response) => {
+      try {
+        const pack = req.body;
+        if (!pack || typeof pack !== 'object') {
+          return res.status(400).json({ error: 'pack body must be an object' });
+        }
+        const ok = EvidencePackService.verify(pack);
+        res.json({ ok });
+      } catch (err) {
+        this.logger.error({ err }, 'evidence-pack verify failed');
+        res.status(500).json({ error: (err as Error).message });
+      }
+    });
 
     this.router.get('/export', (req: Request, res: Response) => {
       const orgId = (req as any).orgId ?? 'default';

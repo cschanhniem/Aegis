@@ -33,6 +33,7 @@
 import Database from 'better-sqlite3';
 import type { Logger } from 'pino';
 import { IntegrityService } from './integrity';
+import { SigningService, type SignaturePayload } from './signing';
 
 const EVIDENCE_PACK_VERSION = '1.0';
 
@@ -66,8 +67,22 @@ export interface EvidencePack {
     first_seen: string | null;
     last_seen: string | null;
   }>;
-  /** Reserved for v0.4.x Ed25519 detached signature. */
-  signature?: { algorithm: 'ed25519'; key_id: string; signature: string };
+  /** Ed25519 detached signature over the canonical JSON of every
+   *  other field. Self-contained — public_key_pem is bundled so
+   *  the pack can be verified offline. */
+  signature?: SignaturePayload;
+}
+
+/**
+ * Canonical JSON form of a pack for signing/verification.
+ * Strips out the signature field, then JSON.stringify with stable
+ * key order (the constructor builds the object in fixed order, and
+ * V8 JSON.stringify preserves insertion order). Producer + verifier
+ * must use this exact function or the signature will not match.
+ */
+export function canonicalize(pack: EvidencePack): string {
+  const { signature: _ignored, ...rest } = pack;
+  return JSON.stringify(rest);
 }
 
 export interface EvidencePackOptions {
@@ -76,13 +91,22 @@ export interface EvidencePackOptions {
    *  (50_000) is well above what a typical SOC 2 review needs and
    *  still serializes in seconds. */
   maxRowsPerTable?: number;
+  /** When true (default), sign the produced pack with the
+   *  gateway's Ed25519 evidence-signing key. Set false to produce
+   *  an unsigned snapshot — useful for internal pipelines that
+   *  hash on their own terms. */
+  sign?: boolean;
 }
 
 export class EvidencePackService {
+  private signer: SigningService;
+
   constructor(
     private db: Database.Database,
     private logger?: Logger,
-  ) {}
+  ) {
+    this.signer = new SigningService(db, logger);
+  }
 
   build(orgId: string, opts: EvidencePackOptions = {}): EvidencePack {
     const cap = Math.max(1, Math.min(opts.maxRowsPerTable ?? 50_000, 500_000));
@@ -166,7 +190,7 @@ export class EvidencePackService {
         latest_trace_id: string | null;
       }>;
 
-    return {
+    const pack: EvidencePack = {
       meta: {
         version: EVIDENCE_PACK_VERSION,
         generated_at: new Date().toISOString(),
@@ -180,6 +204,27 @@ export class EvidencePackService {
       integrity,
       trace_counts,
     };
+
+    if (opts.sign !== false) {
+      pack.signature = this.signer.sign(canonicalize(pack));
+    }
+
+    return pack;
+  }
+
+  /** Convenience for the /verify endpoint and CLI: returns true
+   *  iff `pack.signature` is a valid Ed25519 over the canonical
+   *  form of every other field. Strict: missing signature → false. */
+  static verify(pack: EvidencePack): boolean {
+    if (!pack.signature) return false;
+    return SigningService.verify(canonicalize(pack), pack.signature);
+  }
+
+  /** Expose the gateway's current evidence-signing pubkey + key_id.
+   *  Auditors who want extra paranoia can fetch this directly and
+   *  compare against the public_key_pem embedded in a pack. */
+  getPublicKey(): { key_id: string; public_key_pem: string } {
+    return this.signer.getPublicKey();
   }
 }
 

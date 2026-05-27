@@ -127,14 +127,20 @@ Closing the "this catches things other guardrails miss" gap.
 
 The "ready to be deployed somewhere that matters" line.
 
-- [x] **SOC 2 Type II evidence pack export (v1).** `GET
+- [x] **SOC 2 Type II evidence pack export.** `GET
   /api/v1/evidence-pack/export` (also `agentguard evidence-pack
-  --out`) returns one canonical JSON with audit log + policies +
-  tenant config + bulk integrity verdict + per-agent trace
-  anchors. Org-scoped so multi-tenant deployments don't leak.
-  Auditors get a single, frozen, grep-able artifact. The reserved
-  `signature` field for Ed25519 detached signing lands in v1.0.x
-  to complete the "auditor-can-verify-the-bundle" loop.
+  export --out`) returns one canonical JSON with audit log +
+  policies + tenant config + bulk integrity verdict + per-agent
+  trace anchors. Org-scoped so multi-tenant deployments don't leak.
+  Auditors get a single, frozen, grep-able artifact.
+- [x] **Ed25519 signed pack + offline verification.** Every pack
+  now ships with a self-contained `signature` field (algorithm,
+  key_id, signature, public_key_pem). `agentguard evidence-pack
+  verify <file>` recomputes the canonical form locally and
+  verifies — no network, no API key, no trust in the verifier
+  process beyond `node:crypto`. Tamper one byte → exit 1. The
+  gateway also exposes `GET /evidence-pack/public-key` for
+  out-of-band pubkey comparison.
 - [ ] **SSO via WorkOS** (SAML/OIDC) + RBAC across SSO identities,
   not just API keys.
 - [ ] **Postgres adapter.** SQLite stays the default; enterprise

@@ -10,17 +10,24 @@ In flight on `main`, slated for the next release.
 
 ### Added
 - **SOC 2 evidence pack export** — `GET /api/v1/evidence-pack/export`
-  and `agentguard evidence-pack --out <file>` return one canonical
-  JSON bundle containing: every `admin_audit_log` row scoped to the
-  caller's org, every policy, the current tenant config, the bulk
-  integrity verdict across all agents, and per-agent trace
-  anchors (count + first/last seen + latest trace_id). Org-scoped
-  so multi-tenant deployments can't cross-export. Each export
-  itself writes an audit row (`kind=evidence_pack_export`) so the
-  chain-of-custody question is answerable later. JSON-only by
-  design — zero new deps, grep-able, and one canonical hash input
-  for the v1.0.x Ed25519 signing path that's already reserved in
-  the format.
+  and `agentguard evidence-pack export --out <file>` return one
+  canonical JSON bundle containing: every `admin_audit_log` row
+  scoped to the caller's org, every policy, the current tenant
+  config, the bulk integrity verdict across all agents, and
+  per-agent trace anchors. Org-scoped so multi-tenant deployments
+  can't cross-export. Each export itself writes an audit row
+  (`kind=evidence_pack_export`).
+- **Ed25519 signed evidence packs + offline verification.** Every
+  pack now ships with a self-contained `signature` field
+  (algorithm, key_id, signature, public_key_pem). The gateway
+  generates its evidence-signing keypair on first use and persists
+  it in `gateway_config` so the identity is stable across
+  restarts. `agentguard evidence-pack verify <file>` recomputes
+  the canonical form locally and verifies — no network round
+  trip, no API key. Mutating any field after export → exit 1 with
+  "SIGNATURE INVALID." `GET /api/v1/evidence-pack/public-key`
+  lets auditors pull the pubkey out-of-band and diff against the
+  bundled copy.
 - **Audit-chain integrity verification** — three surfaces:
   - CLI: `agentguard integrity verify <agent-id>` (exits 0 on
     intact chain, 1 on break, 2 on gateway error).

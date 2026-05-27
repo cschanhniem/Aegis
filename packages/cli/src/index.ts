@@ -884,9 +884,13 @@ program
   });
 
 // ── evidence-pack (SOC 2 export) ─────────────────────────────────────────────
-program
+const evidencePack = program
   .command('evidence-pack')
-  .description('Download a one-shot SOC 2 evidence pack (audit log + policies + tenant config + integrity verdict)')
+  .description('Download or verify a SOC 2 evidence pack');
+
+evidencePack
+  .command('export', { isDefault: true })
+  .description('Download a signed evidence pack (audit log + policies + tenant config + integrity verdict)')
   .option('-o, --out <file>', 'Write the pack to this file (default: ./aegis-evidence-<timestamp>.json)')
   .action(async (opts: { out?: string }) => {
     const url = `${gatewayUrl()}/api/v1/evidence-pack/export`;
@@ -914,6 +918,53 @@ program
           `agents: ${raw.integrity?.total_agents ?? 0} · ` +
           `broken chains: ${raw.integrity?.broken_agents ?? 0}\x1b[0m`,
       );
+      if (raw.signature) {
+        console.log(
+          `    \x1b[2msigned: ${raw.signature.algorithm} · key_id ${raw.signature.key_id}\x1b[0m`,
+        );
+      }
+    }
+  });
+
+evidencePack
+  .command('verify <file>')
+  .description('Verify a pack\'s Ed25519 signature offline using the pubkey embedded in the file')
+  .action(async (file: string) => {
+    let pack: any;
+    try {
+      pack = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (e) {
+      console.error(`\x1b[31m✗\x1b[0m cannot read ${file}: ${(e as Error).message}`);
+      process.exit(2);
+    }
+    if (!pack || typeof pack !== 'object' || !pack.signature) {
+      console.log(`\x1b[31m✗\x1b[0m ${file}: no signature in pack`);
+      process.exit(1);
+    }
+    // Offline verify — recompute the canonical form locally using
+    // the gateway's published algorithm (strip signature field then
+    // JSON.stringify the rest with the constructor's insertion
+    // order). No network call, no API key needed.
+    const { signature, ...rest } = pack;
+    const data = JSON.stringify(rest);
+    let ok = false;
+    try {
+      const { createPublicKey, verify: nodeVerify } = await import('crypto');
+      const pub = createPublicKey(signature.public_key_pem);
+      ok = nodeVerify(null, Buffer.from(data, 'utf8'), pub, Buffer.from(signature.signature, 'base64'));
+    } catch (e) {
+      console.error(`\x1b[31m✗\x1b[0m verify failed: ${(e as Error).message}`);
+      process.exit(2);
+    }
+    if (ok) {
+      console.log(`\x1b[32m✓\x1b[0m ${file}: signature valid`);
+      console.log(`    \x1b[2malgorithm: ${signature.algorithm}\x1b[0m`);
+      console.log(`    \x1b[2mkey_id:    ${signature.key_id}\x1b[0m`);
+      console.log(`    \x1b[2mgenerated_at: ${pack.meta?.generated_at ?? '?'}\x1b[0m`);
+      process.exit(0);
+    } else {
+      console.log(`\x1b[31m✗\x1b[0m ${file}: SIGNATURE INVALID — pack has been mutated since export`);
+      process.exit(1);
     }
   });
 
