@@ -13,21 +13,53 @@ const MUTED   = 'hsl(var(--muted-foreground))'
 const SURFACE = 'hsl(var(--card))'
 const BG      = 'hsl(var(--background))'
 
-// Action filters cover the canonical kinds the gateway emits.
-// "All actions" leaves the filter unset.
+// Action filters — must mirror packages/gateway-mcp/src/services/audit-log.ts
+// `AuditAction` exactly. Selecting an action that the server never emits
+// silently returns zero rows, which looks like a Cockpit bug to the
+// auditor (it's actually filter drift). Grouped by domain for scan-ability;
+// labels stay equal to values so it's obvious there's no friendly remapping
+// hiding under the hood.
 const ACTION_FILTERS: { label: string; value: string }[] = [
   { label: 'All actions', value: '' },
-  { label: 'judge.trace (alignment + code-shield)', value: 'judge.trace' },
+  // Judge (alignment + code-shield + evidence-pack export) — most-common
+  { label: 'judge.trace (alignment / code-shield / evidence-pack)', value: 'judge.trace' },
+  { label: 'judge.batch', value: 'judge.batch' },
+  // Tenant config + DSL (DSL changes are recorded as tenant.config.*)
   { label: 'tenant.config.update', value: 'tenant.config.update' },
-  { label: 'tenant.dsl.update', value: 'tenant.dsl.update' },
-  { label: 'tenant.dsl.delete', value: 'tenant.dsl.delete' },
+  { label: 'tenant.config.replace', value: 'tenant.config.replace' },
+  { label: 'tenant.config.apply-template', value: 'tenant.config.apply-template' },
+  // Policies
   { label: 'policy.create', value: 'policy.create' },
   { label: 'policy.update', value: 'policy.update' },
   { label: 'policy.delete', value: 'policy.delete' },
-  { label: 'approval.decide', value: 'approval.decide' },
+  { label: 'policy.toggle', value: 'policy.toggle' },
+  // Approvals
+  { label: 'approval.approve', value: 'approval.approve' },
+  { label: 'approval.reject', value: 'approval.reject' },
+  // API keys
+  { label: 'apikey.create', value: 'apikey.create' },
+  { label: 'apikey.revoke', value: 'apikey.revoke' },
+  { label: 'apikey.regenerate', value: 'apikey.regenerate' },
+  // Kill switch
+  { label: 'killswitch.revoke', value: 'killswitch.revoke' },
+  { label: 'killswitch.restore', value: 'killswitch.restore' },
+  // Users + orgs
+  { label: 'user.create', value: 'user.create' },
+  { label: 'user.update', value: 'user.update' },
+  { label: 'user.delete', value: 'user.delete' },
+  { label: 'user.invite', value: 'user.invite' },
+  { label: 'org.create', value: 'org.create' },
+  { label: 'org.update', value: 'org.update' },
+  { label: 'org.settings', value: 'org.settings' },
+  // Retention
   { label: 'retention.update', value: 'retention.update' },
   { label: 'retention.purge', value: 'retention.purge' },
-  { label: 'auth.bootstrap', value: 'auth.bootstrap' },
+  // Webhooks
+  { label: 'webhook.create', value: 'webhook.create' },
+  { label: 'webhook.delete', value: 'webhook.delete' },
+  // Data movement
+  { label: 'data.export', value: 'data.export' },
+  { label: 'data.seed', value: 'data.seed' },
 ]
 
 const RESOURCE_FILTERS: { label: string; value: string }[] = [
