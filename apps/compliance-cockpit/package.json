@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "// dev port": "13003 keeps the dev server out of 3000 (the common Next.js default that often collides with other local projects). Docker / production still use 3000 via `npm start`.",
+    "dev": "next dev -p 13003",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

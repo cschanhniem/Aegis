@@ -104,7 +104,7 @@ docker compose up -d
 
 | Service | URL | What it does |
 |---------|-----|--------------|
-| **Compliance Cockpit** | [localhost:3000](http://localhost:3000) | Dashboard — traces, policies, approvals, costs |
+| **Compliance Cockpit** | [localhost:3000](http://localhost:3000) (Docker) · [localhost:13003](http://localhost:13003) (dev) | Dashboard — traces, policies, approvals, costs |
 | **Gateway API** | [localhost:8080](http://localhost:8080) | Policy engine — classifies, checks, blocks |
 
 Then add **one line** to your agent:
