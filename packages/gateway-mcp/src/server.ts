@@ -43,6 +43,12 @@ import { EvidencePackAPI } from './api/evidence-pack';
 import { AuthAPI } from './api/auth';
 import { SessionService } from './services/session';
 import { MockIdpAdapter } from './services/idp-adapter';
+import {
+  DetectorRegistry,
+  PiiDetector,
+  ClassifierDetector,
+  AnomalyDetectorPlugin,
+} from './detectors';
 
 const VERSION = '2.0.0';
 
@@ -128,6 +134,16 @@ async function main() {
   const dslPolicy = new DslPolicyService(logger, configBus, tenantConfig);
   const orgIds = db.prepare('SELECT id FROM organizations').all() as { id: string }[];
   dslPolicy.warmCache(orgIds.map((o) => o.id));
+
+  // Detector registry — unified Signal contract over PII / classifier /
+  // anomaly + future tenant-supplied plugins. Built in parallel with the
+  // existing check.ts decision path; consumers can opt in incrementally.
+  const detectors = new DetectorRegistry({ logger });
+  detectors.register(new ClassifierDetector());
+  detectors.register(new PiiDetector());
+  if (config.anomaly.enabled) {
+    detectors.register(new AnomalyDetectorPlugin(anomalyDetector, profileManager));
+  }
 
   // MCP proxy (instantiated after dslPolicy + tenantConfig so DSL flows through)
   const mcpProxy = new MCPProxyService(db, policyEngine, killSwitch, logger, dslPolicy, tenantConfig);

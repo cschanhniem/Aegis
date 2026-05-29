@@ -3,6 +3,7 @@ import { createHash } from 'crypto';
 
 export * from './tenant-config';
 export * from './policy-dsl';
+export * from './detector';
 
 // Base schemas
 export const AgentIdSchema = z.string().uuid();

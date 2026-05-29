@@ -1,0 +1,17 @@
+/**
+ * Detector plugin layer — public entry. Composes:
+ *
+ *   DetectorRegistry          contract + runner
+ *   PiiDetector               content-kind built-in (regex patterns)
+ *   ClassifierDetector        classify-kind built-in (tool category + risk)
+ *   AnomalyDetectorPlugin     behavior-kind built-in (Isolation Forest)
+ *
+ * Third-party detectors implement `Detector` from `@agentguard/core-schema`
+ * and register against the same registry.
+ */
+
+export { DetectorRegistry } from './registry';
+export type { DetectorRegistryOptions } from './registry';
+export { PiiDetector } from './built-in/pii-detector';
+export { ClassifierDetector } from './built-in/classifier-detector';
+export { AnomalyDetectorPlugin } from './built-in/anomaly-detector-plugin';
