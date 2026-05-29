@@ -20,6 +20,7 @@
 [**Download** →](https://github.com/Justin0504/Aegis/releases/latest) ·
 [**Roadmap** →](./ROADMAP.md) ·
 [**Security** →](./SECURITY.md) ·
+[**Commercial** →](./COMMERCIAL.md) ·
 [**Contributing** →](./CONTRIBUTING.md)
 
 </div>
