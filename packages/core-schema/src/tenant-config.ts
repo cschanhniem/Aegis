@@ -71,6 +71,29 @@ export const TenantConfigSchema = z.object({
    * over http / syslog / stdout sink kinds.
    */
   sinks: z.array(SinkConfigSchema).max(20).default([]),
+  /**
+   * Cost-burn guardrails. Turns the (already-tracked) per-call token cost
+   * from a backward-looking report into a forward-looking budget gate.
+   * At evaluation time the BudgetDetector queries spend over the relevant
+   * window, compares against limit, and emits warn / critical signals
+   * that the decision merger treats like any other security signal.
+   *
+   * Limits are USD. Any subset of the four scopes may be set. Action:
+   *   log    just record a signal (info-level)
+   *   warn   emit warn signal (decision still allows)
+   *   block  emit critical signal (decision merger blocks)
+   * warnAt is the fraction of the limit at which we start emitting warn
+   * regardless of action (gives downstream alerting a heads-up).
+   */
+  budget: z.object({
+    enabled: z.boolean().default(false),
+    dailyUsd: z.number().min(0).optional(),
+    monthlyUsd: z.number().min(0).optional(),
+    perAgentDailyUsd: z.number().min(0).optional(),
+    perSessionUsd: z.number().min(0).optional(),
+    warnAt: z.number().min(0).max(1).default(0.8),
+    action: z.enum(['log', 'warn', 'block']).default('warn'),
+  }).optional(),
   sla: z
     .object({
       targetP50Ms: z.number().int().positive().default(50),

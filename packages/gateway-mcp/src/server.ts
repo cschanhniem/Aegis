@@ -48,11 +48,14 @@ import {
   PiiDetector,
   ClassifierDetector,
   AnomalyDetectorPlugin,
+  BudgetDetector,
 } from './detectors';
+import { BudgetGuardService } from './services/budget-guard';
 import { CoverageMapService } from './services/coverage-map';
 import { OntologyAPI } from './api/ontology';
 import { SinkOrchestrator } from './services/sink-orchestrator';
 import { SinksAPI } from './api/sinks';
+import { BudgetAPI } from './api/budget';
 import { TransparencyLogService } from './services/transparency-log';
 import { TransparencyLogAPI } from './api/transparency-log';
 import { SigningService } from './services/signing';
@@ -156,6 +159,8 @@ async function main() {
   if (config.anomaly.enabled) {
     detectors.register(new AnomalyDetectorPlugin(anomalyDetector, profileManager));
   }
+  const budgetGuard = new BudgetGuardService(db, tenantConfig, logger);
+  detectors.register(new BudgetDetector(budgetGuard));
   const coverageMap = new CoverageMapService(detectors);
 
   // Universal sink fan-out. Subscribes to audit log + ConfigBus; every
@@ -450,6 +455,9 @@ async function main() {
   // /api/v1/config (whole tenant config). This endpoint exposes runtime
   // metrics (sent / failed / DLQ depth / last error) per configured sink.
   app.use('/api/v1/sinks', requireAuth, new SinksAPI(sinkOrchestrator, tenantConfig, logger).router);
+
+  // Budget guard read-only status. Config goes through tenant-config PATCH.
+  app.use('/api/v1/budget', requireAuth, new BudgetAPI(budgetGuard).router);
 
   // Transparency log — append-only Merkle tree of audit + evidence-pack
   // events. Customers verify inclusion offline against the signed root.

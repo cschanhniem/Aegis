@@ -19,7 +19,8 @@ export type AuditAction =
   | 'judge.batch' | 'judge.trace'
   | 'webhook.create' | 'webhook.delete'
   | 'data.export' | 'data.seed'
-  | 'tenant.config.update' | 'tenant.config.replace' | 'tenant.config.apply-template';
+  | 'tenant.config.update' | 'tenant.config.replace' | 'tenant.config.apply-template'
+  | 'proxy.llm_call';
 
 export type ResourceType =
   | 'policy' | 'approval' | 'apikey' | 'agent'

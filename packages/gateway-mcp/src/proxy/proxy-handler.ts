@@ -137,7 +137,7 @@ export class ProxyHandler {
       org_id: auth.orgId,
       user_id: undefined,
       user_email: auth.keyName,
-      action: 'data.export',           // closest existing AuditAction; v1.1 adds 'proxy.llm_call'
+      action: 'proxy.llm_call',
       resource_type: 'trace',
       resource_id: randomUUID(),
       ip_address: req.ip,
