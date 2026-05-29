@@ -4,11 +4,20 @@ on:
   push:
     tags:
       - 'v*'
+  # Manual dispatch — lets us test desktop builds (Windows / Intel Mac
+  # / Linux) without minting an actual release. Skips the publish jobs.
+  workflow_dispatch:
+    inputs:
+      desktop_only:
+        description: 'Skip PyPI/npm/Docker publishes — desktop builds only'
+        type: boolean
+        default: true
 
 jobs:
   publish-pypi:
     name: Publish Python SDK to PyPI
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     permissions:
       contents: read
     steps:
@@ -36,6 +45,7 @@ jobs:
   publish-npm:
     name: Publish JS SDK to npm
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     permissions:
       contents: read
     steps:
@@ -63,6 +73,7 @@ jobs:
   publish-docker:
     name: Publish Gateway Docker image
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
@@ -97,6 +108,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     needs: [publish-pypi, publish-npm, publish-docker]
     permissions:
       contents: write
@@ -125,6 +137,7 @@ jobs:
     name: Build desktop (macOS arm64)
     runs-on: macos-14
     needs: [create-release]
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.create-release.result == 'success') }}
     timeout-minutes: 30
     permissions:
       contents: write
@@ -179,6 +192,7 @@ jobs:
     name: Build desktop (Windows x64) [WIP]
     runs-on: windows-latest
     needs: [create-release]
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.create-release.result == 'success') }}
     timeout-minutes: 45
     continue-on-error: true
     permissions:
@@ -233,6 +247,7 @@ jobs:
     name: Build desktop (Linux x64)
     runs-on: ubuntu-latest
     needs: [create-release]
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.create-release.result == 'success') }}
     timeout-minutes: 30
     permissions:
       contents: write
@@ -293,6 +308,7 @@ jobs:
     name: Build desktop (macOS x64 / Intel)
     runs-on: macos-13
     needs: [create-release]
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.create-release.result == 'success') }}
     timeout-minutes: 30
     permissions:
       contents: write
@@ -345,6 +361,7 @@ jobs:
     name: Build desktop (Linux arm64)
     runs-on: ubuntu-24.04-arm
     needs: [create-release]
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.create-release.result == 'success') }}
     timeout-minutes: 45
     continue-on-error: true  # arm runners are newer; let main release ship if this hiccups
     permissions:
