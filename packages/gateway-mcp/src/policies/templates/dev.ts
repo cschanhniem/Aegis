@@ -29,6 +29,7 @@ export const devTemplate: TenantConfig = {
     network: { enabled: false },
     'prompt-injection': { enabled: true, riskLevel: 'MEDIUM' },
   },
+  sinks: [],
 };
 
 export const devDescription =

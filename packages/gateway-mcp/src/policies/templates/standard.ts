@@ -33,6 +33,7 @@ export const standardTemplate: TenantConfig = {
     targetP50Ms: 50,
     targetP95Ms: 200,
   },
+  sinks: [],
 };
 
 export const standardDescription =

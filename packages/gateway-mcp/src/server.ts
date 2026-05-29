@@ -51,6 +51,8 @@ import {
 } from './detectors';
 import { CoverageMapService } from './services/coverage-map';
 import { OntologyAPI } from './api/ontology';
+import { SinkOrchestrator } from './services/sink-orchestrator';
+import { SinksAPI } from './api/sinks';
 
 const VERSION = '2.0.0';
 
@@ -147,6 +149,13 @@ async function main() {
     detectors.register(new AnomalyDetectorPlugin(anomalyDetector, profileManager));
   }
   const coverageMap = new CoverageMapService(detectors);
+
+  // Universal sink fan-out. Subscribes to audit log + ConfigBus; every
+  // audit row routes to whatever http/syslog/stdout sinks the tenant has
+  // declared in tenant_config.sinks. Customer SIEM integration becomes
+  // a config write, not a code release.
+  const sinkOrchestrator = new SinkOrchestrator(logger, auditLog, tenantConfig, configBus);
+  sinkOrchestrator.start(orgIds.map((o) => o.id));
 
   // MCP proxy (instantiated after dslPolicy + tenantConfig so DSL flows through)
   const mcpProxy = new MCPProxyService(db, policyEngine, killSwitch, logger, dslPolicy, tenantConfig);
@@ -402,6 +411,11 @@ async function main() {
   // without taking a sales call. Tenant detectors register against the
   // same registry and automatically extend the published coverage.
   app.use('/api/v1/ontology', requireAuth, new OntologyAPI(coverageMap).router);
+
+  // Universal sink runtime view + dry-fire. Sink CONFIG lives in
+  // /api/v1/config (whole tenant config). This endpoint exposes runtime
+  // metrics (sent / failed / DLQ depth / last error) per configured sink.
+  app.use('/api/v1/sinks', requireAuth, new SinksAPI(sinkOrchestrator, tenantConfig, logger).router);
 
   // Agent alignment auditor — LlamaFirewall-style CoT inspection.
   // Standalone for v0.3 preview; SDKs that capture chain-of-thought

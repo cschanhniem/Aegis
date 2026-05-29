@@ -8,6 +8,7 @@
 
 import { z } from 'zod';
 import { PolicyDslSchema } from './policy-dsl';
+import { SinkConfigSchema } from './sink';
 
 export const DeploymentModeSchema = z.enum([
   'dev',
@@ -62,6 +63,14 @@ export const TenantConfigSchema = z.object({
     .record(z.string(), CategoryOverrideSchema)
     .default({}),
   dsl: PolicyDslSchema.optional(),
+  /**
+   * Per-tenant universal sinks — every audit / decision / signal /
+   * evidence-pack event AEGIS produces is fanned out to these. One AEGIS
+   * deployment can ship to Splunk + Datadog + a custom HTTP receiver
+   * simultaneously without forking us. Schema is the discriminated union
+   * over http / syslog / stdout sink kinds.
+   */
+  sinks: z.array(SinkConfigSchema).max(20).default([]),
   sla: z
     .object({
       targetP50Ms: z.number().int().positive().default(50),

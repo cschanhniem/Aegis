@@ -5,6 +5,7 @@ export * from './tenant-config';
 export * from './policy-dsl';
 export * from './detector';
 export * from './ontology';
+export * from './sink';
 
 // Base schemas
 export const AgentIdSchema = z.string().uuid();

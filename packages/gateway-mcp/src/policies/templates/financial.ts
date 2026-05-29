@@ -37,6 +37,7 @@ export const financialTemplate: TenantConfig = {
     targetP50Ms: 80,
     targetP95Ms: 300,
   },
+  sinks: [],
 };
 
 export const financialDescription =

@@ -37,8 +37,11 @@ export interface AuditEntry {
   ip_address?: string;
 }
 
+export type AuditSubscriber = (entry: AuditEntry & { timestamp: string }) => void;
+
 export class AuditLogService {
   private insertStmt: Database.Statement;
+  private subscribers: AuditSubscriber[] = [];
 
   constructor(
     private db: Database.Database,
@@ -48,6 +51,19 @@ export class AuditLogService {
       INSERT INTO admin_audit_log (org_id, user_id, user_email, action, resource_type, resource_id, details, ip_address)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
+  }
+
+  /**
+   * Register a callback fired AFTER every successful audit row write.
+   * Subscriber errors are isolated — they never affect persistence or
+   * other subscribers. Used by SinkRuntime to fan audit events out to
+   * customer-supplied SIEM destinations.
+   */
+  subscribe(fn: AuditSubscriber): () => void {
+    this.subscribers.push(fn);
+    return () => {
+      this.subscribers = this.subscribers.filter(s => s !== fn);
+    };
   }
 
   log(entry: AuditEntry): void {
@@ -66,6 +82,16 @@ export class AuditLogService {
         { action: entry.action, resource: entry.resource_type, id: entry.resource_id },
         'Audit log entry',
       );
+      const stamped = { ...entry, timestamp: new Date().toISOString() };
+      for (const fn of this.subscribers) {
+        try { fn(stamped); }
+        catch (err) {
+          this.logger.warn(
+            { err: (err as Error).message },
+            'audit subscriber failed (isolated)',
+          );
+        }
+      }
     } catch (err: any) {
       this.logger.error({ err, entry }, 'Failed to write audit log');
     }
