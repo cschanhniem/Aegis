@@ -56,6 +56,11 @@ import { SinksAPI } from './api/sinks';
 import { TransparencyLogService } from './services/transparency-log';
 import { TransparencyLogAPI } from './api/transparency-log';
 import { SigningService } from './services/signing';
+import {
+  ProxyHandler,
+  OpenAIChatAdapter,
+  AnthropicMessagesAdapter,
+} from './proxy';
 
 const VERSION = '2.0.0';
 
@@ -449,6 +454,23 @@ async function main() {
   // Transparency log — append-only Merkle tree of audit + evidence-pack
   // events. Customers verify inclusion offline against the signed root.
   app.use('/api/v1/transparency-log', requireAuth, new TransparencyLogAPI(transparencyLog).router);
+
+  // LLM egress proxy — universal substrate for "any workflow" coverage.
+  // Customer sets OPENAI_BASE_URL / ANTHROPIC_BASE_URL to this prefix and
+  // every LLM call passes through detector chain + audit + transparency.
+  // Auth: X-AEGIS-Key (their AEGIS key), Authorization / x-api-key forwarded
+  // to upstream untouched (BYO key). Routes use app.all so any method
+  // upstream supports (POST chat/completions, POST messages, etc.) works.
+  const proxyHandler = new ProxyHandler({
+    db, logger, detectors,
+    audit: auditLog,
+    adapters: [new OpenAIChatAdapter(), new AnthropicMessagesAdapter()],
+  });
+  // NOTE: no `requireAuth` here — the proxy authenticates via X-AEGIS-Key
+  // inside the handler since `Authorization` is reserved for the upstream
+  // provider's key (BYOK pass-through). Mounted at /llm-proxy/* to avoid
+  // collision with the MCP-server registry which owns /api/v1/proxy.
+  app.all('/api/v1/llm-proxy/*', proxyHandler.handle);
 
   // Agent alignment auditor — LlamaFirewall-style CoT inspection.
   // Standalone for v0.3 preview; SDKs that capture chain-of-thought
