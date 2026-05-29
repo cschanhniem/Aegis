@@ -41,6 +41,33 @@ export function initializeEnterpriseSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
   `);
 
+  // ── Sessions (SSO token store) ─────────────────────────────────────────────
+  // Issued after a successful IdP callback (or local-password login if we
+  // ever add one). Bearer tokens here grant access to authenticated REST
+  // routes alongside the existing X-API-Key mechanism — both auth paths
+  // co-exist so the SDK / CLI flow doesn't change for non-Cockpit users.
+  // Tokens are stored hashed (sha256) so a DB dump doesn't leak active
+  // sessions; the plaintext token is returned exactly once at issue time.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      idp TEXT,                       -- 'workos' / 'okta' / 'mock' / null for local
+      idp_sub TEXT,                   -- the IdP-side subject id, opaque to us
+      ip_address TEXT,
+      user_agent TEXT,
+      expires_at TEXT NOT NULL,
+      revoked_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      last_seen_at TEXT,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions(token_hash);
+    CREATE INDEX IF NOT EXISTS idx_sessions_user ON user_sessions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_sessions_expires ON user_sessions(expires_at);
+  `);
+
   // ── Org-scoped API keys (replace single shared key) ────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS org_api_keys (
