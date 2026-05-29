@@ -149,6 +149,11 @@ jobs:
         with:
           node-version: 22
 
+      - name: Set up Python 3.11 (node-gyp distutils compat)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install monorepo deps
         run: npm install --legacy-peer-deps
 
@@ -205,6 +210,11 @@ jobs:
         with:
           node-version: 22
 
+      - name: Set up Python 3.11 (node-gyp distutils compat)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install monorepo deps
         shell: bash
         run: npm install --legacy-peer-deps
@@ -258,6 +268,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Set up Python 3.11 (node-gyp distutils compat)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Install monorepo deps
         run: npm install --legacy-peer-deps
@@ -320,6 +335,11 @@ jobs:
         with:
           node-version: 22
 
+      - name: Set up Python 3.11 (node-gyp distutils compat)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install monorepo deps
         run: npm install --legacy-peer-deps
 
@@ -373,6 +393,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Set up Python 3.11 (node-gyp distutils compat)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Install monorepo deps
         run: npm install --legacy-peer-deps
