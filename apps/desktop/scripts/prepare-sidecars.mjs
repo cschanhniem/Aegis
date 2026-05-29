@@ -38,11 +38,16 @@ const die  = (msg) => { console.error(`error: ${msg}`); process.exit(1); };
 
 // ── shell helpers ──────────────────────────────────────────────────
 function run(cmd, cwd, env) {
+  // Node 20+ on Windows refuses to spawnSync .cmd/.bat shims without
+  // shell: true (CVE-2024-27980 hardening). npm on Windows is npm.cmd,
+  // so we need the shell for it to work at all. Other platforms keep
+  // shell: false to avoid the cost + quoting surprises.
+  const needsShell = process.platform === 'win32';
   const res = spawnSync(cmd[0], cmd.slice(1), {
     cwd,
     env: { ...process.env, ...env },
     stdio: 'inherit',
-    shell: false,
+    shell: needsShell,
   });
   if (res.error) die(`${cmd.join(' ')}: ${res.error.message}`);
   if (res.status !== 0) die(`${cmd.join(' ')} exited with ${res.status}`);
