@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "node ../scripts/prepare-sidecars.mjs",
+    "beforeBuildCommand": "node scripts/prepare-sidecars.mjs",
     "frontendDist": "frontend"
   },
   "app": {
