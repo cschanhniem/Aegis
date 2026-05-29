@@ -153,6 +153,24 @@ export function initializeEnterpriseSchema(db: Database.Database): void {
       UNIQUE(org_id, period, endpoint)
     );
     CREATE INDEX IF NOT EXISTS idx_sla_period ON sla_metrics(period);
+
+    -- ── Transparency log ────────────────────────────────────────────────────
+    -- Append-only RFC 6962 Merkle log. Every audit row (and every evidence
+    -- pack publication) appends here; the leaf at index N is hash(0x00||payload)
+    -- where payload is the canonical JSON of the source record. Merkle root
+    -- is computed on demand from leaves [0..tree_size) and signed with the
+    -- gateway's Ed25519 evidence key, so customers can verify inclusion
+    -- offline against a published signed root.
+    CREATE TABLE IF NOT EXISTS transparency_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      leaf_hash TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      source TEXT NOT NULL,
+      org_id TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_tlog_source ON transparency_log(source, id);
+    CREATE INDEX IF NOT EXISTS idx_tlog_org ON transparency_log(org_id, id);
   `);
 
   // ── Org-scoped migration: add org_id to traces ─────────────────────────────

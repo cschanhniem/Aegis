@@ -53,6 +53,9 @@ import { CoverageMapService } from './services/coverage-map';
 import { OntologyAPI } from './api/ontology';
 import { SinkOrchestrator } from './services/sink-orchestrator';
 import { SinksAPI } from './api/sinks';
+import { TransparencyLogService } from './services/transparency-log';
+import { TransparencyLogAPI } from './api/transparency-log';
+import { SigningService } from './services/signing';
 
 const VERSION = '2.0.0';
 
@@ -156,6 +159,32 @@ async function main() {
   // a config write, not a code release.
   const sinkOrchestrator = new SinkOrchestrator(logger, auditLog, tenantConfig, configBus);
   sinkOrchestrator.start(orgIds.map((o) => o.id));
+
+  // Transparency log — RFC 6962 Merkle tree over audit + evidence-pack
+  // events, signed with the gateway's existing Ed25519 evidence key.
+  // Every audit row also appends here so customers can verify inclusion
+  // offline without trusting us to replay our own log.
+  const transparencyLog = new TransparencyLogService(db, new SigningService(db, logger), logger);
+  auditLog.subscribe(entry => {
+    try {
+      transparencyLog.append({
+        payload: {
+          action: entry.action,
+          resource_type: entry.resource_type,
+          resource_id: entry.resource_id,
+          user_email: entry.user_email,
+          user_id: entry.user_id,
+          ip_address: entry.ip_address,
+          details: entry.details,
+          timestamp: entry.timestamp,
+        },
+        source: 'audit',
+        org_id: entry.org_id,
+      });
+    } catch (err) {
+      logger.warn({ err: (err as Error).message }, 'transparency log append failed');
+    }
+  });
 
   // MCP proxy (instantiated after dslPolicy + tenantConfig so DSL flows through)
   const mcpProxy = new MCPProxyService(db, policyEngine, killSwitch, logger, dslPolicy, tenantConfig);
@@ -416,6 +445,10 @@ async function main() {
   // /api/v1/config (whole tenant config). This endpoint exposes runtime
   // metrics (sent / failed / DLQ depth / last error) per configured sink.
   app.use('/api/v1/sinks', requireAuth, new SinksAPI(sinkOrchestrator, tenantConfig, logger).router);
+
+  // Transparency log — append-only Merkle tree of audit + evidence-pack
+  // events. Customers verify inclusion offline against the signed root.
+  app.use('/api/v1/transparency-log', requireAuth, new TransparencyLogAPI(transparencyLog).router);
 
   // Agent alignment auditor — LlamaFirewall-style CoT inspection.
   // Standalone for v0.3 preview; SDKs that capture chain-of-thought
