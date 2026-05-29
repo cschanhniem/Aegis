@@ -22,10 +22,20 @@ async function getGatewayKey(): Promise<string> {
 }
 
 async function gatewayHeaders(request: NextRequest): Promise<Record<string, string>> {
-  // Client can override with its own key (e.g. after regeneration)
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  // Forward Bearer if the browser presented one — preferred over X-API-Key
+  // so the gateway resolves a real user session and audit rows carry the
+  // human's email instead of the API key name.
+  const bearer = request.headers.get('authorization')
+  if (bearer && bearer.startsWith('Bearer ')) {
+    headers['authorization'] = bearer
+  }
+  // Always include X-API-Key as well: either the one the client overrode
+  // with, or our cached/bootstrapped one. The gateway's auth middleware
+  // tries Bearer first and falls back to X-API-Key, so this is a safe
+  // belt-and-suspenders for routes that should work in either mode.
   const clientKey = request.headers.get('x-api-key')
   const key = clientKey || await getGatewayKey()
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (key) headers['x-api-key'] = key
   return headers
 }
