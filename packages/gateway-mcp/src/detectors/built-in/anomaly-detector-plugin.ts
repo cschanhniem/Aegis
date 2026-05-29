@@ -22,6 +22,19 @@ export class AnomalyDetectorPlugin implements Detector {
   readonly name = NAME;
   readonly version = VERSION;
   readonly kind = 'behavior' as const;
+  // IsolationForest + 9 baseline signals (tool novelty, freq spike, arg
+  // shape drift, temporal, sequence, cost spike, risk escalation, session
+  // burst). Maps to baseline-drift, runaway, scope-broadening, and the
+  // long-horizon parts of defense evasion.
+  readonly coverage = [
+    'AAT-T2001',  // Out-of-Scope Tool Invocation (tool_never_seen signal)
+    'AAT-T3001',  // New-Tool Activation
+    'AAT-T3002',  // Scope Broadening (arg shape drift, scope-creep)
+    'AAT-T6002',  // Instruction Stickiness Across Sessions (partial — via sequence_anomaly)
+    'AAT-T8001',  // Runaway Automation (session_burst, frequency_spike)
+    'AAT-T8002',  // Budget / Cost Burndown (cost_spike)
+    'AAT-T9003',  // Anomaly Window Probing (we run the window — primary detector here)
+  ] as const;
 
   constructor(
     private anomaly: AnomalyDetector,

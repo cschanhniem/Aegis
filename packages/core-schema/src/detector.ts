@@ -74,6 +74,14 @@ export interface Detector {
   readonly name: string;                  // unique within a registry
   readonly version: string;
   readonly kind: DetectorKind;
+  /**
+   * Ontology nodes this detector claims to cover (AAT-T* IDs from
+   * @agentguard/core-schema/ontology). Used to build the per-tenant coverage
+   * map at GET /api/v1/ontology/coverage. Detectors MAY emit signals
+   * outside their declared coverage (taxonomy lags reality), but the
+   * coverage map is the contract customers compare vendors against.
+   */
+  readonly coverage?: ReadonlyArray<string>;
   /** Optional one-time setup. Registry awaits this before first evaluate. */
   init?(): Promise<void> | void;
   evaluate(ctx: DetectorContext): Promise<Signal[]> | Signal[];

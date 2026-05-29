@@ -28,6 +28,18 @@ export class PiiDetector implements Detector {
   readonly name = NAME;
   readonly version = VERSION;
   readonly kind = 'content' as const;
+  // Coverage declared against AEGIS Agent Threat Ontology v1.0.0.
+  // Pattern-matches API keys, JWTs, AWS ARNs, DB conn strings, PEM headers,
+  // SSN/credit-card → credential access + (when those land in tool args) the
+  // first leg of data exfiltration. Memory/output-side coverage is partial
+  // since this detector only inspects pre-call tool args.
+  readonly coverage = [
+    'AAT-T4001',  // Secret in Tool Arguments
+    'AAT-T4003',  // Private Key Exposure
+    'AAT-T4004',  // OAuth Token Leakage
+    'AAT-T4005',  // Session Token / Cookie Leakage
+    'AAT-T5001',  // Outbound Network with Sensitive Context (partial — flags presence, not destination)
+  ] as const;
 
   evaluate(ctx: DetectorContext): Signal[] {
     const strings = flatStringValues(ctx.tool.args);

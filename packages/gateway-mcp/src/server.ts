@@ -49,6 +49,8 @@ import {
   ClassifierDetector,
   AnomalyDetectorPlugin,
 } from './detectors';
+import { CoverageMapService } from './services/coverage-map';
+import { OntologyAPI } from './api/ontology';
 
 const VERSION = '2.0.0';
 
@@ -144,6 +146,7 @@ async function main() {
   if (config.anomaly.enabled) {
     detectors.register(new AnomalyDetectorPlugin(anomalyDetector, profileManager));
   }
+  const coverageMap = new CoverageMapService(detectors);
 
   // MCP proxy (instantiated after dslPolicy + tenantConfig so DSL flows through)
   const mcpProxy = new MCPProxyService(db, policyEngine, killSwitch, logger, dslPolicy, tenantConfig);
@@ -393,6 +396,12 @@ async function main() {
 
   // Per-tenant DSL (self-service)
   app.use('/api/v1/dsl', requireAuth, new PolicyDslAPI(tenantConfig, dslPolicy, logger).router);
+
+  // AEGIS Agent Threat Ontology + per-deployment coverage map.
+  // Customers use /coverage to answer "what does AEGIS detect today?"
+  // without taking a sales call. Tenant detectors register against the
+  // same registry and automatically extend the published coverage.
+  app.use('/api/v1/ontology', requireAuth, new OntologyAPI(coverageMap).router);
 
   // Agent alignment auditor — LlamaFirewall-style CoT inspection.
   // Standalone for v0.3 preview; SDKs that capture chain-of-thought

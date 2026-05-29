@@ -19,6 +19,17 @@ export class ClassifierDetector implements Detector {
   readonly name = NAME;
   readonly version = VERSION;
   readonly kind = 'classify' as const;
+  // Coverage spans execution-tactic technique IDs the existing risk
+  // signal set already identifies (sql/shell/path/prompt-injection/etc),
+  // plus jailbreak detection and classifier-misdirection signals.
+  readonly coverage = [
+    'AAT-T1004',  // Jailbreak / Policy Bypass (prompt-injection risk signal)
+    'AAT-T2003',  // Unintended Code Execution (shell_injection signal)
+    'AAT-T2004',  // SQL Injection via Tool
+    'AAT-T2005',  // SSRF via Network Tool (network category + plaintext_url)
+    'AAT-T9002',  // Classifier Misdirection (we detect, we don't yet evade-protect)
+    'AAT-T1003',  // Tool Supply-Chain Compromise (unsafe_publish / secret_in_build)
+  ] as const;
 
   constructor(private overrides: Record<string, ToolCategory> = {}) {}
 
