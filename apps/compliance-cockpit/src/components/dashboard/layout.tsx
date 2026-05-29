@@ -14,6 +14,7 @@ import { useTraceStream } from '@/hooks/useTraceStream'
 import { BlockAlertToast } from '@/components/ui/block-alert-toast'
 import { StatusBar } from '@/components/dashboard/status-bar'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { AccountWidget } from '@/components/dashboard/account-widget'
 
 const navigation = [
   { name: 'Welcome',     href: '/welcome',     icon: Sparkles        },
@@ -133,6 +134,7 @@ function SidebarContent({ pathname, connected, lastUpdate, notifPermission, requ
           </button>
         )}
         <ThemeToggle />
+        <AccountWidget />
         <p className="text-[11px]" style={{ color: MUTED, opacity: 0.85 }}>v{process.env.APP_VERSION}</p>
       </div>
     </>
