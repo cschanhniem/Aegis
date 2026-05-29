@@ -44,14 +44,24 @@ import { EvidencePackAPI } from './api/evidence-pack';
 const VERSION = '2.0.0';
 
 // ── Logger ─────────────────────────────────────────────────────────────────
+// All logs go to stderr (fd 2). Critical when this process is launched as
+// an MCP stdio server (or piped through mcp2cli) — stdout must carry pure
+// JSON-RPC for the protocol to parse. Reported by githb-ac in #4.
+const logDest = pino.destination(2);
 const logger = config.server.isProduction
-  ? pino({ level: process.env.LOG_LEVEL || 'info' })
-  : pino({
-      transport: {
-        target: 'pino-pretty',
-        options: { translateTime: 'HH:MM:ss Z', ignore: 'pid,hostname' },
+  ? pino({ level: process.env.LOG_LEVEL || 'info' }, logDest)
+  : pino(
+      {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            translateTime: 'HH:MM:ss Z',
+            ignore: 'pid,hostname',
+            destination: 2,  // pino-pretty's own stderr knob
+          },
+        },
       },
-    });
+    );
 
 async function main() {
   const startTime = Date.now();
@@ -179,7 +189,11 @@ async function main() {
   });
 
   // ── Health / readiness probes ────────────────────────────────────────────
-  app.get('/health', (req, res) => {
+  // Both `/health` (the conventional probe path that Docker/K8s hit) and
+  // `/api/v1/health` (the SaaS-style versioned path that Cockpit's Next.js
+  // proxy and most SDK pollers expect) are wired to the same handler.
+  // Reported by githb-ac in #4.
+  const healthHandler = (req: any, res: any) => {
     try {
       db.prepare('SELECT 1').get();
       res.json({
@@ -196,7 +210,9 @@ async function main() {
         error: 'database_unavailable',
       });
     }
-  });
+  };
+  app.get('/health', healthHandler);
+  app.get('/api/v1/health', healthHandler);
 
   app.get('/ready', (req, res) => {
     try {

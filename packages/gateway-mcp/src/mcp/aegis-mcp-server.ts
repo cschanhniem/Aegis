@@ -10,7 +10,9 @@ import { Logger } from 'pino';
  *   { "mcpServers": { "aegis": { "url": "ws://localhost:8080/mcp-audit" } } }
  */
 export class AegisMcpServer {
-  private tools = [
+  // Public so the stdio entrypoint can reuse the same catalog without
+  // re-declaring it. Transport (WebSocket vs stdio) lives outside this class.
+  public readonly tools = [
     {
       name: 'query_traces',
       description: 'Query recent agent traces from AEGIS audit log',
@@ -114,7 +116,8 @@ export class AegisMcpServer {
     this.sendError(ws, id, -32601, `Method not found: ${method}`);
   }
 
-  private callTool(name: string, args: Record<string, any>): any {
+  // Public for the stdio entrypoint — same execution path either way.
+  public callTool(name: string, args: Record<string, any>): any {
     switch (name) {
       case 'query_traces': {
         const limit = Math.min(args.limit ?? 20, 100);

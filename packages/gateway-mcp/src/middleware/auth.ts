@@ -8,6 +8,7 @@ const logger = pino({ name: 'auth' });
 // Routes that do NOT require authentication (SDK ingest + polling)
 const OPEN_ROUTES: Array<{ method: string; pattern: RegExp }> = [
   { method: 'GET',  pattern: /^\/health$/ },
+  { method: 'GET',  pattern: /^\/api\/v1\/health$/ },
   { method: 'POST', pattern: /^\/api\/v1\/traces/ },
   { method: 'POST', pattern: /^\/api\/v1\/check$/ },
   { method: 'GET',  pattern: /^\/api\/v1\/check\/[^/]+\/decision$/ },
