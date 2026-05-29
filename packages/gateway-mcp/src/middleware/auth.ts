@@ -9,6 +9,10 @@ const logger = pino({ name: 'auth' });
 const OPEN_ROUTES: Array<{ method: string; pattern: RegExp }> = [
   { method: 'GET',  pattern: /^\/health$/ },
   { method: 'GET',  pattern: /^\/api\/v1\/health$/ },
+  // SSO bootstrap — the whole point is letting an unauthenticated
+  // browser kick off a login. /me + /logout still require Bearer.
+  { method: 'GET',  pattern: /^\/api\/v1\/auth\/login-url$/ },
+  { method: 'POST', pattern: /^\/api\/v1\/auth\/callback$/ },
   { method: 'POST', pattern: /^\/api\/v1\/traces/ },
   { method: 'POST', pattern: /^\/api\/v1\/check$/ },
   { method: 'GET',  pattern: /^\/api\/v1\/check\/[^/]+\/decision$/ },
@@ -30,24 +34,36 @@ declare global {
       keyName?: string;
       /** First 12 chars of the API key for audit-trail attribution. */
       keyPrefix?: string;
+      /** Authenticated user, populated when a valid Bearer session is presented. */
+      sessionUser?: {
+        id: string;
+        email: string;
+        name: string | null;
+        role: string;
+        org_id: string;
+      };
     }
   }
 }
 
 /**
- * Build the (user_email, user_id) pair the audit log expects, given
- * a request that has been through the auth middleware. API keys
- * don't map to a real user — but they have a human-readable name
- * and a prefix, which together are the right SOC 2 attribution for
- * service-account writes: an auditor can revoke that key and the
- * trail tells them which key did what.
+ * Build the (user_email, user_id) pair the audit log expects.
  *
- *   "default-key (aegis_a1b2c3…)"  → SOC 2-readable
- *
- * If no auth info on the request (open route or legacy bootstrap),
- * the pair is undefined → audit row stays null on those columns.
+ * Preference order:
+ *   1. Session user (set by the Bearer-token branch) — a real human
+ *      with email + db id, populated post-SSO. This is the SOC 2
+ *      gold standard.
+ *   2. API key name + prefix ("default-key (aegis_a1b2c3…)") — the
+ *      service-account attribution we've used since round 45. Still
+ *      auditable: an auditor can revoke that key and the trail tells
+ *      them which key did what.
+ *   3. {} when neither is set (open routes / legacy bootstrap) —
+ *      audit row stays null on those columns.
  */
 export function auditActor(req: Request): { user_email?: string; user_id?: string } {
+  if (req.sessionUser) {
+    return { user_email: req.sessionUser.email, user_id: req.sessionUser.id };
+  }
   const name = req.keyName;
   const prefix = req.keyPrefix;
   if (!name && !prefix) return {};
@@ -73,10 +89,58 @@ export function createAuthMiddleware(db: Database.Database) {
   return function requireAuth(req: Request, res: Response, next: NextFunction) {
     if (isOpenRoute(req.method, req.path)) return next();
 
+    // ── Try Authorization: Bearer session token first ────────────────────
+    // Sessions are the human-channel auth (post-SSO); API keys remain the
+    // service-account channel. Either one passes — the Bearer path is just
+    // tried first so a browser presenting both ends up with the user
+    // attribution instead of the key attribution on audit rows.
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice('Bearer '.length).trim();
+      if (token) {
+        try {
+          const tokenHash = createHash('sha256').update(token).digest('hex');
+          const sessRow = db.prepare(
+            `SELECT s.id, s.expires_at, s.revoked_at,
+                    u.id as user_id, u.email, u.name, u.role, u.org_id, u.status
+             FROM user_sessions s
+             JOIN users u ON u.id = s.user_id
+             WHERE s.token_hash = ?`,
+          ).get(tokenHash) as any;
+          if (
+            sessRow
+            && !sessRow.revoked_at
+            && new Date(sessRow.expires_at) > new Date()
+            && sessRow.status === 'active'
+          ) {
+            req.orgId = sessRow.org_id;
+            req.sessionUser = {
+              id: sessRow.user_id,
+              email: sessRow.email,
+              name: sessRow.name ?? null,
+              role: sessRow.role,
+              org_id: sessRow.org_id,
+            };
+            // Touch last_seen — non-fatal on failure.
+            try {
+              db.prepare(
+                `UPDATE user_sessions SET last_seen_at = datetime('now') WHERE id = ?`,
+              ).run(sessRow.id);
+            } catch { /* keep going */ }
+            return next();
+          }
+        } catch (err) {
+          logger.warn({ err, path: req.path }, 'session lookup failed');
+        }
+      }
+      // Fall through — invalid Bearer doesn't auto-reject if there's
+      // also a valid X-API-Key on the request.
+    }
+
     const apiKey = req.headers['x-api-key'] as string | undefined;
     if (!apiKey) {
       logger.warn({ path: req.path, ip: req.ip, req_id: req.requestId }, 'Missing API key');
-      return res.status(401).json({ error: { code: 'AUTH_MISSING', message: 'Missing X-API-Key header' } });
+      return res.status(401).json({ error: { code: 'AUTH_MISSING', message: 'Missing X-API-Key header or Authorization: Bearer token' } });
     }
 
     // ── Try org-scoped API key first ──────────────────────────────────────

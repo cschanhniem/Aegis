@@ -40,6 +40,9 @@ import { AlignmentAPI } from './api/alignment';
 import { CodeShieldAPI } from './api/code-shield';
 import { IntegrityAPI } from './api/integrity';
 import { EvidencePackAPI } from './api/evidence-pack';
+import { AuthAPI } from './api/auth';
+import { SessionService } from './services/session';
+import { MockIdpAdapter } from './services/idp-adapter';
 
 const VERSION = '2.0.0';
 
@@ -391,6 +394,17 @@ async function main() {
   // SOC 2 evidence pack — one-shot export of audit log + policies +
   // tenant config + integrity verdict, scoped to the requester's org.
   app.use('/api/v1/evidence-pack', requireAuth, new EvidencePackAPI(db, logger, auditLog).router);
+
+  // SSO — sessions + IdP adapter. MockIdpAdapter is wired by default
+  // so local dev + the test suite work end-to-end without WorkOS
+  // credentials. Swap for WorkOSAdapter when the integration lands.
+  const sessionService = new SessionService(db, logger);
+  const idp = new MockIdpAdapter();
+  app.use(
+    '/api/v1/auth',
+    requireAuth,
+    new AuthAPI(db, logger, idp, sessionService, auditLog).router,
+  );
 
   // Kill-switch endpoints (auth required)
   app.post('/api/v1/kill-switch/revoke', requireAuth, async (req, res) => {
