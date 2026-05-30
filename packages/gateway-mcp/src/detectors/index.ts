@@ -16,3 +16,4 @@ export { PiiDetector } from './built-in/pii-detector';
 export { ClassifierDetector } from './built-in/classifier-detector';
 export { AnomalyDetectorPlugin } from './built-in/anomaly-detector-plugin';
 export { BudgetDetector } from './built-in/budget-detector';
+export { ToolScopeDetector } from './built-in/tool-scope-detector';

@@ -49,6 +49,7 @@ import {
   ClassifierDetector,
   AnomalyDetectorPlugin,
   BudgetDetector,
+  ToolScopeDetector,
 } from './detectors';
 import { BudgetGuardService } from './services/budget-guard';
 import { CoverageMapService } from './services/coverage-map';
@@ -165,6 +166,7 @@ async function main() {
   const agentRegistry = new AgentRegistryService(db, logger);
   const budgetGuard = new BudgetGuardService(db, tenantConfig, logger, agentRegistry);
   detectors.register(new BudgetDetector(budgetGuard));
+  detectors.register(new ToolScopeDetector(agentRegistry));
   const coverageMap = new CoverageMapService(detectors);
 
   // Universal sink fan-out. Subscribes to audit log + ConfigBus; every
