@@ -7,6 +7,9 @@ node_modules
 coverage
 *.lcov
 .nyc_output
+# …but the Cockpit's /coverage page is source code, not test output.
+!apps/compliance-cockpit/src/app/coverage
+!apps/compliance-cockpit/src/components/coverage
 
 # Next.js
 .next
