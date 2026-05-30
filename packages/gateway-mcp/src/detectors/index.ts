@@ -17,3 +17,6 @@ export { ClassifierDetector } from './built-in/classifier-detector';
 export { AnomalyDetectorPlugin } from './built-in/anomaly-detector-plugin';
 export { BudgetDetector } from './built-in/budget-detector';
 export { ToolScopeDetector } from './built-in/tool-scope-detector';
+export { DiscoveryDetector } from './built-in/discovery-detector';
+export { ExfilDetector } from './built-in/exfil-detector';
+export { LateralMovementDetector } from './built-in/lateral-movement-detector';

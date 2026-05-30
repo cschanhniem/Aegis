@@ -50,6 +50,9 @@ import {
   AnomalyDetectorPlugin,
   BudgetDetector,
   ToolScopeDetector,
+  DiscoveryDetector,
+  ExfilDetector,
+  LateralMovementDetector,
 } from './detectors';
 import { BudgetGuardService } from './services/budget-guard';
 import { CoverageMapService } from './services/coverage-map';
@@ -167,6 +170,9 @@ async function main() {
   const budgetGuard = new BudgetGuardService(db, tenantConfig, logger, agentRegistry);
   detectors.register(new BudgetDetector(budgetGuard));
   detectors.register(new ToolScopeDetector(agentRegistry));
+  detectors.register(new DiscoveryDetector());
+  detectors.register(new ExfilDetector());
+  detectors.register(new LateralMovementDetector());
   const coverageMap = new CoverageMapService(detectors);
 
   // Universal sink fan-out. Subscribes to audit log + ConfigBus; every
