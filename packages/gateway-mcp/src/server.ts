@@ -56,6 +56,8 @@ import { OntologyAPI } from './api/ontology';
 import { SinkOrchestrator } from './services/sink-orchestrator';
 import { SinksAPI } from './api/sinks';
 import { BudgetAPI } from './api/budget';
+import { OtlpExporterService } from './services/otlp-exporter';
+import { ObservabilityAPI } from './api/observability';
 import { TransparencyLogService } from './services/transparency-log';
 import { TransparencyLogAPI } from './api/transparency-log';
 import { SigningService } from './services/signing';
@@ -169,6 +171,13 @@ async function main() {
   // a config write, not a code release.
   const sinkOrchestrator = new SinkOrchestrator(logger, auditLog, tenantConfig, configBus);
   sinkOrchestrator.start(orgIds.map((o) => o.id));
+
+  // OTLP trace exporter — per-tenant polling job that ships trace rows
+  // out as OpenTelemetry spans to whatever otlp/v1/traces endpoint the
+  // customer pointed AEGIS at (Datadog, Honeycomb, Grafana Tempo,
+  // New Relic, OTel collector — all accept the same JSON shape).
+  const otlpExporter = new OtlpExporterService(db, logger, tenantConfig, configBus);
+  otlpExporter.start(orgIds.map((o) => o.id));
 
   // Transparency log — RFC 6962 Merkle tree over audit + evidence-pack
   // events, signed with the gateway's existing Ed25519 evidence key.
@@ -458,6 +467,10 @@ async function main() {
 
   // Budget guard read-only status. Config goes through tenant-config PATCH.
   app.use('/api/v1/budget', requireAuth, new BudgetAPI(budgetGuard).router);
+
+  // OTLP exporter status + manual flush. Config (endpoint, headers,
+  // interval) lives in /api/v1/config under observability.otlp.
+  app.use('/api/v1/observability', requireAuth, new ObservabilityAPI(otlpExporter).router);
 
   // Transparency log — append-only Merkle tree of audit + evidence-pack
   // events. Customers verify inclusion offline against the signed root.

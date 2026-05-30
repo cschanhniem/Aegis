@@ -94,6 +94,28 @@ export const TenantConfigSchema = z.object({
     warnAt: z.number().min(0).max(1).default(0.8),
     action: z.enum(['log', 'warn', 'block']).default('warn'),
   }).optional(),
+  /**
+   * Observability export — surfaces AEGIS traces in the customer's own
+   * observability stack (Datadog, Honeycomb, Grafana Tempo, New Relic,
+   * any OTLP-compatible backend) rather than locking insight inside the
+   * AEGIS dashboard. Wire format: OTLP/HTTP JSON.
+   */
+  observability: z.object({
+    otlp: z.object({
+      enabled: z.boolean().default(false),
+      /** Full OTLP traces endpoint (e.g. https://otlp.honeycomb.io/v1/traces).
+       *  Path is preserved verbatim — customers point at their backend's
+       *  documented v1/traces URL. */
+      endpoint: z.string().url(),
+      headers: z.record(z.string()).default({}),
+      /** Polling interval in seconds; default 30s. */
+      intervalSec: z.number().int().min(5).max(3600).default(30),
+      /** Max spans per export batch; default 200. */
+      batchSize: z.number().int().min(1).max(2000).default(200),
+      /** service.name to set on the resource; default 'aegis-gateway'. */
+      serviceName: z.string().default('aegis-gateway'),
+    }).optional(),
+  }).optional(),
   sla: z
     .object({
       targetP50Ms: z.number().int().positive().default(50),
