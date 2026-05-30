@@ -60,6 +60,8 @@ import { CrossAgentCorrelatorService } from './services/cross-agent-correlator';
 import { BudgetGuardService } from './services/budget-guard';
 import { CoverageMapService } from './services/coverage-map';
 import { OntologyAPI } from './api/ontology';
+import { ComplianceBundleService } from './services/compliance-bundle';
+import { ComplianceAPI } from './api/compliance';
 import { SinkOrchestrator } from './services/sink-orchestrator';
 import { SinksAPI } from './api/sinks';
 import { BudgetAPI } from './api/budget';
@@ -491,6 +493,16 @@ async function main() {
   // Transparency log — append-only Merkle tree of audit + evidence-pack
   // events. Customers verify inclusion offline against the signed root.
   app.use('/api/v1/transparency-log', requireAuth, new TransparencyLogAPI(transparencyLog).router);
+
+  // Per-framework compliance bundles (SOC 2 / ISO 27001 / NIST AI RMF /
+  // EU AI Act). Hands the auditor a signed, transparency-logged artifact
+  // mapping each control to the AEGIS evidence that demonstrates it.
+  const complianceBundles = new ComplianceBundleService(
+    db, logger, detectors, coverageMap,
+    new SigningService(db, logger),
+    transparencyLog,
+  );
+  app.use('/api/v1/compliance', requireAuth, new ComplianceAPI(complianceBundles, auditLog).router);
 
   // LLM egress proxy — universal substrate for "any workflow" coverage.
   // Customer sets OPENAI_BASE_URL / ANTHROPIC_BASE_URL to this prefix and
