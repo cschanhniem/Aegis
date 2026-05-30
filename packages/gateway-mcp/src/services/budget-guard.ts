@@ -15,6 +15,7 @@
 import Database from 'better-sqlite3';
 import { Logger } from 'pino';
 import { TenantConfigService } from './tenant-config';
+import { AgentRegistryService } from './agent-registry';
 
 export type BudgetScope = 'tenant-daily' | 'tenant-monthly' | 'agent-daily' | 'session';
 export type BudgetSeverity = 'ok' | 'warn' | 'critical';
@@ -53,6 +54,10 @@ export class BudgetGuardService {
     private db: Database.Database,
     private tenantConfig: TenantConfigService,
     private logger: Logger,
+    /** Optional — when provided, agents.max_cost_daily_usd overrides
+     *  the tenant-wide perAgentDailyUsd for that specific agent.
+     *  Backward compatible: missing registry = tenant-wide rules only. */
+    private agentRegistry?: AgentRegistryService,
   ) {}
 
   /**
@@ -128,9 +133,21 @@ export class BudgetGuardService {
       const spent = this.spendSince({ orgId: opts.orgId, sinceIso: monthStart });
       entries.push(this.toEntry('tenant-monthly', cfg.monthlyUsd, spent, monthStart, warnAt));
     }
-    if (cfg.perAgentDailyUsd != null && opts.agentId) {
+    // Per-agent daily limit. Registry-declared `max_cost_daily_usd` on the
+    // specific agent takes precedence over the tenant-wide cap; this lets
+    // ops pin a stricter ceiling on a specific agent (e.g. a research
+    // bot capped at $5/day even though the tenant default is $100/day),
+    // OR set a higher ceiling for a known-expensive workflow.
+    let agentLimit = cfg.perAgentDailyUsd;
+    if (opts.agentId && this.agentRegistry) {
+      const agent = this.agentRegistry.get(opts.agentId);
+      if (agent?.max_cost_daily_usd != null) {
+        agentLimit = agent.max_cost_daily_usd;
+      }
+    }
+    if (agentLimit != null && opts.agentId) {
       const spent = this.spendSince({ orgId: opts.orgId, sinceIso: todayStart, agentId: opts.agentId });
-      entries.push(this.toEntry('agent-daily', cfg.perAgentDailyUsd, spent, todayStart, warnAt));
+      entries.push(this.toEntry('agent-daily', agentLimit, spent, todayStart, warnAt));
     }
     if (cfg.perSessionUsd != null && opts.sessionId) {
       // Session window = entire session lifetime; we approximate with "all-time"

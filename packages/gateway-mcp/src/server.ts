@@ -162,9 +162,9 @@ async function main() {
   if (config.anomaly.enabled) {
     detectors.register(new AnomalyDetectorPlugin(anomalyDetector, profileManager));
   }
-  const budgetGuard = new BudgetGuardService(db, tenantConfig, logger);
-  detectors.register(new BudgetDetector(budgetGuard));
   const agentRegistry = new AgentRegistryService(db, logger);
+  const budgetGuard = new BudgetGuardService(db, tenantConfig, logger, agentRegistry);
+  detectors.register(new BudgetDetector(budgetGuard));
   const coverageMap = new CoverageMapService(detectors);
 
   // Universal sink fan-out. Subscribes to audit log + ConfigBus; every

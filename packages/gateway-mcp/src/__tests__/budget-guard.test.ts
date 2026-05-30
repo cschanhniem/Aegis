@@ -5,6 +5,7 @@ import { BudgetDetector } from '../detectors/built-in/budget-detector';
 import { TenantConfigService } from '../services/tenant-config';
 import { ConfigBus } from '../services/config-bus';
 import { AuditLogService } from '../services/audit-log';
+import { AgentRegistryService } from '../services/agent-registry';
 import { DetectorContext } from '@agentguard/core-schema';
 
 function setup(): { db: Database.Database; guard: BudgetGuardService; tc: TenantConfigService; detector: BudgetDetector } {
@@ -28,6 +29,16 @@ function setup(): { db: Database.Database; guard: BudgetGuardService; tc: Tenant
       trace_id TEXT PRIMARY KEY, agent_id TEXT, session_id TEXT,
       org_id TEXT, timestamp TEXT, cost_usd REAL,
       model TEXT, input_tokens INTEGER, output_tokens INTEGER
+    );
+    CREATE TABLE agents (
+      id TEXT PRIMARY KEY, org_id TEXT NOT NULL,
+      name TEXT, description TEXT, owner_email TEXT,
+      declared_tools TEXT, max_cost_daily_usd REAL, environments TEXT,
+      status TEXT NOT NULL DEFAULT 'unregistered',
+      secret_hash TEXT, public_key_pem TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_seen_at TEXT
     );
     INSERT INTO organizations (id, name, slug, plan) VALUES ('default', 'd', 'd', 'community');
   `);
@@ -106,6 +117,31 @@ describe('BudgetGuardService', () => {
 
     const d = guard.evaluate({ orgId: 'default', agentId: 'agent-1' })!;
     expect(d.worst).toBe('critical');
+  });
+
+  it('agent.max_cost_daily_usd overrides tenant-wide perAgentDailyUsd', () => {
+    const { db, tc } = setup();
+    const logger = pino({ level: 'silent' });
+    const reg = new AgentRegistryService(db, logger);
+    const guard = new BudgetGuardService(db, tc, logger, reg);
+
+    // Tenant default: $100/day per agent
+    tc.update('default', {
+      budget: { enabled: true, perAgentDailyUsd: 100, warnAt: 0.8, action: 'block' },
+    }, { userEmail: 't' });
+
+    // Register a STRICTER agent at $1/day
+    const strict = reg.register({ orgId: 'default', req: { id: 'strict-bot', name: 'strict' } });
+    reg.update({ orgId: 'default', agentId: 'strict-bot', req: { max_cost_daily_usd: 1 } });
+
+    // Spend $2 — well under tenant default, but over agent-specific limit
+    db.prepare(
+      `INSERT INTO traces (trace_id, agent_id, org_id, timestamp, cost_usd, model) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), ?, ?)`,
+    ).run('t1', 'strict-bot', 'default', 2.0, 'gpt-4');
+
+    const d = guard.evaluate({ orgId: 'default', agentId: 'strict-bot' })!;
+    expect(d.worst).toBe('critical');
+    expect(d.entries[0].limitUsd).toBe(1);   // agent override applied, not tenant 100
   });
 
   it('per-agent limit isolates one agent from another', () => {
