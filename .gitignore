@@ -67,6 +67,9 @@ build/
 private_key.pem
 *.cert
 *.crt
+# …but the AEGIS-published release-signing PUBLIC key belongs in-tree;
+# customers retrieve it from this exact path to pin trust.
+!.well-known/aegis-release-pubkey.pem
 
 # Temporary files
 *.tmp

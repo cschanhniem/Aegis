@@ -35,12 +35,40 @@ jobs:
         working-directory: packages/sdk-python
         run: python -m build
 
+      - name: Set up Node (for release signer)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sign release artifacts (Ed25519)
+        if: env.AEGIS_RELEASE_SIGNING_KEY != ''
+        env:
+          AEGIS_RELEASE_SIGNING_KEY: ${{ secrets.AEGIS_RELEASE_SIGNING_KEY }}
+        run: |
+          echo "$AEGIS_RELEASE_SIGNING_KEY" > /tmp/release-signing.pem
+          chmod 600 /tmp/release-signing.pem
+          for f in packages/sdk-python/dist/*.whl packages/sdk-python/dist/*.tar.gz; do
+            [ -f "$f" ] || continue
+            node tools/release-sign/sign.mjs \
+              --in  "$f" \
+              --key /tmp/release-signing.pem \
+              --out "${f}.sig.json"
+          done
+          rm -f /tmp/release-signing.pem
+
       - name: Publish to PyPI
         working-directory: packages/sdk-python
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: twine upload dist/* --non-interactive --skip-existing
+        run: twine upload dist/*.whl dist/*.tar.gz --non-interactive --skip-existing
+
+      - name: Upload signature manifests as workflow artifact
+        if: hashFiles('packages/sdk-python/dist/*.sig.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-python-signatures
+          path: packages/sdk-python/dist/*.sig.json
 
   publish-npm:
     name: Publish JS SDK to npm
@@ -64,11 +92,41 @@ jobs:
         working-directory: packages/sdk-js
         run: npm run build
 
+      - name: Pack tarball
+        working-directory: packages/sdk-js
+        run: |
+          npm pack
+          TGZ=$(ls *.tgz | head -1)
+          echo "TARBALL=$TGZ" >> $GITHUB_ENV
+
+      - name: Sign release artifact (Ed25519)
+        if: env.AEGIS_RELEASE_SIGNING_KEY != ''
+        env:
+          AEGIS_RELEASE_SIGNING_KEY: ${{ secrets.AEGIS_RELEASE_SIGNING_KEY }}
+        run: |
+          # Materialize the signing key from the GitHub secret, sign the
+          # tarball, then immediately wipe the key file.
+          echo "$AEGIS_RELEASE_SIGNING_KEY" > /tmp/release-signing.pem
+          chmod 600 /tmp/release-signing.pem
+          node tools/release-sign/sign.mjs \
+            --in  packages/sdk-js/${TARBALL} \
+            --key /tmp/release-signing.pem \
+            --out packages/sdk-js/${TARBALL}.sig.json
+          rm -f /tmp/release-signing.pem
+          echo "Signed $TARBALL"
+
       - name: Publish to npm
         working-directory: packages/sdk-js
         run: npm publish --access public || echo "Version already published, skipping"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Upload signature manifest as workflow artifact
+        if: hashFiles('packages/sdk-js/*.sig.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-js-signatures
+          path: packages/sdk-js/*.sig.json
 
   publish-docker:
     name: Publish Gateway Docker image
