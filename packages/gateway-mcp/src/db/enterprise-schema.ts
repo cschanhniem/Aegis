@@ -171,6 +171,36 @@ export function initializeEnterpriseSchema(db: Database.Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_tlog_source ON transparency_log(source, id);
     CREATE INDEX IF NOT EXISTS idx_tlog_org ON transparency_log(org_id, id);
+
+    -- ── Agent registry ─────────────────────────────────────────────────────
+    -- Stable, declared identity for every agent that talks to AEGIS. Until
+    -- now agent_id was a free-form string anyone could pass; the registry
+    -- promotes it to first-class identity with status machine, declared
+    -- tool scope, per-agent budget overrides, optional secret/pubkey, and
+    -- audit attribution strength.
+    --
+    -- Backward compat: first sighting of an unknown agent_id auto-inserts
+    -- a row with status='unregistered' so existing customers don't break.
+    -- Operators promote to 'active' by completing registration; suspended
+    -- and deprecated agents are blocked at the middleware layer.
+    CREATE TABLE IF NOT EXISTS agents (
+      id TEXT PRIMARY KEY,
+      org_id TEXT NOT NULL,
+      name TEXT,
+      description TEXT,
+      owner_email TEXT,
+      declared_tools TEXT,             -- JSON array; null = no scope declared
+      max_cost_daily_usd REAL,         -- null = inherit tenant budget
+      environments TEXT,               -- JSON array of dev/staging/prod
+      status TEXT NOT NULL DEFAULT 'unregistered',
+      secret_hash TEXT,                -- SHA-256 of agent secret; null = no secret required
+      public_key_pem TEXT,             -- Ed25519 pubkey if agent self-signs requests
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_seen_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_agents_org ON agents(org_id, status);
+    CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status);
   `);
 
   // ── Org-scoped migration: add org_id to traces ─────────────────────────────

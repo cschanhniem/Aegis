@@ -1,7 +1,14 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import Database from 'better-sqlite3';
 import { Logger } from 'pino';
 import { z } from 'zod';
+import {
+  AgentRegistrationRequestSchema,
+  AgentUpdateRequestSchema,
+  AgentStatusSchema,
+} from '@agentguard/core-schema';
+import { AgentRegistryService } from '../services/agent-registry';
+import { AuditLogService } from './../services/audit-log';
 
 // agent_id is supplied by SDKs and is typically a UUID, but legacy callers
 // may use slug-like identifiers. Accept either, reject anything else so we
@@ -12,10 +19,19 @@ const AgentIdParamSchema = z
   .max(128)
   .regex(/^[A-Za-z0-9._:-]+$/);
 
+function orgIdOf(req: Request): string {
+  return (req as any).orgId ?? 'default';
+}
+
 export class AgentsAPI {
   router: Router;
 
-  constructor(private db: Database.Database, private logger: Logger) {
+  constructor(
+    private db: Database.Database,
+    private logger: Logger,
+    private registry: AgentRegistryService,
+    private audit: AuditLogService,
+  ) {
     this.router = Router();
     this.registerRoutes();
   }
@@ -170,6 +186,116 @@ export class AgentsAPI {
         this.logger.error({ err }, 'Failed to compute agent baseline');
         res.status(500).json({ error: 'Internal server error' });
       }
+    });
+
+    // ── Registry CRUD ────────────────────────────────────────────────────
+
+    // List registered agents. Filter by status; deprecated excluded by
+    // default. Query params: ?status=active|suspended|deprecated|unregistered
+    // and ?include_deprecated=1.
+    this.router.get('/', (req: Request, res: Response) => {
+      const status = typeof req.query.status === 'string'
+        ? AgentStatusSchema.safeParse(req.query.status)
+        : undefined;
+      const items = this.registry.list({
+        orgId: orgIdOf(req),
+        status: status?.success ? status.data : undefined,
+        includeDeprecated: req.query.include_deprecated === '1',
+      });
+      res.json({ items });
+    });
+
+    // Register a new agent. Body conforms to AgentRegistrationRequest. If
+    // `id` is provided and a row already exists (e.g. unregistered first-
+    // sighting record), this PROMOTES it to active in-place.
+    this.router.post('/', (req: Request, res: Response) => {
+      const parsed = AgentRegistrationRequestSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Invalid registration body', issues: parsed.error.issues });
+      }
+      const orgId = orgIdOf(req);
+      const result = this.registry.register({ orgId, req: parsed.data });
+      this.audit.log({
+        org_id: orgId,
+        action: 'user.create',
+        resource_type: 'agent',
+        resource_id: result.agent.id,
+        details: {
+          name: result.agent.name,
+          declared_tools_count: result.agent.declared_tools?.length ?? 0,
+          issued_secret: !!result.secret,
+        },
+        ip_address: req.ip,
+      });
+      res.status(201).json(result);
+    });
+
+    // Read a single agent's registry record. Distinct from the analytics
+    // endpoints above; this returns the registration metadata.
+    this.router.get('/:agentId', (req: Request, res: Response) => {
+      // Skip the analytics paths — they have their own handlers above.
+      // The `param('agentId')` validator already ran.
+      const agent = this.registry.get(req.params.agentId);
+      if (!agent || agent.org_id !== orgIdOf(req)) {
+        return res.status(404).json({ error: 'agent not found' });
+      }
+      res.json({ agent });
+    });
+
+    this.router.patch('/:agentId', (req: Request, res: Response) => {
+      const parsed = AgentUpdateRequestSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Invalid update body', issues: parsed.error.issues });
+      }
+      const orgId = orgIdOf(req);
+      const updated = this.registry.update({
+        orgId,
+        agentId: req.params.agentId,
+        req: parsed.data,
+      });
+      if (!updated) return res.status(404).json({ error: 'agent not found' });
+      this.audit.log({
+        org_id: orgId,
+        action: 'user.update',
+        resource_type: 'agent',
+        resource_id: updated.id,
+        details: { changed_keys: Object.keys(parsed.data) },
+        ip_address: req.ip,
+      });
+      res.json({ agent: updated });
+    });
+
+    // Rotate the agent secret. Plaintext is returned ONCE; only its hash
+    // is kept. Callers should transport the new secret to the agent
+    // out-of-band (env var rotation, secret manager update, etc).
+    this.router.post('/:agentId/rotate-secret', (req: Request, res: Response) => {
+      const orgId = orgIdOf(req);
+      const r = this.registry.rotateSecret({ orgId, agentId: req.params.agentId });
+      if (!r) return res.status(404).json({ error: 'agent not found' });
+      this.audit.log({
+        org_id: orgId,
+        action: 'apikey.regenerate',
+        resource_type: 'agent',
+        resource_id: req.params.agentId,
+        ip_address: req.ip,
+      });
+      res.json(r);
+    });
+
+    // Soft delete — status flips to 'deprecated'. Existing audit rows
+    // keep the agent_id reference; analytics still query it.
+    this.router.delete('/:agentId', (req: Request, res: Response) => {
+      const orgId = orgIdOf(req);
+      const ok = this.registry.deregister({ orgId, agentId: req.params.agentId });
+      if (!ok) return res.status(404).json({ error: 'agent not found' });
+      this.audit.log({
+        org_id: orgId,
+        action: 'user.delete',
+        resource_type: 'agent',
+        resource_id: req.params.agentId,
+        ip_address: req.ip,
+      });
+      res.status(204).end();
     });
   }
 }

@@ -6,6 +6,7 @@ export * from './policy-dsl';
 export * from './detector';
 export * from './ontology';
 export * from './sink';
+export * from './agent-registry';
 
 // Base schemas
 export const AgentIdSchema = z.string().uuid();

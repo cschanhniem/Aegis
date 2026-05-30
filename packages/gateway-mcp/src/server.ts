@@ -58,6 +58,7 @@ import { SinksAPI } from './api/sinks';
 import { BudgetAPI } from './api/budget';
 import { OtlpExporterService } from './services/otlp-exporter';
 import { ObservabilityAPI } from './api/observability';
+import { AgentRegistryService } from './services/agent-registry';
 import { TransparencyLogService } from './services/transparency-log';
 import { TransparencyLogAPI } from './api/transparency-log';
 import { SigningService } from './services/signing';
@@ -163,6 +164,7 @@ async function main() {
   }
   const budgetGuard = new BudgetGuardService(db, tenantConfig, logger);
   detectors.register(new BudgetDetector(budgetGuard));
+  const agentRegistry = new AgentRegistryService(db, logger);
   const coverageMap = new CoverageMapService(detectors);
 
   // Universal sink fan-out. Subscribes to audit log + ConfigBus; every
@@ -441,7 +443,7 @@ async function main() {
   app.use('/api/v1/policies',  requireAuth, new PolicyAPI(db, policyEngine, logger).router);
   app.use('/api/v1/approvals', requireAuth, new ApprovalAPI(db, logger).router);
   app.use('/api/v1/webhooks',  requireAuth, new WebhookAPI(webhooks).router);
-  app.use('/api/v1/agents',    requireAuth, new AgentsAPI(db, logger).router);
+  app.use('/api/v1/agents',    requireAuth, new AgentsAPI(db, logger, agentRegistry, auditLog).router);
   app.use('/api/v1/proxy',     requireAuth, new ProxyRegistryAPI(db, logger).router);
 
   // Enterprise admin routes (auth + feature gate)
@@ -486,6 +488,7 @@ async function main() {
     db, logger, detectors,
     audit: auditLog,
     adapters: [new OpenAIChatAdapter(), new AnthropicMessagesAdapter()],
+    agentRegistry,
   });
   // NOTE: no `requireAuth` here — the proxy authenticates via X-AEGIS-Key
   // inside the handler since `Authorization` is reserved for the upstream

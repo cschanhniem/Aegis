@@ -23,6 +23,7 @@ import { Severity, Signal } from '@agentguard/core-schema';
 import { DetectorRegistry } from '../detectors/registry';
 import { AuditLogService } from '../services/audit-log';
 import { calculateCost } from '../services/cost';
+import { AgentRegistryService } from '../services/agent-registry';
 import {
   NeutralToolCall,
   ProxyAdapter,
@@ -37,6 +38,11 @@ export interface ProxyHandlerDeps {
   detectors: DetectorRegistry;
   audit: AuditLogService;
   adapters: ReadonlyArray<ProxyAdapter>;
+  /** Optional — if provided, every proxy call touches the agent registry
+   *  and gets blocked when the agent is suspended/deprecated or missing
+   *  its required secret. Backward-compatible: missing agentRegistry =
+   *  no identity enforcement. */
+  agentRegistry?: AgentRegistryService;
 }
 
 interface AuthOk {
@@ -83,6 +89,32 @@ export class ProxyHandler {
 
     const headers = lowerCaseHeaders(req.headers);
     const ctx = adapter.extractAegisContext(headers, req.body);
+
+    // Agent identity gate. Auto-records unknown agent_ids as 'unregistered'
+    // (backward compat); blocks if the agent is suspended/deprecated or
+    // requires a secret the caller didn't present. attributionStrength is
+    // attached to the audit row so compliance reports can distinguish
+    // first-party from drive-by traffic.
+    let attributionStrength: 'strong' | 'weak' = 'weak';
+    if (this.deps.agentRegistry) {
+      const presentedSecret = headers['x-aegis-agent-secret'];
+      const authz = this.deps.agentRegistry.authorize({
+        orgId: auth.orgId,
+        agentId: ctx.agentId,
+        presentedSecret,
+      });
+      if (authz?.blocked) {
+        res.status(403).json({
+          error: {
+            code: 'AGENT_IDENTITY_BLOCKED',
+            message: authz.blockReason,
+            agent_status: authz.agent.status,
+          },
+        });
+        return;
+      }
+      if (authz) attributionStrength = authz.attributionStrength;
+    }
 
     // Forward upstream — BYO key model: customer's auth header passes through.
     const upstreamHeaders = adapter.upstreamHeaders(headers);
@@ -150,6 +182,7 @@ export class ProxyHandler {
           model: usage?.model || ctx.model,
           upstream_ms: upstreamMs,
           upstream_status: (upstreamRes as globalThis.Response).status,
+          attribution_strength: attributionStrength,
         },
         cost: {
           input_tokens: usage?.promptTokens ?? 0,
