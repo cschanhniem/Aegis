@@ -24,6 +24,7 @@ import { DetectorRegistry } from '../detectors/registry';
 import { AuditLogService } from '../services/audit-log';
 import { calculateCost } from '../services/cost';
 import { AgentRegistryService } from '../services/agent-registry';
+import { CrossAgentCorrelatorService } from '../services/cross-agent-correlator';
 import {
   NeutralToolCall,
   ProxyAdapter,
@@ -43,6 +44,10 @@ export interface ProxyHandlerDeps {
    *  its required secret. Backward-compatible: missing agentRegistry =
    *  no identity enforcement. */
   agentRegistry?: AgentRegistryService;
+  /** Optional — when provided, every proxy evaluation observes
+   *  signals so the cross-agent detector can spot multi-agent
+   *  inheritance on subsequent calls in the same session. */
+  crossAgent?: CrossAgentCorrelatorService;
 }
 
 interface AuthOk {
@@ -144,6 +149,19 @@ export class ProxyHandler {
     // they're audit material, not blockable.
     const pending = adapter.extractPendingToolCalls(upstreamJson);
     const evaluations = await this.evaluatePending(ctx, auth.orgId, pending);
+
+    // Feed the cross-agent correlator so the NEXT call in this session
+    // can spot inheritance. Pass the flattened signal list (the correlator
+    // only cares about severity for now).
+    if (this.deps.crossAgent) {
+      const allSignals = evaluations.flatMap(e => e.signals);
+      this.deps.crossAgent.observe({
+        orgId: auth.orgId,
+        sessionId: ctx.sessionId,
+        agentId: ctx.agentId,
+        signals: allSignals,
+      });
+    }
 
     const blocked = evaluations.filter(e => e.decision === 'block');
     const directive = {

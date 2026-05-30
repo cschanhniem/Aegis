@@ -20,3 +20,4 @@ export { ToolScopeDetector } from './built-in/tool-scope-detector';
 export { DiscoveryDetector } from './built-in/discovery-detector';
 export { ExfilDetector } from './built-in/exfil-detector';
 export { LateralMovementDetector } from './built-in/lateral-movement-detector';
+export { CrossAgentDetector } from './built-in/cross-agent-detector';

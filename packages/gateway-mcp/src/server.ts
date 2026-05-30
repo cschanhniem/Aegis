@@ -53,7 +53,9 @@ import {
   DiscoveryDetector,
   ExfilDetector,
   LateralMovementDetector,
+  CrossAgentDetector,
 } from './detectors';
+import { CrossAgentCorrelatorService } from './services/cross-agent-correlator';
 import { BudgetGuardService } from './services/budget-guard';
 import { CoverageMapService } from './services/coverage-map';
 import { OntologyAPI } from './api/ontology';
@@ -173,6 +175,8 @@ async function main() {
   detectors.register(new DiscoveryDetector());
   detectors.register(new ExfilDetector());
   detectors.register(new LateralMovementDetector());
+  const crossAgent = new CrossAgentCorrelatorService({ logger });
+  detectors.register(new CrossAgentDetector(crossAgent));
   const coverageMap = new CoverageMapService(detectors);
 
   // Universal sink fan-out. Subscribes to audit log + ConfigBus; every
@@ -497,6 +501,7 @@ async function main() {
     audit: auditLog,
     adapters: [new OpenAIChatAdapter(), new AnthropicMessagesAdapter()],
     agentRegistry,
+    crossAgent,
   });
   // NOTE: no `requireAuth` here — the proxy authenticates via X-AEGIS-Key
   // inside the handler since `Authorization` is reserved for the upstream
