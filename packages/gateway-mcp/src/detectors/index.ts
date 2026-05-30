@@ -21,3 +21,4 @@ export { DiscoveryDetector } from './built-in/discovery-detector';
 export { ExfilDetector } from './built-in/exfil-detector';
 export { LateralMovementDetector } from './built-in/lateral-movement-detector';
 export { CrossAgentDetector } from './built-in/cross-agent-detector';
+export { MemoryPoisonDetector } from './built-in/memory-poison-detector';

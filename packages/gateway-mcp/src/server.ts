@@ -54,6 +54,7 @@ import {
   ExfilDetector,
   LateralMovementDetector,
   CrossAgentDetector,
+  MemoryPoisonDetector,
 } from './detectors';
 import { CrossAgentCorrelatorService } from './services/cross-agent-correlator';
 import { BudgetGuardService } from './services/budget-guard';
@@ -175,6 +176,7 @@ async function main() {
   detectors.register(new DiscoveryDetector());
   detectors.register(new ExfilDetector());
   detectors.register(new LateralMovementDetector());
+  detectors.register(new MemoryPoisonDetector());
   const crossAgent = new CrossAgentCorrelatorService({ logger });
   detectors.register(new CrossAgentDetector(crossAgent));
   const coverageMap = new CoverageMapService(detectors);
