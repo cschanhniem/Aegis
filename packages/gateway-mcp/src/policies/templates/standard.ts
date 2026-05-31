@@ -34,6 +34,7 @@ export const standardTemplate: TenantConfig = {
     targetP95Ms: 200,
   },
   sinks: [],
+  customDetectors: [],
 };
 
 export const standardDescription =

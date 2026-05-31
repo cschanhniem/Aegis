@@ -71,6 +71,8 @@ import { BudgetAPI } from './api/budget';
 import { OtlpExporterService } from './services/otlp-exporter';
 import { ObservabilityAPI } from './api/observability';
 import { AgentRegistryService } from './services/agent-registry';
+import { CustomDetectorService } from './services/custom-detector-service';
+import { CustomDetectorAPI } from './api/custom-detectors';
 import { TransparencyLogService } from './services/transparency-log';
 import { TransparencyLogAPI } from './api/transparency-log';
 import { SigningService } from './services/signing';
@@ -195,6 +197,13 @@ async function main() {
   // a config write, not a code release.
   const sinkOrchestrator = new SinkOrchestrator(logger, auditLog, tenantConfig, configBus);
   sinkOrchestrator.start(orgIds.map((o) => o.id));
+
+  // Custom detector service — registers operator-uploaded declarative
+  // detectors with the live registry. Hot-reloads on tenant config
+  // change so a customer-specific detector goes live on the next call,
+  // no restart, no PR to AEGIS.
+  const customDetectors = new CustomDetectorService(logger, detectors, tenantConfig, configBus);
+  customDetectors.start(orgIds.map((o) => o.id));
 
   // OTLP trace exporter — per-tenant polling job that ships trace rows
   // out as OpenTelemetry spans to whatever otlp/v1/traces endpoint the
@@ -488,6 +497,9 @@ async function main() {
   // /api/v1/config (whole tenant config). This endpoint exposes runtime
   // metrics (sent / failed / DLQ depth / last error) per configured sink.
   app.use('/api/v1/sinks', requireAuth, new SinksAPI(sinkOrchestrator, tenantConfig, logger).router);
+
+  // Custom detectors — operator-uploaded declarative detectors.
+  app.use('/api/v1/custom-detectors', requireAuth, new CustomDetectorAPI(tenantConfig, logger).router);
 
   // Budget guard read-only status. Config goes through tenant-config PATCH.
   app.use('/api/v1/budget', requireAuth, new BudgetAPI(budgetGuard).router);

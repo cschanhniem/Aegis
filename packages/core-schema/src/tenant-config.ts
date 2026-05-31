@@ -9,6 +9,7 @@
 import { z } from 'zod';
 import { PolicyDslSchema } from './policy-dsl';
 import { SinkConfigSchema } from './sink';
+import { CustomDetectorSpecSchema } from './custom-detector';
 
 export const DeploymentModeSchema = z.enum([
   'dev',
@@ -100,6 +101,14 @@ export const TenantConfigSchema = z.object({
    * any OTLP-compatible backend) rather than locking insight inside the
    * AEGIS dashboard. Wire format: OTLP/HTTP JSON.
    */
+  /**
+   * Operator-declared detectors. Each spec compiles to a live Detector
+   * instance scoped to this tenant — emits signals only when ctx.tenant.id
+   * matches this org. Hot-reloaded on tenant_config update.
+   * The whole array replaces in-place on PUT (not deep-merged) — same
+   * semantic as `dsl.rules` and `sinks`.
+   */
+  customDetectors: z.array(CustomDetectorSpecSchema).max(50).default([]),
   observability: z.object({
     otlp: z.object({
       enabled: z.boolean().default(false),

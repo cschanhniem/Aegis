@@ -30,6 +30,7 @@ export const devTemplate: TenantConfig = {
     'prompt-injection': { enabled: true, riskLevel: 'MEDIUM' },
   },
   sinks: [],
+  customDetectors: [],
 };
 
 export const devDescription =
