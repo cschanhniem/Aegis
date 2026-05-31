@@ -9,6 +9,7 @@ export * from './sink';
 export * from './agent-registry';
 export * from './custom-detector';
 export * from './custom-compliance';
+export * from './tenant-template';
 
 // Base schemas
 export const AgentIdSchema = z.string().uuid();

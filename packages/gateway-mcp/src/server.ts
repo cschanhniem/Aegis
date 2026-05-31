@@ -74,6 +74,8 @@ import { ObservabilityAPI } from './api/observability';
 import { AgentRegistryService } from './services/agent-registry';
 import { CustomDetectorService } from './services/custom-detector-service';
 import { CustomDetectorAPI } from './api/custom-detectors';
+import { TemplateRegistryService } from './services/template-registry';
+import { TemplatesAPI } from './api/templates';
 import { TransparencyLogService } from './services/transparency-log';
 import { TransparencyLogAPI } from './api/transparency-log';
 import { SigningService } from './services/signing';
@@ -161,6 +163,8 @@ async function main() {
   // Per-tenant runtime config (deployment mode, layer toggles, thresholds)
   const configBus     = new ConfigBus(logger);
   const tenantConfig  = new TenantConfigService(db, logger, configBus, auditLog);
+  const templateRegistry = new TemplateRegistryService(db, logger);
+  tenantConfig.setTemplateLookup(templateRegistry);
   tenantConfig.seedDefaults();
 
   // Per-tenant policy DSL (fail-safe composer over classifier + AJV + anomaly)
@@ -501,6 +505,9 @@ async function main() {
 
   // Custom detectors — operator-uploaded declarative detectors.
   app.use('/api/v1/custom-detectors', requireAuth, new CustomDetectorAPI(tenantConfig, logger).router);
+
+  // Deployment template registry — built-ins + operator-registered customs.
+  app.use('/api/v1/templates', requireAuth, new TemplatesAPI(templateRegistry).router);
 
   // Budget guard read-only status. Config goes through tenant-config PATCH.
   app.use('/api/v1/budget', requireAuth, new BudgetAPI(budgetGuard).router);

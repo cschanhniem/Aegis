@@ -46,10 +46,22 @@ function deepMerge<T extends Record<string, any>>(base: T, patch: any): T {
   return out as T;
 }
 
+/** Minimal view of the template registry the tenant-config service
+ *  needs. Decouples the service from the concrete registry class so
+ *  tests can pass in a stub. */
+export interface TemplateLookup {
+  get(id: string): { config: TenantConfig; description: string } | null;
+  list(): Array<{ name: string; description: string; config: TenantConfig; source?: 'builtin' | 'custom' }>;
+}
+
 export class TenantConfigService {
   private cache = new Map<string, TenantConfig>();
   private selectStmt: Database.Statement;
   private updateStmt: Database.Statement;
+  /** Optional — when injected, applyTemplate accepts any registry id
+   *  (built-in or operator-registered). When absent, falls back to the
+   *  hardcoded TemplateName enum. */
+  private templateLookup?: TemplateLookup;
 
   constructor(
     private db: Database.Database,
@@ -193,14 +205,24 @@ export class TenantConfigService {
     return validated;
   }
 
+  /** Inject the merged (built-in + operator-registered) lookup. */
+  setTemplateLookup(lookup: TemplateLookup): void {
+    this.templateLookup = lookup;
+  }
+
   /** Replace config with the named template (deep-clone to avoid sharing). */
   applyTemplate(
     orgId: string,
-    name: TemplateName,
+    name: string,
     ctx: UpdateContext,
   ): TenantConfig {
     this.assertOrgExists(orgId);
-    const template = getTemplate(name);
+    // Prefer the injected merged lookup (built-in + operator-registered);
+    // fall back to the hardcoded built-in templates for tests / older
+    // wiring paths that don't pass a lookup.
+    const template = this.templateLookup
+      ? this.templateLookup.get(name)
+      : getTemplate(name as TemplateName);
     if (!template) {
       const err = new Error(`Unknown template: ${name}`);
       (err as any).status = 404;
@@ -216,12 +238,16 @@ export class TenantConfigService {
     return validated;
   }
 
-  listTemplates(): TemplateMeta[] {
-    return listTemplates();
+  listTemplates(): Array<{ name: string; description: string; config: TenantConfig; source?: 'builtin' | 'custom' }> {
+    return this.templateLookup ? this.templateLookup.list() : listTemplates();
   }
 
-  getTemplate(name: TemplateName): TemplateMeta | null {
-    return getTemplate(name);
+  getTemplate(name: string): { name: string; description: string; config: TenantConfig } | null {
+    if (this.templateLookup) {
+      const t = this.templateLookup.get(name);
+      return t ? { name, description: t.description, config: t.config } : null;
+    }
+    return getTemplate(name as TemplateName);
   }
 
   // ── Internal ──────────────────────────────────────────────────────────────

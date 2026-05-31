@@ -150,6 +150,7 @@ export const TenantConfigPartialSchema = TenantConfigSchema.deepPartial();
 export type TenantConfigPartial = z.infer<typeof TenantConfigPartialSchema>;
 
 export const ApplyTemplateRequestSchema = z.object({
-  template: DeploymentModeSchema.exclude(['custom']),
+  /** Built-in or operator-registered template id. Registry validates. */
+  template: z.string().min(2).max(40).regex(/^[a-z0-9][a-z0-9.\-_]*$/),
 });
 export type ApplyTemplateRequest = z.infer<typeof ApplyTemplateRequestSchema>;
