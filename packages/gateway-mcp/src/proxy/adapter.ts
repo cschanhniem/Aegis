@@ -58,8 +58,8 @@ export interface BlockingDirective {
 }
 
 export interface ProxyAdapter {
-  readonly name: 'openai-chat' | 'anthropic-messages';
-  readonly provider: 'openai' | 'anthropic';
+  readonly name: 'openai-chat' | 'anthropic-messages' | 'gemini-generate' | 'mistral-chat' | 'bedrock-invoke';
+  readonly provider: 'openai' | 'anthropic' | 'gemini' | 'mistral' | 'bedrock';
 
   /** Compute the upstream URL from the incoming proxy path + the upstream
    *  base. The proxy mounts at /api/v1/proxy/<provider>/<rest>, so

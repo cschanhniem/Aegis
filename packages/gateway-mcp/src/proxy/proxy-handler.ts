@@ -31,7 +31,7 @@ import {
   ProxyAdapter,
 } from './adapter';
 
-const PROXY_PATH_RE = /^\/(openai|anthropic)(\/.*)$/;
+const PROXY_PATH_RE = /^\/(openai|anthropic|mistral|gemini)(\/.*)$/;
 const SEVERITY_RANK: Record<Severity, number> = { info: 0, warn: 1, critical: 2 };
 
 export interface ProxyHandlerDeps {

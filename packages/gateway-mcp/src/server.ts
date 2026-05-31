@@ -84,6 +84,8 @@ import {
   ProxyHandler,
   OpenAIChatAdapter,
   AnthropicMessagesAdapter,
+  MistralChatAdapter,
+  GeminiGenerateAdapter,
 } from './proxy';
 
 const VERSION = '2.0.0';
@@ -546,7 +548,12 @@ async function main() {
   const proxyHandler = new ProxyHandler({
     db, logger, detectors,
     audit: auditLog,
-    adapters: [new OpenAIChatAdapter(), new AnthropicMessagesAdapter()],
+    adapters: [
+      new OpenAIChatAdapter(),
+      new AnthropicMessagesAdapter(),
+      new MistralChatAdapter(),
+      new GeminiGenerateAdapter(),
+    ],
     agentRegistry,
     crossAgent,
     taintTracker,
