@@ -25,6 +25,7 @@ import { AuditLogService } from '../services/audit-log';
 import { calculateCost } from '../services/cost';
 import { AgentRegistryService } from '../services/agent-registry';
 import { CrossAgentCorrelatorService } from '../services/cross-agent-correlator';
+import { TaintTrackerService } from '../services/taint-tracker';
 import {
   NeutralToolCall,
   ProxyAdapter,
@@ -48,6 +49,10 @@ export interface ProxyHandlerDeps {
    *  signals so the cross-agent detector can spot multi-agent
    *  inheritance on subsequent calls in the same session. */
   crossAgent?: CrossAgentCorrelatorService;
+  /** Optional — when provided, sensitive-content touches in this
+   *  call's signals get recorded so subsequent outbound calls within
+   *  the taint window trigger the T5001 exfil signal. */
+  taintTracker?: TaintTrackerService;
 }
 
 interface AuthOk {
@@ -157,15 +162,25 @@ export class ProxyHandler {
       pending,
     );
 
+    const allSignals = evaluations.flatMap(e => e.signals);
+
     // Feed the cross-agent correlator so the NEXT call in this session
     // can spot inheritance. Pass the flattened signal list (the correlator
     // only cares about severity for now).
     if (this.deps.crossAgent) {
-      const allSignals = evaluations.flatMap(e => e.signals);
       this.deps.crossAgent.observe({
         orgId: auth.orgId,
         sessionId: ctx.sessionId,
         agentId: ctx.agentId,
+        signals: allSignals,
+      });
+    }
+    // Feed the taint tracker so NEXT outbound call in this session can
+    // see the temporal connection to sensitive-content access.
+    if (this.deps.taintTracker) {
+      this.deps.taintTracker.observe({
+        orgId: auth.orgId,
+        sessionId: ctx.sessionId,
         signals: allSignals,
       });
     }

@@ -23,3 +23,4 @@ export { LateralMovementDetector } from './built-in/lateral-movement-detector';
 export { CrossAgentDetector } from './built-in/cross-agent-detector';
 export { MemoryPoisonDetector } from './built-in/memory-poison-detector';
 export { IpiDetector } from './built-in/ipi-detector';
+export { SensitiveExfilDetector } from './built-in/sensitive-exfil-detector';

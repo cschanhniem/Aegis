@@ -56,8 +56,10 @@ import {
   CrossAgentDetector,
   MemoryPoisonDetector,
   IpiDetector,
+  SensitiveExfilDetector,
 } from './detectors';
 import { CrossAgentCorrelatorService } from './services/cross-agent-correlator';
+import { TaintTrackerService } from './services/taint-tracker';
 import { BudgetGuardService } from './services/budget-guard';
 import { CoverageMapService } from './services/coverage-map';
 import { OntologyAPI } from './api/ontology';
@@ -183,6 +185,8 @@ async function main() {
   detectors.register(new IpiDetector());
   const crossAgent = new CrossAgentCorrelatorService({ logger });
   detectors.register(new CrossAgentDetector(crossAgent));
+  const taintTracker = new TaintTrackerService({ logger });
+  detectors.register(new SensitiveExfilDetector(taintTracker));
   const coverageMap = new CoverageMapService(detectors);
 
   // Universal sink fan-out. Subscribes to audit log + ConfigBus; every
@@ -518,6 +522,7 @@ async function main() {
     adapters: [new OpenAIChatAdapter(), new AnthropicMessagesAdapter()],
     agentRegistry,
     crossAgent,
+    taintTracker,
   });
   // NOTE: no `requireAuth` here — the proxy authenticates via X-AEGIS-Key
   // inside the handler since `Authorization` is reserved for the upstream
