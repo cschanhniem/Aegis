@@ -2,6 +2,7 @@
 
 import atexit
 import json
+import os
 import queue
 import threading
 import time
@@ -14,6 +15,38 @@ from agentguard_core_schema import AgentActionTrace
 from ..core.config import AgentGuardConfig, TransportMode
 
 
+def _identity_headers(config: AgentGuardConfig) -> dict:
+    """
+    Headers that pin tenant + agent identity on every gateway call.
+    Mirrors the same env-var fallback chain the interceptor uses so an
+    SDK consumer can set `AEGIS_API_KEY` / `AEGIS_AGENT_SECRET` /
+    `AEGIS_SESSION_ID` without touching code.
+    """
+    headers: dict = {"Content-Type": "application/json"}
+    api_key = (
+        getattr(config, "api_key", None)
+        or os.environ.get("AEGIS_API_KEY")
+        or os.environ.get("AGENTGUARD_API_KEY")
+    )
+    if api_key:
+        headers["x-api-key"] = api_key
+    headers["x-aegis-agent-id"] = str(config.agent_id)
+    agent_secret = (
+        getattr(config, "agent_secret", None)
+        or os.environ.get("AEGIS_AGENT_SECRET")
+        or os.environ.get("AGENTGUARD_AGENT_SECRET")
+    )
+    if agent_secret:
+        headers["x-aegis-agent-secret"] = agent_secret
+    session_id = (
+        getattr(config, "session_id", None)
+        or os.environ.get("AEGIS_SESSION_ID")
+    )
+    if session_id:
+        headers["x-aegis-session-id"] = session_id
+    return headers
+
+
 class TransportService:
     """Service for sending traces to the AgentGuard gateway."""
 
@@ -24,11 +57,12 @@ class TransportService:
         self._last_flush = time.time()
         self._shutdown = False
 
-        # HTTP client
+        # HTTP client — identity headers are baked in so every trace POST
+        # carries agent + tenant identity for audit attribution.
         self._client = httpx.Client(
             base_url=config.gateway_url,
             timeout=30.0,
-            headers={"Content-Type": "application/json"},
+            headers=_identity_headers(config),
         )
 
         # Start background thread if async is enabled

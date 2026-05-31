@@ -28,6 +28,23 @@ export interface AgentGuardConfig {
   failOpen?: boolean;
   /** Log debug info to console (default: false) */
   debug?: boolean;
+  /**
+   * AEGIS API key (per-org). Sent as X-API-Key on every request. Falls
+   * back to env AEGIS_API_KEY / AGENTGUARD_API_KEY.
+   */
+  apiKey?: string;
+  /**
+   * Optional agent secret. When the agent is registered with a secret,
+   * the SDK forwards it as X-AEGIS-Agent-Secret so the gateway's agent
+   * registry can verify identity before serving the request. Falls back
+   * to env AEGIS_AGENT_SECRET / AGENTGUARD_AGENT_SECRET.
+   */
+  agentSecret?: string;
+  /**
+   * Optional session id for cross-agent correlation. Falls back to env
+   * AEGIS_SESSION_ID.
+   */
+  sessionId?: string;
 }
 
 export interface TraceInput {

@@ -28,6 +28,13 @@ export class AgentGuard {
       blockingTimeoutMs: 3000,
       failOpen: true,
       debug: false,
+      // Identity headers default to empty strings; HttpTransport's
+      // env-fallback logic in buildHeaders() picks them up from
+      // AEGIS_API_KEY / AEGIS_AGENT_SECRET / AEGIS_SESSION_ID when
+      // the caller didn't supply them explicitly.
+      apiKey: '',
+      agentSecret: '',
+      sessionId: '',
       ...config,
     };
     this.agentId = config.agentId;

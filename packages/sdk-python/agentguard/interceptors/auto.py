@@ -3,6 +3,7 @@ Auto-instrumentation: patches Anthropic/OpenAI at SDK level.
 Zero user code changes required. Supports both sync and async APIs.
 """
 
+import os
 import time
 import asyncio
 import threading
@@ -12,6 +13,42 @@ import json as _json_mod
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, Optional
 from uuid import uuid4
+
+
+def _build_identity_headers(cfg) -> Dict[str, str]:
+    """
+    Header set that pins agent identity on every gateway call.
+
+      x-api-key             — tenant key (config or env)
+      x-aegis-agent-id      — this SDK instance's agent UUID
+      x-aegis-agent-secret  — when the agent is registered with a secret
+      x-aegis-session-id    — optional cross-call correlation
+    """
+    headers: Dict[str, str] = {"Content-Type": "application/json"}
+    api_key = (
+        getattr(cfg, "api_key", None)
+        or os.environ.get("AEGIS_API_KEY")
+        or os.environ.get("AGENTGUARD_API_KEY")
+    )
+    if api_key:
+        headers["x-api-key"] = api_key
+    agent_id = getattr(cfg, "agent_id", None)
+    if agent_id:
+        headers["x-aegis-agent-id"] = str(agent_id)
+    agent_secret = (
+        getattr(cfg, "agent_secret", None)
+        or os.environ.get("AEGIS_AGENT_SECRET")
+        or os.environ.get("AGENTGUARD_AGENT_SECRET")
+    )
+    if agent_secret:
+        headers["x-aegis-agent-secret"] = agent_secret
+    session_id = (
+        getattr(cfg, "session_id", None)
+        or os.environ.get("AEGIS_SESSION_ID")
+    )
+    if session_id:
+        headers["x-aegis-session-id"] = session_id
+    return headers
 
 if TYPE_CHECKING:
     from ..core.tracer import AgentGuard
@@ -158,7 +195,7 @@ class AutoInstrument:
             req = urllib.request.Request(
                 f"{gateway_url}/api/v1/check",
                 data=self._build_check_payload(tool_name, arguments),
-                headers={"Content-Type": "application/json"},
+                headers=_build_identity_headers(cfg),
                 method="POST",
             )
             with urllib.request.urlopen(req, timeout=timeout_s) as resp:
@@ -215,6 +252,7 @@ class AutoInstrument:
             try:
                 req = urllib.request.Request(
                     f"{gateway_url}/api/v1/check/{check_id}/decision",
+                    headers=_build_identity_headers(self._guard.config),
                     method="GET",
                 )
                 with urllib.request.urlopen(req, timeout=5) as resp:
@@ -268,7 +306,7 @@ class AutoInstrument:
                 req = urllib.request.Request(
                     f"{gateway_url}/api/v1/check",
                     data=payload,
-                    headers={"Content-Type": "application/json"},
+                    headers=_build_identity_headers(cfg),
                     method="POST",
                 )
                 with urllib.request.urlopen(req, timeout=timeout_s) as resp:
@@ -325,6 +363,7 @@ class AutoInstrument:
                 def _do_poll():
                     req = urllib.request.Request(
                         f"{gateway_url}/api/v1/check/{check_id}/decision",
+                        headers=_build_identity_headers(self._guard.config),
                         method="GET",
                     )
                     with urllib.request.urlopen(req, timeout=5) as resp:

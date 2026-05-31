@@ -55,6 +55,24 @@ class AgentGuardConfig(BaseModel):
         description="Optional session ID to group related traces together."
     )
 
+    # ── Identity headers forwarded to gateway ─────────────────────────────
+    api_key: Optional[str] = Field(
+        default=None,
+        description=(
+            "AEGIS API key (per-org). Sent as X-API-Key on every request. "
+            "Falls back to env AEGIS_API_KEY / AGENTGUARD_API_KEY."
+        ),
+    )
+    agent_secret: Optional[str] = Field(
+        default=None,
+        description=(
+            "Optional agent secret. When the agent is registered with a "
+            "secret, the SDK forwards it as X-AEGIS-Agent-Secret so the "
+            "gateway's agent registry can verify identity before serving. "
+            "Falls back to env AEGIS_AGENT_SECRET / AGENTGUARD_AGENT_SECRET."
+        ),
+    )
+
     # Blocking mode — pre-execution policy enforcement
     blocking_mode: bool = Field(
         default=False,
