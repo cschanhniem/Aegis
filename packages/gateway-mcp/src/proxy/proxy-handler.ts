@@ -146,9 +146,16 @@ export class ProxyHandler {
 
     // Run detectors over every pending tool call from the response. Tool
     // calls in the REQUEST history already executed in earlier turns —
-    // they're audit material, not blockable.
+    // they're audit material, not blockable. Earlier-turn tool RESULTS
+    // ARE flowed in as untrusted conversation surface so the IPI
+    // detector can scan them for embedded instructions.
     const pending = adapter.extractPendingToolCalls(upstreamJson);
-    const evaluations = await this.evaluatePending(ctx, auth.orgId, pending);
+    const toolResultContent = adapter.extractToolResultContent(req.body);
+    const evaluations = await this.evaluatePending(
+      { agentId: ctx.agentId, sessionId: ctx.sessionId, toolResultContent },
+      auth.orgId,
+      pending,
+    );
 
     // Feed the cross-agent correlator so the NEXT call in this session
     // can spot inheritance. Pass the flattened signal list (the correlator
@@ -228,7 +235,7 @@ export class ProxyHandler {
   };
 
   private async evaluatePending(
-    ctx: { agentId: string; sessionId?: string },
+    ctx: { agentId: string; sessionId?: string; toolResultContent?: string[] },
     orgId: string,
     pending: NeutralToolCall[],
   ): Promise<Array<{ toolCall: NeutralToolCall; signals: Signal[]; decision: 'allow' | 'block'; reason?: string }>> {
@@ -239,6 +246,9 @@ export class ProxyHandler {
         agent: { id: ctx.agentId },
         tenant: { id: orgId },
         session: ctx.sessionId ? { id: ctx.sessionId } : undefined,
+        conversation: ctx.toolResultContent && ctx.toolResultContent.length > 0
+          ? { toolResultContent: ctx.toolResultContent }
+          : undefined,
       });
       const worst = signals.reduce<Signal | null>(
         (acc, s) => (acc == null || SEVERITY_RANK[s.severity] > SEVERITY_RANK[acc.severity]) ? s : acc,

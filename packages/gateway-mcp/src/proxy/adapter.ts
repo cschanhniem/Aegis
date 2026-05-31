@@ -81,6 +81,12 @@ export interface ProxyAdapter {
    *  before the request reached AEGIS. */
   extractHistoricToolCalls(requestBody: any): NeutralToolCall[];
 
+  /** Text content from earlier-turn tool results — web fetches, RAG hits,
+   *  file reads, email bodies, anything the LLM read from a tool and
+   *  whose author is NOT the user. The IPI detector treats every
+   *  returned string as untrusted and scans for embedded instructions. */
+  extractToolResultContent(requestBody: any): string[];
+
   /** Tool calls the model wants the host runtime to execute NOW. These are
    *  the blockable ones — they haven't run yet. */
   extractPendingToolCalls(responseBody: any): NeutralToolCall[];

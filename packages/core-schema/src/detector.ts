@@ -68,6 +68,20 @@ export interface DetectorContext {
   /** Upstream detector results, populated as the chain runs. Lets a
    *  meta-detector see what content/behavior detectors already emitted. */
   readonly upstream?: ReadonlyArray<Signal>;
+  /** Adversary-controlled conversation surface. When the LLM egress proxy
+   *  is in the loop, it pulls earlier-turn tool results out of the request
+   *  body and surfaces them here so the IPI detector can scan retrieved
+   *  content for embedded instructions. Treat every string in this object
+   *  as untrusted regardless of who returned it. */
+  readonly conversation?: {
+    /** Text blocks that came from tool / function-call results in
+     *  prior turns. Web pages, RAG hits, file contents, email bodies,
+     *  anything the LLM read from a tool. */
+    readonly toolResultContent?: ReadonlyArray<string>;
+    /** Direct user input in this turn — kept separate so trust
+     *  boundaries are explicit in detector logic. */
+    readonly userInput?: string;
+  };
 }
 
 export interface Detector {

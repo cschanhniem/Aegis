@@ -91,6 +91,24 @@ export class OpenAIChatAdapter implements ProxyAdapter {
     return out;
   }
 
+  extractToolResultContent(requestBody: any): string[] {
+    const messages = Array.isArray(requestBody?.messages) ? requestBody.messages : [];
+    const out: string[] = [];
+    for (const m of messages) {
+      // OpenAI chat: role:'tool' messages carry function output as content.
+      if (m?.role === 'tool' && typeof m.content === 'string') {
+        out.push(m.content);
+      }
+      // Newer OpenAI shapes carry content as an array of typed parts.
+      if (m?.role === 'tool' && Array.isArray(m.content)) {
+        for (const part of m.content) {
+          if (typeof part?.text === 'string') out.push(part.text);
+        }
+      }
+    }
+    return out;
+  }
+
   extractPendingToolCalls(responseBody: any): NeutralToolCall[] {
     const choice = responseBody?.choices?.[0]?.message;
     if (!choice || !Array.isArray(choice.tool_calls)) return [];

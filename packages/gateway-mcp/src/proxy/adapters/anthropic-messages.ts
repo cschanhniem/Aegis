@@ -83,6 +83,28 @@ export class AnthropicMessagesAdapter implements ProxyAdapter {
     return out;
   }
 
+  extractToolResultContent(requestBody: any): string[] {
+    const messages = Array.isArray(requestBody?.messages) ? requestBody.messages : [];
+    const out: string[] = [];
+    for (const m of messages) {
+      const content = m?.content;
+      if (!Array.isArray(content)) continue;
+      for (const block of content) {
+        if (block?.type !== 'tool_result') continue;
+        // tool_result.content can be string OR array of content blocks
+        if (typeof block.content === 'string') {
+          out.push(block.content);
+        } else if (Array.isArray(block.content)) {
+          for (const inner of block.content) {
+            if (typeof inner?.text === 'string') out.push(inner.text);
+            else if (typeof inner === 'string')   out.push(inner);
+          }
+        }
+      }
+    }
+    return out;
+  }
+
   extractPendingToolCalls(responseBody: any): NeutralToolCall[] {
     const content = responseBody?.content;
     if (!Array.isArray(content)) return [];
