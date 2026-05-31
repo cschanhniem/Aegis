@@ -64,6 +64,7 @@ import { BudgetGuardService } from './services/budget-guard';
 import { CoverageMapService } from './services/coverage-map';
 import { OntologyAPI } from './api/ontology';
 import { ComplianceBundleService } from './services/compliance-bundle';
+import { ComplianceControlSource } from './services/compliance-source';
 import { ComplianceAPI } from './api/compliance';
 import { SinkOrchestrator } from './services/sink-orchestrator';
 import { SinksAPI } from './api/sinks';
@@ -515,12 +516,18 @@ async function main() {
   // Per-framework compliance bundles (SOC 2 / ISO 27001 / NIST AI RMF /
   // EU AI Act). Hands the auditor a signed, transparency-logged artifact
   // mapping each control to the AEGIS evidence that demonstrates it.
+  const complianceSource = new ComplianceControlSource(tenantConfig);
   const complianceBundles = new ComplianceBundleService(
     db, logger, detectors, coverageMap,
     new SigningService(db, logger),
+    complianceSource,
     transparencyLog,
   );
-  app.use('/api/v1/compliance', requireAuth, new ComplianceAPI(complianceBundles, auditLog).router);
+  app.use(
+    '/api/v1/compliance',
+    requireAuth,
+    new ComplianceAPI(complianceBundles, auditLog, complianceSource, tenantConfig).router,
+  );
 
   // LLM egress proxy — universal substrate for "any workflow" coverage.
   // Customer sets OPENAI_BASE_URL / ANTHROPIC_BASE_URL to this prefix and

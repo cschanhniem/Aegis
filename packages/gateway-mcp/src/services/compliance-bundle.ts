@@ -18,7 +18,8 @@
 import Database from 'better-sqlite3';
 import { Logger } from 'pino';
 import { allNodes, isValidNodeId, ONTOLOGY_VERSION } from '@agentguard/core-schema';
-import { ComplianceControl, controlsFor, Framework } from './compliance-controls';
+import { ComplianceControl, Framework } from './compliance-controls';
+import { ComplianceControlSource } from './compliance-source';
 import { DetectorRegistry } from '../detectors/registry';
 import { CoverageMapService } from './coverage-map';
 import { SigningService, SignaturePayload } from './signing';
@@ -82,11 +83,12 @@ export class ComplianceBundleService {
     private detectors: DetectorRegistry,
     private coverageMap: CoverageMapService,
     private signer: SigningService,
+    private source: ComplianceControlSource,
     private transparency?: TransparencyLogService,
   ) {}
 
   generate(opts: { framework: Framework; orgId: string }): ComplianceBundle {
-    const controls = controlsFor(opts.framework);
+    const controls = this.source.controlsFor(opts.orgId, opts.framework);
     const fwd = this.coverageMap.forwardMap();
     const registered = this.detectors.list();
     const registeredNames = new Set(registered.map(d => d.name));

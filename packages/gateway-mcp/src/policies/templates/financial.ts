@@ -39,6 +39,7 @@ export const financialTemplate: TenantConfig = {
   },
   sinks: [],
   customDetectors: [],
+  customComplianceFrameworks: [],
 };
 
 export const financialDescription =

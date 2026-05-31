@@ -14,7 +14,12 @@
  * proofs, and a clearly delineated mapping. That's hours not weeks.
  */
 
-export type Framework = 'soc2' | 'iso27001' | 'nist-ai-rmf' | 'eu-ai-act';
+/** Canonical built-in frameworks. The public `Framework` type widens to
+ *  string to allow operator-registered customs through the same code
+ *  path; APIs that need to reject unknowns combine `isBuiltinFramework`
+ *  with a tenant-scoped lookup. */
+export type BuiltinFramework = 'soc2' | 'iso27001' | 'nist-ai-rmf' | 'eu-ai-act';
+export type Framework = BuiltinFramework | string;
 
 export interface ControlEvidenceSpec {
   /** Audit actions whose presence supports this control. */
@@ -200,10 +205,33 @@ const EU_AI_ACT: ComplianceControl[] = [
 
 const ALL: ComplianceControl[] = [...SOC2, ...ISO27001, ...NIST_AI_RMF, ...EU_AI_ACT];
 
-export function listFrameworks(): ReadonlyArray<Framework> {
-  return ['soc2', 'iso27001', 'nist-ai-rmf', 'eu-ai-act'];
+const BUILTIN_IDS: ReadonlyArray<BuiltinFramework> = ['soc2', 'iso27001', 'nist-ai-rmf', 'eu-ai-act'];
+
+export function isBuiltinFramework(v: string): v is BuiltinFramework {
+  return (BUILTIN_IDS as ReadonlyArray<string>).includes(v);
 }
 
-export function controlsFor(framework: Framework): ReadonlyArray<ComplianceControl> {
+export function listBuiltinFrameworks(): ReadonlyArray<BuiltinFramework> {
+  return BUILTIN_IDS;
+}
+
+/** @deprecated kept for back-compat with the original API surface;
+ *  prefer `listBuiltinFrameworks()` + the tenant-aware
+ *  `ComplianceControlSource.list()`. */
+export function listFrameworks(): ReadonlyArray<Framework> {
+  return BUILTIN_IDS;
+}
+
+export function builtinControlsFor(framework: BuiltinFramework): ReadonlyArray<ComplianceControl> {
   return ALL.filter(c => c.framework === framework);
+}
+
+/** @deprecated use `builtinControlsFor` for built-ins or
+ *  `ComplianceControlSource.controlsFor(orgId, framework)` for the
+ *  tenant-aware merge. Kept as a thin shim while callers migrate. */
+export function controlsFor(framework: Framework): ReadonlyArray<ComplianceControl> {
+  if (isBuiltinFramework(framework as string)) {
+    return builtinControlsFor(framework as BuiltinFramework);
+  }
+  return [];
 }

@@ -39,6 +39,7 @@ export const healthcareTemplate: TenantConfig = {
   },
   sinks: [],
   customDetectors: [],
+  customComplianceFrameworks: [],
 };
 
 export const healthcareDescription =

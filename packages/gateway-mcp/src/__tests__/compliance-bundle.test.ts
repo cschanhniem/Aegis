@@ -9,10 +9,20 @@ import { ComplianceBundleService } from '../services/compliance-bundle';
 import { SigningService } from '../services/signing';
 import { TransparencyLogService } from '../services/transparency-log';
 import { controlsFor, listFrameworks } from '../services/compliance-controls';
+import { ComplianceControlSource } from '../services/compliance-source';
+import { AuditLogService } from '../services/audit-log';
+import { TenantConfigService } from '../services/tenant-config';
+import { ConfigBus } from '../services/config-bus';
 
 function setup() {
   const db = new Database(':memory:');
   db.exec(`
+    CREATE TABLE organizations (
+      id TEXT PRIMARY KEY, name TEXT, slug TEXT, plan TEXT, settings TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+    INSERT INTO organizations (id, name, slug, plan) VALUES ('default', 'd', 'd', 'community');
     CREATE TABLE admin_audit_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       org_id TEXT, user_id TEXT, user_email TEXT,
@@ -35,8 +45,13 @@ function setup() {
   const coverage = new CoverageMapService(registry);
   const signer = new SigningService(db, logger);
   const tlog = new TransparencyLogService(db, signer, logger);
-  const svc = new ComplianceBundleService(db, logger, registry, coverage, signer, tlog);
-  return { db, svc, signer, tlog, registry };
+  const audit = new AuditLogService(db, logger);
+  const bus = new ConfigBus(logger);
+  const tc = new TenantConfigService(db, logger, bus, audit);
+  tc.seedDefaults();
+  const src = new ComplianceControlSource(tc);
+  const svc = new ComplianceBundleService(db, logger, registry, coverage, signer, src, tlog);
+  return { db, svc, signer, tlog, registry, tc };
 }
 
 describe('compliance-controls definitions', () => {
@@ -140,6 +155,73 @@ describe('Bundle signature is verifiable offline', () => {
     const sig = Buffer.from(bundle.signature.signature, 'base64');
     const ok = edVerify(null, Buffer.from(canonical, 'utf8'), pub, sig);
     expect(ok).toBe(true);
+  });
+});
+
+// ── Tenant-registered custom frameworks ─────────────────────────────────
+
+describe('Custom compliance framework registration', () => {
+  it('source lists built-ins + tenant customs', () => {
+    const { svc, tc } = setup();
+    tc.update('default', {
+      customComplianceFrameworks: [{
+        id: 'pci-dss-4',
+        name: 'PCI DSS v4.0',
+        controls: [{
+          id: 'REQ-3.4',
+          title: 'Render PAN unreadable',
+          summary: 'Card numbers must not appear in cleartext in tool args.',
+          evidenceSpec: {
+            detectors: ['aegis.builtin.pii'],
+            ontology: ['AAT-T4001'],
+          },
+        }],
+      }] as any,
+    }, { userEmail: 't' });
+    const src = new ComplianceControlSource(tc);
+    const ids = src.list('default').map(f => f.id);
+    expect(ids).toContain('soc2');
+    expect(ids).toContain('pci-dss-4');
+  });
+
+  it('bundle generator works for a custom framework just like a built-in', () => {
+    const { svc, tc } = setup();
+    tc.update('default', {
+      customComplianceFrameworks: [{
+        id: 'pci-dss-4',
+        name: 'PCI DSS v4.0',
+        controls: [{
+          id: 'REQ-3.4',
+          title: 'Render PAN unreadable',
+          summary: 'PAN must be redacted before leaving the trust boundary.',
+          evidenceSpec: { detectors: ['aegis.builtin.pii'], ontology: ['AAT-T4001'] },
+        }],
+      }] as any,
+    }, { userEmail: 't' });
+
+    const bundle = svc.generate({ framework: 'pci-dss-4', orgId: 'default' });
+    expect(bundle.framework).toBe('pci-dss-4');
+    expect(bundle.controls.length).toBe(1);
+    expect(bundle.controls[0].id).toBe('REQ-3.4');
+    // PII detector is registered → status should be covered.
+    expect(bundle.controls[0].status).toBe('covered');
+    // Bundle hash + signature should still be present.
+    expect(bundle.bundle_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(bundle.signature.algorithm).toBe('ed25519');
+  });
+
+  it('source.exists treats built-ins and customs uniformly', () => {
+    const { tc } = setup();
+    tc.update('default', {
+      customComplianceFrameworks: [{
+        id: 'hipaa', name: 'HIPAA',
+        controls: [{ id: 'X', title: 't', summary: 's', evidenceSpec: {} }],
+      }] as any,
+    }, { userEmail: 't' });
+    const src = new ComplianceControlSource(tc);
+    expect(src.exists('default', 'soc2')).toBe(true);
+    expect(src.exists('default', 'hipaa')).toBe(true);
+    expect(src.exists('default', 'nope')).toBe(false);
   });
 });
 

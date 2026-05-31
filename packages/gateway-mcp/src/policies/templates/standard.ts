@@ -35,6 +35,7 @@ export const standardTemplate: TenantConfig = {
   },
   sinks: [],
   customDetectors: [],
+  customComplianceFrameworks: [],
 };
 
 export const standardDescription =

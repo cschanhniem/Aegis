@@ -8,6 +8,7 @@ export * from './ontology';
 export * from './sink';
 export * from './agent-registry';
 export * from './custom-detector';
+export * from './custom-compliance';
 
 // Base schemas
 export const AgentIdSchema = z.string().uuid();

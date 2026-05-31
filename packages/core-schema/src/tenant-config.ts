@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { PolicyDslSchema } from './policy-dsl';
 import { SinkConfigSchema } from './sink';
 import { CustomDetectorSpecSchema } from './custom-detector';
+import { CustomComplianceFrameworkSchema } from './custom-compliance';
 
 export const DeploymentModeSchema = z.enum([
   'dev',
@@ -109,6 +110,15 @@ export const TenantConfigSchema = z.object({
    * semantic as `dsl.rules` and `sinks`.
    */
   customDetectors: z.array(CustomDetectorSpecSchema).max(50).default([]),
+  /**
+   * Operator-registered compliance frameworks. The bundle generator
+   * picks them up automatically — a customer's PCI-DSS / HIPAA / FFIEC
+   * framework registration becomes available at
+   * `POST /api/v1/compliance/bundle/<id>` the moment it lands.
+   * Reserved IDs (`soc2|iso27001|nist-ai-rmf|eu-ai-act`) are rejected
+   * at the API layer to avoid shadowing built-ins.
+   */
+  customComplianceFrameworks: z.array(CustomComplianceFrameworkSchema).max(20).default([]),
   observability: z.object({
     otlp: z.object({
       enabled: z.boolean().default(false),
