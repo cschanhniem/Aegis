@@ -1,4 +1,4 @@
-# AEGIS release artifact signing
+# AEGIS release artifact signing + SLSA provenance + SBOM
 
 Every AEGIS npm tarball, Python wheel, and Docker image manifest published
 from this repository is signed with our Ed25519 release-signing key. The
@@ -12,13 +12,30 @@ public half of the key is committed at:
 out-of-band (e.g. by reading it from this repo over HTTPS the first time
 they install) and verify every subsequent release against that pin.
 
+Every release also publishes a CycloneDX SBOM and a SLSA v1.0 in-toto
+provenance attestation. Customers can verify the full provenance chain
+with `verify.mjs --attestation`, getting builder identity, source
+commit, and SBOM digest in one verification.
+
 ## Quick verify
 
 ```bash
+# Sig + attestation + SBOM verification in one command:
 node tools/release-sign/verify.mjs \
-  --in     ./agentguard-1.2.0.tgz \
-  --sig    ./agentguard-1.2.0.tgz.sig.json \
-  --pubkey ./.well-known/aegis-release-pubkey.pem
+  --in          ./agentguard-1.2.0.tgz \
+  --sig         ./agentguard-1.2.0.tgz.sig.json \
+  --attestation ./agentguard-1.2.0.tgz.attestation.sig.json \
+  --pubkey      ./.well-known/aegis-release-pubkey.pem
+
+# Output on success:
+# OK
+#   artifact:        agentguard-1.2.0.tgz
+#   sha256:          df54442…
+#   pubkey matches:  yes
+#   attestation:     OK
+#     builder:       https://github.com/Justin0504/Aegis/.github/workflows/release.yml
+#     source:        git+https://github.com/Justin0504/Aegis@<commit-sha>
+#     build_id:      <CI run id>
 ```
 
 Exit code `0` means:

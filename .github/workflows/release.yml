@@ -40,19 +40,37 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Sign release artifacts (Ed25519)
+      - name: Generate CycloneDX SBOM (Python)
+        run: |
+          pip install --quiet cyclonedx-bom
+          cd packages/sdk-python
+          cyclonedx-py environment -o dist/sbom.cdx.json || true
+          ls -la dist/sbom.cdx.json 2>/dev/null || echo "SBOM generation failed; continuing"
+
+      - name: Sign + attest release artifacts (Ed25519)
         if: env.AEGIS_RELEASE_SIGNING_KEY != ''
         env:
           AEGIS_RELEASE_SIGNING_KEY: ${{ secrets.AEGIS_RELEASE_SIGNING_KEY }}
         run: |
           echo "$AEGIS_RELEASE_SIGNING_KEY" > /tmp/release-signing.pem
           chmod 600 /tmp/release-signing.pem
+          STARTED_ON="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           for f in packages/sdk-python/dist/*.whl packages/sdk-python/dist/*.tar.gz; do
             [ -f "$f" ] || continue
             node tools/release-sign/sign.mjs \
-              --in  "$f" \
-              --key /tmp/release-signing.pem \
+              --in  "$f" --key /tmp/release-signing.pem \
               --out "${f}.sig.json"
+            SBOM_ARG=""
+            [ -f "packages/sdk-python/dist/sbom.cdx.json" ] && SBOM_ARG="--sbom packages/sdk-python/dist/sbom.cdx.json"
+            node tools/release-sign/attest.mjs \
+              --in "$f" --key /tmp/release-signing.pem \
+              --out "${f}.attestation.sig.json" \
+              --source-uri "git+${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA}" \
+              --build-id "${GITHUB_RUN_ID}" \
+              --builder-uri "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/.github/workflows/release.yml" \
+              --started-on "$STARTED_ON" \
+              --finished-on "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              $SBOM_ARG
           done
           rm -f /tmp/release-signing.pem
 
@@ -63,12 +81,15 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: twine upload dist/*.whl dist/*.tar.gz --non-interactive --skip-existing
 
-      - name: Upload signature manifests as workflow artifact
-        if: hashFiles('packages/sdk-python/dist/*.sig.json') != ''
+      - name: Upload signatures + attestations + SBOM as workflow artifact
+        if: hashFiles('packages/sdk-python/dist/*.sig.json') != '' || hashFiles('packages/sdk-python/dist/sbom.cdx.json') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: sdk-python-signatures
-          path: packages/sdk-python/dist/*.sig.json
+          name: sdk-python-provenance
+          path: |
+            packages/sdk-python/dist/*.sig.json
+            packages/sdk-python/dist/*.attestation.sig.json
+            packages/sdk-python/dist/sbom.cdx.json
 
   publish-npm:
     name: Publish JS SDK to npm
@@ -99,21 +120,37 @@ jobs:
           TGZ=$(ls *.tgz | head -1)
           echo "TARBALL=$TGZ" >> $GITHUB_ENV
 
-      - name: Sign release artifact (Ed25519)
+      - name: Generate CycloneDX SBOM (npm)
+        working-directory: packages/sdk-js
+        run: |
+          npx -y @cyclonedx/cdxgen -o sbom.cdx.json -p . || true
+          ls -la sbom.cdx.json 2>/dev/null || echo "SBOM generation failed; continuing"
+
+      - name: Sign + attest release artifact (Ed25519)
         if: env.AEGIS_RELEASE_SIGNING_KEY != ''
         env:
           AEGIS_RELEASE_SIGNING_KEY: ${{ secrets.AEGIS_RELEASE_SIGNING_KEY }}
         run: |
-          # Materialize the signing key from the GitHub secret, sign the
-          # tarball, then immediately wipe the key file.
           echo "$AEGIS_RELEASE_SIGNING_KEY" > /tmp/release-signing.pem
           chmod 600 /tmp/release-signing.pem
+          STARTED_ON="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           node tools/release-sign/sign.mjs \
             --in  packages/sdk-js/${TARBALL} \
             --key /tmp/release-signing.pem \
             --out packages/sdk-js/${TARBALL}.sig.json
+          SBOM_ARG=""
+          [ -f "packages/sdk-js/sbom.cdx.json" ] && SBOM_ARG="--sbom packages/sdk-js/sbom.cdx.json"
+          node tools/release-sign/attest.mjs \
+            --in  packages/sdk-js/${TARBALL} \
+            --key /tmp/release-signing.pem \
+            --out packages/sdk-js/${TARBALL}.attestation.sig.json \
+            --source-uri "git+${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}@${GITHUB_SHA}" \
+            --build-id "${GITHUB_RUN_ID}" \
+            --builder-uri "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/.github/workflows/release.yml" \
+            --started-on "$STARTED_ON" \
+            --finished-on "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            $SBOM_ARG
           rm -f /tmp/release-signing.pem
-          echo "Signed $TARBALL"
 
       - name: Publish to npm
         working-directory: packages/sdk-js
@@ -121,12 +158,15 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Upload signature manifest as workflow artifact
-        if: hashFiles('packages/sdk-js/*.sig.json') != ''
+      - name: Upload signature + attestation + SBOM as workflow artifact
+        if: hashFiles('packages/sdk-js/*.sig.json') != '' || hashFiles('packages/sdk-js/sbom.cdx.json') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: sdk-js-signatures
-          path: packages/sdk-js/*.sig.json
+          name: sdk-js-provenance
+          path: |
+            packages/sdk-js/*.sig.json
+            packages/sdk-js/*.attestation.sig.json
+            packages/sdk-js/sbom.cdx.json
 
   publish-docker:
     name: Publish Gateway Docker image

@@ -30,7 +30,7 @@ function parseArgs() {
 
 function usage(msg) {
   if (msg) console.error(`error: ${msg}`);
-  console.error('Usage: verify.mjs --in <artifact> --sig <manifest.sig.json> [--pubkey <pubkey.pem>]');
+  console.error('Usage: verify.mjs --in <artifact> --sig <manifest.sig.json> [--pubkey <pubkey.pem>] [--attestation <provenance.sig.json>]');
   exit(2);
 }
 
@@ -78,12 +78,53 @@ try {
     }
   }
 
+  // 4. Optional SLSA attestation — same Ed25519 verify, plus we check
+  //    the in-toto statement's subject digest matches the artifact.
+  let attestationResult = null;
+  if (args.attestation) {
+    const att = JSON.parse(await readFile(args.attestation, 'utf8'));
+    if (!att.signed_input || !att.signature || !att.public_key_pem) {
+      throw new Error('attestation manifest missing required fields');
+    }
+    const attPub = createPublicKey(att.public_key_pem);
+    const attOk = edVerify(
+      null,
+      Buffer.from(att.signed_input, 'utf8'),
+      attPub,
+      Buffer.from(att.signature, 'base64'),
+    );
+    if (!attOk) throw new Error('attestation signature did not verify');
+    const stmt = JSON.parse(att.signed_input);
+    const subj = stmt.subject?.[0];
+    if (!subj?.digest?.sha256) throw new Error('attestation has no subject.digest.sha256');
+    if (subj.digest.sha256 !== sha256) {
+      throw new Error(`attestation subject sha256 (${subj.digest.sha256.slice(0,12)}…) does not match artifact (${sha256.slice(0,12)}…)`);
+    }
+    if (args.pubkey) {
+      const trusted = (await readFile(args.pubkey, 'utf8')).trim();
+      if (trusted !== att.public_key_pem.trim()) {
+        throw new Error('attestation pubkey does NOT match trusted pubkey');
+      }
+    }
+    attestationResult = {
+      builder: stmt.predicate?.runDetails?.builder?.id,
+      source:  stmt.predicate?.buildDefinition?.externalParameters?.source,
+      build_id: stmt.predicate?.runDetails?.metadata?.invocationId,
+    };
+  }
+
   console.log('OK');
   console.log(`  artifact:        ${basename(args.in)}`);
   console.log(`  sha256:          ${sha256}`);
   console.log(`  signed_at:       ${claim.signed_at}`);
   console.log(`  purpose:         ${claim.purpose ?? 'aegis-release'}`);
   console.log(`  pubkey matches:  ${args.pubkey ? 'yes' : 'embedded-only (consider --pubkey)'}`);
+  if (attestationResult) {
+    console.log(`  attestation:     OK`);
+    console.log(`    builder:       ${attestationResult.builder ?? 'unknown'}`);
+    console.log(`    source:        ${attestationResult.source ?? 'unknown'}`);
+    console.log(`    build_id:      ${attestationResult.build_id ?? 'unknown'}`);
+  }
   exit(0);
 } catch (err) {
   console.error(`FAIL: ${err.message}`);
