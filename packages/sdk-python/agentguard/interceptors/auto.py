@@ -1059,6 +1059,108 @@ class AutoInstrument:
             print(f"[AEGIS] smolagents auto-patch failed: {e}")
             return False
 
+    # ── Pydantic-AI ─────────────────────────────────────────────────────────
+
+    def patch_pydantic_ai(self) -> bool:
+        """Patches pydantic_ai.Agent.run + run_sync — traces every tool the
+        agent triggers. Pydantic-AI registers tools via @agent.tool; the
+        framework dispatches them inside Agent.run, so wrapping Agent.run
+        gives us per-tool traces via the inner tool-call hook."""
+        try:
+            import pydantic_ai as _pa  # type: ignore
+            agent_cls = _pa.Agent
+            original_run = agent_cls.run
+            original_run_sync = getattr(agent_cls, 'run_sync', None)
+            instrument = self
+
+            async def patched_run(self_agent, user_prompt: str = '', **kw):
+                start = time.time()
+                error: Optional[str] = None
+                result = None
+                tool_name = f"pydantic_ai:{getattr(self_agent, 'name', 'agent')}"
+                args = {'user_prompt': str(user_prompt)[:500]}
+                await instrument._async_check_block(tool_name, args)
+                try:
+                    result = await original_run(self_agent, user_prompt, **kw)
+                    return result
+                except Exception as e:
+                    error = str(e); raise
+                finally:
+                    instrument._send_trace(
+                        tool_name=tool_name, input_prompt=str(user_prompt)[:500],
+                        arguments=args, result=str(result)[:500] if result else None,
+                        start_time=start, error=error,
+                    )
+
+            def patched_run_sync(self_agent, user_prompt: str = '', **kw):
+                start = time.time()
+                error: Optional[str] = None
+                result = None
+                tool_name = f"pydantic_ai:{getattr(self_agent, 'name', 'agent')}"
+                args = {'user_prompt': str(user_prompt)[:500]}
+                instrument._check_block(tool_name, args)
+                try:
+                    result = original_run_sync(self_agent, user_prompt, **kw) if original_run_sync else None
+                    return result
+                except Exception as e:
+                    error = str(e); raise
+                finally:
+                    instrument._send_trace(
+                        tool_name=tool_name, input_prompt=str(user_prompt)[:500],
+                        arguments=args, result=str(result)[:500] if result else None,
+                        start_time=start, error=error,
+                    )
+
+            agent_cls.run = patched_run
+            if original_run_sync:
+                agent_cls.run_sync = patched_run_sync
+            return True
+        except Exception as e:
+            print(f"[AEGIS] Pydantic-AI auto-patch failed: {e}")
+            return False
+
+    # ── AutoGen 0.4+ ────────────────────────────────────────────────────────
+
+    def patch_autogen(self) -> bool:
+        """Patches autogen_core.tools.BaseTool.run / FunctionTool.run.
+        AutoGen 0.4+ standardized tool execution through BaseTool.run, so a
+        single hook covers every tool the agent invokes."""
+        try:
+            import autogen_core.tools as _at  # type: ignore
+            target_cls = getattr(_at, 'BaseTool', None) or getattr(_at, 'FunctionTool', None)
+            if not target_cls or not hasattr(target_cls, 'run'):
+                return False
+            original_run = target_cls.run
+            instrument = self
+
+            async def patched_run(self_tool, args=None, cancellation_token=None):
+                tool_name = getattr(self_tool, 'name', self_tool.__class__.__name__)
+                try:
+                    args_dict = args.model_dump() if hasattr(args, 'model_dump') else (args or {})
+                except Exception:
+                    args_dict = {'_raw': str(args)[:500]}
+                await instrument._async_check_block(tool_name, args_dict)
+                start = time.time()
+                error: Optional[str] = None
+                result = None
+                try:
+                    result = await original_run(self_tool, args, cancellation_token)
+                    return result
+                except Exception as e:
+                    error = str(e); raise
+                finally:
+                    instrument._send_trace(
+                        tool_name=tool_name, input_prompt=tool_name,
+                        arguments=args_dict, result=str(result)[:500] if result else None,
+                        start_time=start, error=error,
+                    )
+
+            target_cls.run = patched_run
+            return True
+        except Exception as e:
+            print(f"[AEGIS] AutoGen auto-patch failed: {e}")
+            return False
+
     # ── Send trace ─────────────────────────────────────────────────────────
 
     def _send_trace(

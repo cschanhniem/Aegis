@@ -150,6 +150,8 @@ def auto(
     mistral_ok         = instrument.patch_mistral()
     llamaindex_ok      = instrument.patch_llamaindex()
     smolagents_ok      = instrument.patch_smolagents()
+    pydantic_ai_ok     = instrument.patch_pydantic_ai()
+    autogen_ok         = instrument.patch_autogen()
 
     patched = []
     if anthropic_ok or anthropic_async_ok: patched.append("Anthropic")
@@ -161,6 +163,8 @@ def auto(
     if mistral_ok:                         patched.append("Mistral")
     if llamaindex_ok:                      patched.append("LlamaIndex")
     if smolagents_ok:                      patched.append("smolagents")
+    if pydantic_ai_ok:                     patched.append("Pydantic-AI")
+    if autogen_ok:                         patched.append("AutoGen")
 
     if patched:
         print(f"[AEGIS] Auto-instrumented: {', '.join(patched)} → {gateway_url}")
