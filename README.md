@@ -130,6 +130,26 @@ That's it. Every tool call is now classified, policy-checked, and recorded in a 
 
 ---
 
+## Recently shipped (last batch)
+
+| Capability | Endpoint / file | What it solves |
+|---|---|---|
+| **Agent registry + identity** | `POST /api/v1/agents` · [agent-registry.ts](packages/gateway-mcp/src/services/agent-registry.ts) | `agent_id` was a free-form string anyone could pass. Now it's first-class identity with status (active/suspended/deprecated/unregistered), declared tool scope, per-agent budget, optional Ed25519 / shared-secret authentication. |
+| **AEGIS Agent Threat Ontology v1** | `GET /api/v1/ontology` · [agent-threats.ts](packages/core-schema/src/ontology/agent-threats.ts) | 10 tactics × 40 techniques (AAT-T*) — a published, versioned taxonomy of agent-specific threats. Coverage at `GET /coverage` shows which nodes this deployment defends against; tenant detectors automatically extend it. |
+| **Detector plugin contract** | [`Detector` interface](packages/core-schema/src/detector.ts) | Customer security teams or 3rd parties register a `Detector` against the live registry — same signal type, same decision merger, same audit / sink / transparency-log fan-out as built-ins. |
+| **LLM egress proxy** | `/api/v1/llm-proxy/{openai,anthropic}/*` · [proxy/](packages/gateway-mcp/src/proxy/) | Customer changes one env var (`OPENAI_BASE_URL=…aegis…/openai/v1`) — every LLM call now flows through the detector chain, audit, transparency log, and sinks. Works for any language / any closed-source agent platform. |
+| **Universal SIEM sinks** | `tenant_config.sinks[]` · [sinks/](packages/gateway-mcp/src/sinks/) | Declarative `http` / `syslog` / `stdout` sinks for Splunk HEC, Datadog Logs, Sumo, QRadar, Graylog — customer integrates by config write, not code release. Bounded DLQ + retry + field-mapping templates. |
+| **RFC 6962 transparency log** | `GET /api/v1/transparency-log/proof/:idx` · [transparency-log.ts](packages/gateway-mcp/src/services/transparency-log.ts) | Append-only Merkle tree over audit + evidence-pack events. Signed roots + inclusion proofs let customers verify "this audit row existed at this date" offline — defeats the "you control the key" objection. |
+| **Per-framework compliance bundles** | `POST /api/v1/compliance/bundle/:fw` · [compliance-bundle.ts](packages/gateway-mcp/src/services/compliance-bundle.ts) | One POST → signed JSON bundle mapping SOC 2, ISO 27001, NIST AI RMF, EU AI Act controls to live AEGIS evidence. Hands the auditor a verifiable artifact, not screenshots. |
+| **Budget guard** | `tenant_config.budget` · [budget-guard.ts](packages/gateway-mcp/src/services/budget-guard.ts) | Daily / monthly / per-agent / per-session USD limits with warn / block actions. Coverage of AAT-T8002. |
+| **OTLP trace export** | `tenant_config.observability.otlp` · [otlp-exporter.ts](packages/gateway-mcp/src/services/otlp-exporter.ts) | Per-tenant push to any OTLP/HTTP backend (Datadog, Honeycomb, Grafana Tempo, New Relic). Customers see AEGIS spans alongside their non-LLM infra traces. |
+| **Cross-agent + IPI + memory-poison + sensitive-exfil detectors** | [detectors/built-in/](packages/gateway-mcp/src/detectors/built-in/) | Coverage of AAT-T10001 (trust abuse), T1001 (indirect prompt injection), T6001 (memory poisoning), T5001 (sensitive-context exfiltration). |
+| **Ed25519-signed release artifacts** | [tools/release-sign/](tools/release-sign/) + [.well-known/aegis-release-pubkey.pem](.well-known/aegis-release-pubkey.pem) | Every npm tarball + PyPI wheel ships with a signature manifest verifiable offline against the AEGIS-pinned public key. Defeats mirror tampering / in-transit forgery. |
+
+Ontology coverage at the time of this batch: **28/40 (70%)** across the 10 tactics. See live status at `GET /api/v1/ontology/coverage` or in the Cockpit's `/coverage` page.
+
+---
+
 ## Why AEGIS?
 
 The agent-guardrail category is consolidating around two camps: closed
@@ -138,23 +158,29 @@ narrow open-source libraries (LlamaFirewall, NeMo, Guardrails AI).
 AEGIS is the open-source platform that ships the full vertical —
 gateway, cascade, DSL, dashboard, audit trail, approvals — in one repo.
 
-|  | Lakera Guard | NeMo Guardrails | LlamaFirewall | Guardrails AI | **AEGIS** |
-|--|--------------|------------------|---------------|---------------|-----------|
-| Open source | ❌ | ✅ | ✅ | ✅ | ✅ |
-| Self-hostable in full | paid tier | ✅ | ✅ | ✅ | ✅ |
+|  | Lakera Guard | NeMo Guardrails | Cisco AI Defense | Guardrails AI | **AEGIS** |
+|--|--------------|------------------|------------------|---------------|-----------|
+| Open source / self-hostable | paid tier | ✅ | ❌ | ✅ | ✅ |
 | Pre-execution blocking | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Compliance dashboard / Cockpit UI** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Human-in-the-loop approval flow** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Tamper-evident audit trail (hash chain + Ed25519)** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Agent identity + registration + secret rotation** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Per-agent declared tool scope enforcement** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Per-agent / per-tenant budget guard** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **AEGIS Agent Threat Ontology + coverage map** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Detector plugin contract (3rd-party / customer)** | ❌ | partial | ❌ | partial | ✅ |
 | **Per-tenant Policy DSL (fail-safe)** | ❌ | Colang | ❌ | ❌ | ✅ |
-| **5 ready-made deployment templates** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Behavioral anomaly detection (Isolation Forest + PPM)** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Cost-aware L1→L2→L3 cascade** | ❌ | ❌ | partial | ❌ | ✅ |
-| Chain-of-thought alignment auditor | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Static checks on agent-generated code | ❌ | ❌ | ✅ (Semgrep) | ❌ | ✅ (regex, sub-ms) |
-| Multi-framework SDK | API only | NVIDIA-centric | ✅ | ✅ | 14 frameworks |
-| **MCP server / proxy** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **HTTP proxy for closed-source agents** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **RFC 6962 transparency log (offline-verifiable)** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Per-framework signed compliance bundles** | ❌ | ❌ | ❌ | partial | ✅ |
+| **Universal SIEM sinks (http / syslog / stdout)** | partial | ❌ | ✅ | ❌ | ✅ |
+| **OTLP trace export (Datadog/Honeycomb/Tempo/…)** | ❌ | ❌ | partial | ❌ | ✅ |
+| **LLM egress proxy (zero-code, any-language)** | ❌ | ❌ | ✅ | partial | ✅ |
+| **Cross-agent compromise correlator** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Sensitive-context taint tracking (PII → exfil)** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Memory-poison & indirect-prompt-injection detectors** | partial | partial | partial | ❌ | ✅ |
+| **Ed25519-signed release artifacts (npm + PyPI)** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Behavioral anomaly detection (IsolationForest + PPM) | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Cost-aware L1→L2→L3 cascade | ❌ | ❌ | partial | ❌ | ✅ |
+| Human-in-the-loop approval flow | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Multi-framework SDK | API only | NVIDIA-centric | partial | ✅ | 14 frameworks |
 | Kill switch + admin audit log (SOC 2 prep) | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 > If your point of comparison is *observability* (LangFuse, Helicone,
@@ -549,6 +575,29 @@ agentguard scan ./my-package --fix        # auto-add *.map to .npmignore
 ```
 
 Scans for `.map` files, embedded `sourcesContent`, secrets (AWS/GitHub/npm/OpenAI/Anthropic keys, JWTs, database URLs), dangerous config files, and validates `.npmignore` / `package.json` files field.
+
+**Verify the AEGIS release you just downloaded:**
+
+Every npm tarball and PyPI wheel published from this repository ships
+with an Ed25519 signature manifest. Pin trust on the AEGIS-published
+public key once and verify every future release:
+
+```bash
+# Public key — commit to your install machine once.
+curl -sLo aegis-release-pubkey.pem \
+  https://raw.githubusercontent.com/Justin0504/Aegis/main/.well-known/aegis-release-pubkey.pem
+
+# Verify any release (npm tarball, PyPI wheel, Docker manifest).
+node tools/release-sign/verify.mjs \
+  --in     ./agentguard-1.2.0.tgz \
+  --sig    ./agentguard-1.2.0.tgz.sig.json \
+  --pubkey ./aegis-release-pubkey.pem
+# OK
+#   sha256:          df54442…
+#   pubkey matches:  yes
+```
+
+Threat model, key bootstrap, and CI integration: [tools/release-sign/README.md](tools/release-sign/README.md).
 
 ### Cryptographic Audit Trail
 

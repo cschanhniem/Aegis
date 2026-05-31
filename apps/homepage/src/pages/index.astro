@@ -86,24 +86,59 @@ import { sortedPosts as posts } from '@/data/posts';
         <p class="section-eyebrow inline">Recently shipped on main</p>
         <ul class="shipped-list">
           <li>
-            <strong>Code Shield</strong> — fast local regex scanner for
-            agent-generated code. 19 high-precision rules across Python,
-            JS, shell, SQL, and cross-language secrets. Sub-millisecond
-            per scan, drives the new
-            <code>code_shield.worst</code> DSL signal.
+            <strong>Agent identity + registration</strong> — registered
+            agents have status / declared tool scope / per-agent budget /
+            optional shared secret. The SDK forwards
+            <code>X-AEGIS-Agent-Secret</code> automatically; the gateway
+            blocks suspended or unregistered agents at the gate.
           </li>
           <li>
-            <strong>Closed-loop alignment</strong> — LangChain
-            <code>AlignmentCallback</code> verdicts now flow into the
-            synchronous <code>/check</code> on the same hop, so DSL
-            rules like
-            <code>{`{ alignment.drifted: true }`}</code> fire without
-            user-side wiring.
+            <strong>AEGIS Agent Threat Ontology v1</strong> — 10 tactics
+            × 40 techniques (<code>AAT-T*</code>) published with per-
+            deployment coverage map. The Cockpit
+            <code>/coverage</code> page renders it as a heat-map; the
+            REST API at <code>/api/v1/ontology/coverage</code> is what
+            customers compare AEGIS against other vendors with.
           </li>
           <li>
-            <strong>Alignment auditor</strong> — chain-of-thought drift
-            detection in the Cockpit, with a dedicated Alignment tab
-            and audit-trail evidence per verdict.
+            <strong>LLM egress proxy</strong> — customer sets
+            <code>OPENAI_BASE_URL=…aegis…/openai/v1</code> and every
+            LLM call from any language / any framework / any closed-
+            source platform now flows through the detector chain,
+            audit, transparency log, and SIEM sinks.
+          </li>
+          <li>
+            <strong>Universal SIEM sinks + OTLP trace export</strong> —
+            declarative <code>http</code> / <code>syslog</code> sinks
+            for Splunk / Datadog / QRadar; per-tenant OTLP exporter
+            ships spans to Honeycomb / Grafana Tempo / New Relic. Both
+            configurable via tenant config, no fork required.
+          </li>
+          <li>
+            <strong>RFC 6962 transparency log</strong> — every audit row
+            and compliance bundle appends to an append-only Merkle log
+            with Ed25519-signed roots. Customers can verify any past
+            event's existence offline against a cached signed root.
+          </li>
+          <li>
+            <strong>Signed per-framework compliance bundles</strong> —
+            <code>POST /api/v1/compliance/bundle/&lt;soc2|iso27001|nist-ai-rmf|eu-ai-act&gt;</code>
+            returns a signed JSON artifact mapping each control to live
+            AEGIS evidence. The auditor verifies; you don't argue.
+          </li>
+          <li>
+            <strong>Detector plugin contract + threat detectors for the
+            new red zones</strong> — IPI (T1001), memory-poison
+            (T6001), discovery / credential discovery (T7001-T7003),
+            cross-agent trust abuse (T10001), session/token replay
+            (T10002), sensitive-context exfiltration (T5001) all
+            shipped behind the same pluggable Detector interface.
+          </li>
+          <li>
+            <strong>Ed25519-signed releases</strong> — every npm tarball
+            and PyPI wheel ships with a verifiable signature manifest;
+            pin trust on
+            <code>.well-known/aegis-release-pubkey.pem</code> once.
           </li>
         </ul>
         <p class="section-foot">
