@@ -17,7 +17,7 @@
 
 import { z } from 'zod';
 
-export const SinkKindSchema = z.enum(['http', 'syslog', 'stdout']);
+export const SinkKindSchema = z.enum(['http', 'syslog', 'stdout', 'kafka', 'nats']);
 export type SinkKind = z.infer<typeof SinkKindSchema>;
 
 export const FieldMappingSchema = z.record(z.string(), z.string());
@@ -70,10 +70,52 @@ export const StdoutSinkConfigSchema = z.object({
 });
 export type StdoutSinkConfig = z.infer<typeof StdoutSinkConfigSchema>;
 
+export const KafkaSaslSchema = z.object({
+  mechanism: z.enum(['plain', 'scram-sha-256', 'scram-sha-512']),
+  username: z.string().min(1).max(120),
+  password: z.string().min(1).max(500),
+}).strict();
+
+export const KafkaSinkConfigSchema = z.object({
+  kind: z.literal('kafka'),
+  name: z.string().min(1).max(64),
+  enabled: z.boolean().default(true),
+  /** Bootstrap servers, e.g. ["broker1:9092", "broker2:9092"]. */
+  brokers: z.array(z.string().min(3)).min(1).max(16),
+  topic: z.string().min(1).max(200),
+  clientId: z.string().min(1).max(120).default('aegis-sink'),
+  ssl: z.union([z.boolean(), z.object({ rejectUnauthorized: z.boolean().optional() })]).optional(),
+  sasl: KafkaSaslSchema.optional(),
+  /** Optional Kafka message key derived from a dotted event path. */
+  keyPath: z.string().max(120).optional(),
+  fieldMapping: FieldMappingSchema.optional(),
+  retry: RetryPolicySchema.default({ maxAttempts: 3, backoffMs: 500, factor: 2 }),
+  timeoutMs: z.number().int().min(100).max(60_000).default(5_000),
+});
+export type KafkaSinkConfig = z.infer<typeof KafkaSinkConfigSchema>;
+
+export const NatsSinkConfigSchema = z.object({
+  kind: z.literal('nats'),
+  name: z.string().min(1).max(64),
+  enabled: z.boolean().default(true),
+  /** Server URLs, e.g. ["nats://prod-1:4222", "nats://prod-2:4222"]. */
+  servers: z.array(z.string().min(7)).min(1).max(16),
+  subject: z.string().min(1).max(200),
+  user: z.string().min(1).max(120).optional(),
+  pass: z.string().min(1).max(500).optional(),
+  token: z.string().min(1).max(500).optional(),
+  fieldMapping: FieldMappingSchema.optional(),
+  retry: RetryPolicySchema.default({ maxAttempts: 3, backoffMs: 500, factor: 2 }),
+  timeoutMs: z.number().int().min(100).max(60_000).default(5_000),
+});
+export type NatsSinkConfig = z.infer<typeof NatsSinkConfigSchema>;
+
 export const SinkConfigSchema = z.discriminatedUnion('kind', [
   HttpSinkConfigSchema,
   SyslogSinkConfigSchema,
   StdoutSinkConfigSchema,
+  KafkaSinkConfigSchema,
+  NatsSinkConfigSchema,
 ]);
 export type SinkConfig = z.infer<typeof SinkConfigSchema>;
 

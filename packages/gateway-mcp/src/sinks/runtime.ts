@@ -20,6 +20,8 @@ import { Logger } from 'pino';
 import { HttpSink } from './built-in/http';
 import { SyslogSink } from './built-in/syslog';
 import { StdoutSink } from './built-in/stdout';
+import { KafkaSink } from './built-in/kafka';
+import { NatsSink } from './built-in/nats';
 
 const DLQ_CAP = 1000;
 
@@ -133,5 +135,7 @@ function instantiate(cfg: SinkConfig): Sink {
     case 'http':   return new HttpSink(cfg);
     case 'syslog': return new SyslogSink(cfg);
     case 'stdout': return new StdoutSink(cfg);
+    case 'kafka':  return new KafkaSink(cfg);
+    case 'nats':   return new NatsSink(cfg);
   }
 }
