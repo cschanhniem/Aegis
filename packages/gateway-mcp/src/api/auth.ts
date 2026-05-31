@@ -39,13 +39,20 @@ export class AuthAPI {
   constructor(
     private db: Database.Database,
     private logger: Logger,
-    private idp: IdpAdapter,
+    /** Either a static IdpAdapter (legacy single-org wiring used in
+     *  tests + dev) OR a function that resolves an adapter from an
+     *  orgId (production multi-tenant wiring via IdpFactory). */
+    private idp: IdpAdapter | ((orgId: string) => IdpAdapter),
     private sessions: SessionService,
     private auditLog: AuditLogService,
     private orgId: string = 'default',
   ) {
     this.router = Router();
     this.setupRoutes();
+  }
+
+  private resolveIdp(): IdpAdapter {
+    return typeof this.idp === 'function' ? this.idp(this.orgId) : this.idp;
   }
 
   private setupRoutes() {
@@ -55,8 +62,9 @@ export class AuthAPI {
         return res.status(400).json({ error: 'Invalid query', details: parsed.error.issues });
       }
       const state = this.stateStore.issue({ return_to: parsed.data.return_to });
-      const url = this.idp.redirectUrl({ state, redirect_uri: parsed.data.redirect_uri });
-      res.json({ url, state, provider: this.idp.name });
+      const idp = this.resolveIdp();
+      const url = idp.redirectUrl({ state, redirect_uri: parsed.data.redirect_uri });
+      res.json({ url, state, provider: idp.name });
     });
 
     this.router.post('/callback', async (req: Request, res: Response) => {
@@ -70,7 +78,7 @@ export class AuthAPI {
       }
       let idpUser: IdpUser;
       try {
-        idpUser = await this.idp.exchangeCode({
+        idpUser = await this.resolveIdp().exchangeCode({
           code: parsed.data.code,
           state: parsed.data.state,
           expected_state: pending.state,

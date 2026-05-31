@@ -43,6 +43,7 @@ import { EvidencePackAPI } from './api/evidence-pack';
 import { AuthAPI } from './api/auth';
 import { SessionService } from './services/session';
 import { MockIdpAdapter } from './services/idp-adapter';
+import { IdpFactory } from './services/idp-factory';
 import {
   DetectorRegistry,
   PiiDetector,
@@ -573,15 +574,21 @@ async function main() {
   // tenant config + integrity verdict, scoped to the requester's org.
   app.use('/api/v1/evidence-pack', requireAuth, new EvidencePackAPI(db, logger, auditLog).router);
 
-  // SSO — sessions + IdP adapter. MockIdpAdapter is wired by default
-  // so local dev + the test suite work end-to-end without WorkOS
-  // credentials. Swap for WorkOSAdapter when the integration lands.
+  // SSO — sessions + IdP adapter factory. Per-tenant SSO config in
+  // tenant_config.sso drives the picker; absent config falls through
+  // to MockIdpAdapter so local dev + the test suite stay unchanged.
+  // Production providers (Okta, Azure AD / Entra, Google Workspace,
+  // and any OIDC-compliant IdP) handled by OidcAdapter via discovery.
   const sessionService = new SessionService(db, logger);
-  const idp = new MockIdpAdapter();
+  const idpFactory = new IdpFactory(logger, tenantConfig);
   app.use(
     '/api/v1/auth',
     requireAuth,
-    new AuthAPI(db, logger, idp, sessionService, auditLog).router,
+    new AuthAPI(
+      db, logger,
+      (orgId: string) => idpFactory.for(orgId),
+      sessionService, auditLog,
+    ).router,
   );
 
   // Kill-switch endpoints (auth required)

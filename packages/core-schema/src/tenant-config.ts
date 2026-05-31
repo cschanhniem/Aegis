@@ -12,6 +12,7 @@ import { SinkConfigSchema } from './sink';
 import { CustomDetectorSpecSchema } from './custom-detector';
 import { CustomComplianceFrameworkSchema } from './custom-compliance';
 import { TenantOntologyNodeSchema } from './custom-ontology';
+import { SsoConfigSchema } from './sso';
 
 export const DeploymentModeSchema = z.enum([
   'dev',
@@ -128,6 +129,13 @@ export const TenantConfigSchema = z.object({
    * node see the unchanged AAT-T-only coverage map.
    */
   ontologyNodes: z.array(TenantOntologyNodeSchema).max(100).default([]),
+  /**
+   * Per-tenant single-sign-on. When `enabled: true`, /auth/login-url
+   * builds an OIDC authorize URL against the configured provider and
+   * /auth/callback exchanges the code for an AEGIS session. Default
+   * (mock) keeps the old "any email signs in" dev behavior.
+   */
+  sso: SsoConfigSchema.optional(),
   observability: z.object({
     otlp: z.object({
       enabled: z.boolean().default(false),

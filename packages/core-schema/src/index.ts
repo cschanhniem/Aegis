@@ -11,6 +11,7 @@ export * from './custom-detector';
 export * from './custom-compliance';
 export * from './tenant-template';
 export * from './custom-ontology';
+export * from './sso';
 
 // Base schemas
 export const AgentIdSchema = z.string().uuid();
