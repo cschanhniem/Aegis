@@ -10,6 +10,7 @@ export * from './agent-registry';
 export * from './custom-detector';
 export * from './custom-compliance';
 export * from './tenant-template';
+export * from './custom-ontology';
 
 // Base schemas
 export const AgentIdSchema = z.string().uuid();

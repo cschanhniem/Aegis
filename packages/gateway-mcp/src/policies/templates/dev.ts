@@ -32,6 +32,7 @@ export const devTemplate: TenantConfig = {
   sinks: [],
   customDetectors: [],
   customComplianceFrameworks: [],
+  ontologyNodes: [],
 };
 
 export const devDescription =

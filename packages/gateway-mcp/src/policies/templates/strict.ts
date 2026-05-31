@@ -40,6 +40,7 @@ export const strictTemplate: TenantConfig = {
   sinks: [],
   customDetectors: [],
   customComplianceFrameworks: [],
+  ontologyNodes: [],
 };
 
 export const strictDescription =

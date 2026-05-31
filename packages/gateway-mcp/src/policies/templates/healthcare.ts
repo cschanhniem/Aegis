@@ -40,6 +40,7 @@ export const healthcareTemplate: TenantConfig = {
   sinks: [],
   customDetectors: [],
   customComplianceFrameworks: [],
+  ontologyNodes: [],
 };
 
 export const healthcareDescription =

@@ -194,7 +194,7 @@ async function main() {
   detectors.register(new CrossAgentDetector(crossAgent));
   const taintTracker = new TaintTrackerService({ logger });
   detectors.register(new SensitiveExfilDetector(taintTracker));
-  const coverageMap = new CoverageMapService(detectors);
+  const coverageMap = new CoverageMapService(detectors, tenantConfig);
 
   // Universal sink fan-out. Subscribes to audit log + ConfigBus; every
   // audit row routes to whatever http/syslog/stdout sinks the tenant has
@@ -496,7 +496,7 @@ async function main() {
   // Customers use /coverage to answer "what does AEGIS detect today?"
   // without taking a sales call. Tenant detectors register against the
   // same registry and automatically extend the published coverage.
-  app.use('/api/v1/ontology', requireAuth, new OntologyAPI(coverageMap).router);
+  app.use('/api/v1/ontology', requireAuth, new OntologyAPI(coverageMap, tenantConfig).router);
 
   // Universal sink runtime view + dry-fire. Sink CONFIG lives in
   // /api/v1/config (whole tenant config). This endpoint exposes runtime

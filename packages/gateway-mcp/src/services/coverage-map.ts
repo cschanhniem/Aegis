@@ -18,8 +18,10 @@ import {
   isValidNodeId,
   ONTOLOGY_VERSION,
   OntologyNode,
+  TenantOntologyNode,
 } from '@agentguard/core-schema';
 import { DetectorRegistry } from '../detectors/registry';
+import { TenantConfigService } from './tenant-config';
 
 export interface CoverageEntry {
   readonly nodeId: string;
@@ -46,13 +48,31 @@ export interface CoverageSummary {
 }
 
 export class CoverageMapService {
-  constructor(private registry: DetectorRegistry) {}
+  constructor(
+    private registry: DetectorRegistry,
+    /** Optional — when injected, summary(orgId) merges TENANT.* nodes
+     *  from the tenant config alongside canonical AAT-T* nodes. */
+    private tenantConfig?: TenantConfigService,
+  ) {}
 
-  forwardMap(): Map<string, Array<{ name: string; version: string }>> {
+  private tenantNodeIds(orgId?: string): Set<string> {
+    if (!orgId || !this.tenantConfig) return new Set();
+    const nodes = this.tenantConfig.get(orgId).ontologyNodes ?? [];
+    return new Set(nodes.map(n => n.id));
+  }
+
+  private tenantNodes(orgId?: string): ReadonlyArray<TenantOntologyNode> {
+    if (!orgId || !this.tenantConfig) return [];
+    return this.tenantConfig.get(orgId).ontologyNodes ?? [];
+  }
+
+  forwardMap(orgId?: string): Map<string, Array<{ name: string; version: string }>> {
+    const allowedTenant = this.tenantNodeIds(orgId);
     const out = new Map<string, Array<{ name: string; version: string }>>();
     for (const d of this.registry.list()) {
       for (const nodeId of d.coverage ?? []) {
-        if (!isValidNodeId(nodeId)) continue;   // detector claimed an unknown ID — drop, don't fabricate
+        const ok = isValidNodeId(nodeId) || allowedTenant.has(nodeId);
+        if (!ok) continue;
         const arr = out.get(nodeId) ?? [];
         arr.push({ name: d.name, version: d.version });
         out.set(nodeId, arr);
@@ -61,25 +81,36 @@ export class CoverageMapService {
     return out;
   }
 
-  reverseMap(): Map<string, ReadonlyArray<string>> {
+  reverseMap(orgId?: string): Map<string, ReadonlyArray<string>> {
+    const allowedTenant = this.tenantNodeIds(orgId);
     const out = new Map<string, ReadonlyArray<string>>();
     for (const d of this.registry.list()) {
-      out.set(d.name, [...(d.coverage ?? [])].filter(isValidNodeId));
+      out.set(d.name, [...(d.coverage ?? [])].filter(id => isValidNodeId(id) || allowedTenant.has(id)));
     }
     return out;
   }
 
-  summary(): CoverageSummary {
-    const fwd = this.forwardMap();
-    const nodes = allNodes().filter(n => n.kind === 'technique') as Extract<OntologyNode, { kind: 'technique' }>[];
+  summary(orgId?: string): CoverageSummary {
+    const fwd = this.forwardMap(orgId);
+    const canonical = allNodes().filter(n => n.kind === 'technique') as Extract<OntologyNode, { kind: 'technique' }>[];
+    const tenant = this.tenantNodes(orgId);
 
-    const entries: CoverageEntry[] = nodes.map(n => ({
-      nodeId: n.id,
-      title: n.title,
-      tactic: n.tactic,
-      covered: fwd.has(n.id),
-      coveringDetectors: fwd.get(n.id) ?? [],
-    }));
+    const entries: CoverageEntry[] = [
+      ...canonical.map(n => ({
+        nodeId: n.id,
+        title: n.title,
+        tactic: n.tactic,
+        covered: fwd.has(n.id),
+        coveringDetectors: fwd.get(n.id) ?? [],
+      })),
+      ...tenant.map(n => ({
+        nodeId: n.id,
+        title: n.title,
+        tactic: n.tactic,
+        covered: fwd.has(n.id),
+        coveringDetectors: fwd.get(n.id) ?? [],
+      })),
+    ];
 
     const perTacticMap = new Map<string, { total: number; covered: number }>();
     for (const e of entries) {

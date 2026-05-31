@@ -11,6 +11,7 @@ import { PolicyDslSchema } from './policy-dsl';
 import { SinkConfigSchema } from './sink';
 import { CustomDetectorSpecSchema } from './custom-detector';
 import { CustomComplianceFrameworkSchema } from './custom-compliance';
+import { TenantOntologyNodeSchema } from './custom-ontology';
 
 export const DeploymentModeSchema = z.enum([
   'dev',
@@ -119,6 +120,14 @@ export const TenantConfigSchema = z.object({
    * at the API layer to avoid shadowing built-ins.
    */
   customComplianceFrameworks: z.array(CustomComplianceFrameworkSchema).max(20).default([]),
+  /**
+   * Tenant-scoped ontology nodes — TENANT.* namespace. Custom detectors
+   * and custom compliance controls reference these from their `ontology[]`
+   * fields; the coverage map surfaces them on this tenant's view alongside
+   * the canonical AAT-T* nodes. Customers who never register a tenant
+   * node see the unchanged AAT-T-only coverage map.
+   */
+  ontologyNodes: z.array(TenantOntologyNodeSchema).max(100).default([]),
   observability: z.object({
     otlp: z.object({
       enabled: z.boolean().default(false),
