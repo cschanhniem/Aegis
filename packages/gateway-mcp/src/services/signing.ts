@@ -152,4 +152,18 @@ export class SigningService {
     const { keyId, publicKeyPem } = this.ensureKey();
     return { key_id: keyId, public_key_pem: publicKeyPem };
   }
+
+  /** PEM-encoded public key. Convenience accessor for components (e.g.
+   *  AgentIdCardService) that need the raw PEM string for kid derivation
+   *  or claim embedding. */
+  publicKeyPem(): string {
+    return this.ensureKey().publicKeyPem;
+  }
+
+  /** Underlying Ed25519 private key. ONLY used inside the gateway process
+   *  by services that need to call crypto.sign() directly (e.g. JWT
+   *  signing). Never serialized; never leaves the runtime. */
+  privateKey(): KeyObject {
+    return this.ensureKey().privateKey;
+  }
 }

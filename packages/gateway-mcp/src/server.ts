@@ -73,6 +73,7 @@ import { BudgetAPI } from './api/budget';
 import { OtlpExporterService } from './services/otlp-exporter';
 import { ObservabilityAPI } from './api/observability';
 import { AgentRegistryService } from './services/agent-registry';
+import { AgentIdCardService } from './services/agent-id-card';
 import { CustomDetectorService } from './services/custom-detector-service';
 import { CustomDetectorAPI } from './api/custom-detectors';
 import { TemplateRegistryService } from './services/template-registry';
@@ -185,6 +186,7 @@ async function main() {
     detectors.register(new AnomalyDetectorPlugin(anomalyDetector, profileManager));
   }
   const agentRegistry = new AgentRegistryService(db, logger);
+  const agentIdCards  = new AgentIdCardService(new SigningService(db, logger), agentRegistry);
   const budgetGuard = new BudgetGuardService(db, tenantConfig, logger, agentRegistry);
   detectors.register(new BudgetDetector(budgetGuard));
   detectors.register(new ToolScopeDetector(agentRegistry));
@@ -482,7 +484,7 @@ async function main() {
   app.use('/api/v1/policies',  requireAuth, new PolicyAPI(db, policyEngine, logger).router);
   app.use('/api/v1/approvals', requireAuth, new ApprovalAPI(db, logger).router);
   app.use('/api/v1/webhooks',  requireAuth, new WebhookAPI(webhooks).router);
-  app.use('/api/v1/agents',    requireAuth, new AgentsAPI(db, logger, agentRegistry, auditLog).router);
+  app.use('/api/v1/agents',    requireAuth, new AgentsAPI(db, logger, agentRegistry, auditLog, agentIdCards).router);
   app.use('/api/v1/proxy',     requireAuth, new ProxyRegistryAPI(db, logger).router);
 
   // Enterprise admin routes (auth + feature gate)

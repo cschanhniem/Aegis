@@ -38,7 +38,8 @@ function setup(): { db: Database.Database; guard: BudgetGuardService; tc: Tenant
       secret_hash TEXT, public_key_pem TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-      last_seen_at TEXT
+      last_seen_at TEXT,
+      capabilities TEXT, provenance TEXT
     );
     INSERT INTO organizations (id, name, slug, plan) VALUES ('default', 'd', 'd', 'community');
   `);

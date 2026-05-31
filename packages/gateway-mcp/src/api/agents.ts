@@ -9,6 +9,7 @@ import {
 } from '@agentguard/core-schema';
 import { AgentRegistryService } from '../services/agent-registry';
 import { AuditLogService } from './../services/audit-log';
+import { AgentIdCardService } from '../services/agent-id-card';
 
 // agent_id is supplied by SDKs and is typically a UUID, but legacy callers
 // may use slug-like identifiers. Accept either, reject anything else so we
@@ -31,6 +32,7 @@ export class AgentsAPI {
     private logger: Logger,
     private registry: AgentRegistryService,
     private audit: AuditLogService,
+    private idCards: AgentIdCardService,
   ) {
     this.router = Router();
     this.registerRoutes();
@@ -280,6 +282,41 @@ export class AgentsAPI {
         ip_address: req.ip,
       });
       res.json(r);
+    });
+
+    // ── AEGIS Agent ID v1 (signed JWT identity card) ────────────────────
+
+    // Mint a fresh ID card JWT for this agent. The JWT carries the
+    // agent's current capability + provenance snapshot, signed with the
+    // gateway's Ed25519 evidence key. Default TTL 24h, capped 30 days.
+    this.router.post('/:agentId/id-card', (req: Request, res: Response) => {
+      const orgId = orgIdOf(req);
+      const ttl = typeof req.body?.ttl_sec === 'number' ? req.body.ttl_sec : undefined;
+      const result = this.idCards.mint({
+        orgId,
+        agentId: req.params.agentId,
+        mint: ttl ? { ttl_sec: ttl } : undefined,
+      });
+      if (!result) return res.status(404).json({ error: 'agent not found' });
+      this.audit.log({
+        org_id: orgId,
+        action: 'apikey.create',
+        resource_type: 'agent',
+        resource_id: req.params.agentId,
+        details: { artifact: 'id-card', kid: result.kid, ttl_sec: ttl ?? 86400 },
+        ip_address: req.ip,
+      });
+      res.status(201).json(result);
+    });
+
+    // Verify a JWT and return decoded claims + agent current status.
+    // Anyone with network access can call — this is also the online OCSP-
+    // style check downstream services use before trusting an agent
+    // request that carries a JWT. Body: { token: "<jwt>" }.
+    this.router.post('/id-card/verify', (req: Request, res: Response) => {
+      const token = typeof req.body?.token === 'string' ? req.body.token : '';
+      const result = this.idCards.verify(token);
+      res.json(result);
     });
 
     // Soft delete — status flips to 'deprecated'. Existing audit rows

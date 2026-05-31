@@ -35,6 +35,11 @@ function mintSecret(): string {
   return `${SECRET_PREFIX}${randomBytes(24).toString('base64url')}`;
 }
 
+function safeParseJson<T = unknown>(s: string | null | undefined): T | undefined {
+  if (!s) return undefined;
+  try { return JSON.parse(s) as T; } catch { return undefined; }
+}
+
 function rowToAgent(row: any): RegisteredAgent {
   return {
     id: row.id,
@@ -48,6 +53,8 @@ function rowToAgent(row: any): RegisteredAgent {
     status: row.status as AgentStatus,
     has_secret: !!row.secret_hash,
     has_public_key: !!row.public_key_pem,
+    capabilities: safeParseJson<any>(row.capabilities),
+    provenance: safeParseJson<any>(row.provenance),
     created_at: row.created_at,
     updated_at: row.updated_at,
     last_seen_at: row.last_seen_at ?? undefined,
@@ -87,6 +94,8 @@ export class AgentRegistryService {
 
     const declared = opts.req.declared_tools ? JSON.stringify(opts.req.declared_tools) : null;
     const envs = opts.req.environments ? JSON.stringify(opts.req.environments) : null;
+    const capabilities = opts.req.capabilities ? JSON.stringify(opts.req.capabilities) : null;
+    const provenance   = opts.req.provenance   ? JSON.stringify(opts.req.provenance)   : null;
 
     if (existing) {
       this.db.prepare(
@@ -96,6 +105,8 @@ export class AgentRegistryService {
            status = 'active',
            secret_hash = COALESCE(?, secret_hash),
            public_key_pem = ?,
+           capabilities = ?,
+           provenance = ?,
            updated_at = datetime('now')
          WHERE id = ?`,
       ).run(
@@ -108,6 +119,8 @@ export class AgentRegistryService {
         envs ?? existing.environments,
         secretHash,
         opts.req.public_key_pem ?? existing.public_key_pem ?? null,
+        capabilities ?? existing.capabilities ?? null,
+        provenance   ?? existing.provenance   ?? null,
         id,
       );
     } else {
@@ -115,8 +128,9 @@ export class AgentRegistryService {
         `INSERT INTO agents
            (id, org_id, name, description, owner_email,
             declared_tools, max_cost_daily_usd, environments,
-            status, secret_hash, public_key_pem)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`,
+            status, secret_hash, public_key_pem,
+            capabilities, provenance)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)`,
       ).run(
         id, opts.orgId,
         opts.req.name ?? null,
@@ -124,6 +138,7 @@ export class AgentRegistryService {
         opts.req.owner_email ?? null,
         declared, opts.req.max_cost_daily_usd ?? null, envs,
         secretHash, opts.req.public_key_pem ?? null,
+        capabilities, provenance,
       );
     }
 
@@ -194,6 +209,12 @@ export class AgentRegistryService {
     const envs = opts.req.environments !== undefined
       ? JSON.stringify(opts.req.environments)
       : existing.environments;
+    const capabilities = opts.req.capabilities !== undefined
+      ? (opts.req.capabilities === null ? null : JSON.stringify(opts.req.capabilities))
+      : existing.capabilities;
+    const provenance = opts.req.provenance !== undefined
+      ? (opts.req.provenance === null ? null : JSON.stringify(opts.req.provenance))
+      : existing.provenance;
 
     this.db.prepare(
       `UPDATE agents SET
@@ -205,6 +226,8 @@ export class AgentRegistryService {
          environments = ?,
          status = COALESCE(?, status),
          public_key_pem = CASE WHEN ? THEN ? ELSE public_key_pem END,
+         capabilities = ?,
+         provenance = ?,
          updated_at = datetime('now')
        WHERE id = ?`,
     ).run(
@@ -218,6 +241,8 @@ export class AgentRegistryService {
       opts.req.status ?? null,
       opts.req.public_key_pem !== undefined ? 1 : 0,
       opts.req.public_key_pem ?? null,
+      capabilities,
+      provenance,
       opts.agentId,
     );
     return this.get(opts.agentId);

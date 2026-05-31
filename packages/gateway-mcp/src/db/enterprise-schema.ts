@@ -207,6 +207,10 @@ export function initializeEnterpriseSchema(db: Database.Database): void {
   const orgMigrations = [
     `ALTER TABLE traces ADD COLUMN org_id TEXT DEFAULT 'default'`,
     `CREATE INDEX IF NOT EXISTS idx_traces_org ON traces(org_id)`,
+    // Agent registry capability + provenance extension (AEGIS Agent ID v1)
+    `ALTER TABLE agents ADD COLUMN capabilities TEXT`,
+    `ALTER TABLE agents ADD COLUMN provenance TEXT`,
+    `CREATE INDEX IF NOT EXISTS idx_agents_spawned_by ON agents(json_extract(provenance, '$.spawned_by'))`,
   ];
 
   for (const sql of orgMigrations) {
