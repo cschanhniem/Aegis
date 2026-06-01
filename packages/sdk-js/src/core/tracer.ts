@@ -34,7 +34,10 @@ export class AgentGuard {
       // the caller didn't supply them explicitly.
       apiKey: '',
       agentSecret: '',
+      agentToken: '',
       sessionId: '',
+      buildArtifact: '',
+      sourceCommit: '',
       ...config,
     };
     this.agentId = config.agentId;

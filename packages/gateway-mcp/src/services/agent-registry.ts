@@ -145,21 +145,43 @@ export class AgentRegistryService {
     return { agent: this.get(id)!, secret };
   }
 
-  /** Called from the hot path on every agent sighting. Idempotent. */
-  touch(opts: { orgId: string; agentId: string }): void {
+  /** Called from the hot path on every agent sighting. Idempotent.
+   *  Optionally backfills provenance fields when the SDK reported them
+   *  via X-AEGIS-Build-Artifact / X-AEGIS-Source-Commit and the row's
+   *  provenance is still empty. */
+  touch(opts: { orgId: string; agentId: string; provenance?: { build_artifact?: string; source_commit?: string } }): void {
     try {
       const row = this.getRow(opts.agentId);
       if (row) {
         this.db.prepare(
           `UPDATE agents SET last_seen_at = datetime('now') WHERE id = ?`,
         ).run(opts.agentId);
+        // Backfill provenance fields if SDK reported them and we don't
+        // have them yet. Operator-set provenance is never overwritten.
+        if (opts.provenance && !row.provenance) {
+          const next: any = {};
+          if (opts.provenance.build_artifact) next.build_artifact = opts.provenance.build_artifact;
+          if (opts.provenance.source_commit)  next.source_commit  = opts.provenance.source_commit;
+          if (Object.keys(next).length > 0) {
+            this.db.prepare(
+              `UPDATE agents SET provenance = ?, updated_at = datetime('now') WHERE id = ?`,
+            ).run(JSON.stringify(next), opts.agentId);
+          }
+        }
         return;
       }
-      // First sighting → auto-record as unregistered.
+      // First sighting → auto-record as unregistered, with provenance if
+      // the SDK reported any.
+      const prov = opts.provenance && (opts.provenance.build_artifact || opts.provenance.source_commit)
+        ? JSON.stringify({
+            build_artifact: opts.provenance.build_artifact,
+            source_commit: opts.provenance.source_commit,
+          })
+        : null;
       this.db.prepare(
-        `INSERT OR IGNORE INTO agents (id, org_id, status, last_seen_at)
-         VALUES (?, ?, 'unregistered', datetime('now'))`,
-      ).run(opts.agentId, opts.orgId);
+        `INSERT OR IGNORE INTO agents (id, org_id, status, last_seen_at, provenance)
+         VALUES (?, ?, 'unregistered', datetime('now'), ?)`,
+      ).run(opts.agentId, opts.orgId, prov);
     } catch (err) {
       this.logger.warn({ err: (err as Error).message, agentId: opts.agentId }, 'agent touch failed');
     }
@@ -182,8 +204,11 @@ export class AgentRegistryService {
      *  AgentIdCardService.verify() first; this just plumbs through
      *  the result so authorize() can decide on attribution). */
     presentedJwtValid?: boolean;
+    /** SDK-reported build provenance — backfilled into the row on first
+     *  sighting / when the row had no provenance yet. */
+    provenance?: { build_artifact?: string; source_commit?: string };
   }): AuthorizeResult | null {
-    this.touch(opts);
+    this.touch({ orgId: opts.orgId, agentId: opts.agentId, provenance: opts.provenance });
     const agent = this.get(opts.agentId);
     if (!agent) return null;   // touch should have created it; defensive
 

@@ -141,11 +141,16 @@ export class ProxyHandler {
     let attributionStrength: 'strong' | 'weak' = 'weak';
     if (this.deps.agentRegistry) {
       const presentedSecret = headers['x-aegis-agent-secret'];
+      const buildArtifact = headers['x-aegis-build-artifact'];
+      const sourceCommit  = headers['x-aegis-source-commit'];
       const authz = this.deps.agentRegistry.authorize({
         orgId: auth.orgId,
         agentId: ctx.agentId,
         presentedSecret,
         presentedJwtValid: jwtValid,
+        provenance: (buildArtifact || sourceCommit)
+          ? { build_artifact: buildArtifact, source_commit: sourceCommit }
+          : undefined,
       });
       if (authz?.blocked) {
         res.status(403).json({

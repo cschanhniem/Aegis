@@ -20,6 +20,8 @@ function buildHeaders(config: AgentGuardConfig): Record<string, string> {
   if (apiKey) headers['x-api-key'] = apiKey;
   const agentSecret = config.agentSecret || env.AEGIS_AGENT_SECRET || env.AGENTGUARD_AGENT_SECRET;
   if (agentSecret) headers['x-aegis-agent-secret'] = agentSecret;
+  const agentToken = config.agentToken || env.AEGIS_AGENT_TOKEN;
+  if (agentToken) headers['x-aegis-agent-token'] = agentToken;
   const sessionId = config.sessionId || env.AEGIS_SESSION_ID;
   if (sessionId) headers['x-aegis-session-id'] = sessionId;
   return headers;

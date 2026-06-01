@@ -41,10 +41,26 @@ export interface AgentGuardConfig {
    */
   agentSecret?: string;
   /**
+   * AEGIS Agent ID v1 JWT (signed by the gateway). When present, the
+   * SDK forwards it as X-AEGIS-Agent-Token; the gateway uses the JWT's
+   * sub claim as the agent identity (overriding any X-AEGIS-Agent-Id
+   * header). Falls back to env AEGIS_AGENT_TOKEN.
+   * Stronger proof of identity than agentSecret.
+   */
+  agentToken?: string;
+  /**
    * Optional session id for cross-agent correlation. Falls back to env
    * AEGIS_SESSION_ID.
    */
   sessionId?: string;
+  /**
+   * Build-time provenance — sent on registration / first sighting so the
+   * agent's ID card carries the build_artifact + source_commit fields.
+   * SDK auto-fills from AEGIS_BUILD_ARTIFACT + AEGIS_SOURCE_COMMIT
+   * (or BUILD_ARTIFACT / GIT_COMMIT_SHA / SOURCE_COMMIT env vars).
+   */
+  buildArtifact?: string;
+  sourceCommit?: string;
 }
 
 export interface TraceInput {

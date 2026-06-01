@@ -72,6 +72,31 @@ class AgentGuardConfig(BaseModel):
             "Falls back to env AEGIS_AGENT_SECRET / AGENTGUARD_AGENT_SECRET."
         ),
     )
+    agent_token: Optional[str] = Field(
+        default=None,
+        description=(
+            "AEGIS Agent ID v1 JWT signed by the gateway. When set, the SDK "
+            "forwards it as X-AEGIS-Agent-Token; the gateway uses the JWT's "
+            "sub claim as the agent identity (overriding any header-claimed "
+            "agent_id). Stronger proof than agent_secret. "
+            "Falls back to env AEGIS_AGENT_TOKEN."
+        ),
+    )
+    build_artifact: Optional[str] = Field(
+        default=None,
+        description=(
+            "Container image / binary SHA-256, e.g. 'sha256:abc123...'. "
+            "Reported on first sighting so the ID card carries build "
+            "provenance. Falls back to env AEGIS_BUILD_ARTIFACT or BUILD_ARTIFACT."
+        ),
+    )
+    source_commit: Optional[str] = Field(
+        default=None,
+        description=(
+            "Source URI of the build, typically 'git+<repo>@<commit-sha>'. "
+            "Falls back to env AEGIS_SOURCE_COMMIT or GIT_COMMIT_SHA."
+        ),
+    )
 
     # Blocking mode — pre-execution policy enforcement
     blocking_mode: bool = Field(

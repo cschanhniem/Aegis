@@ -38,12 +38,34 @@ def _identity_headers(config: AgentGuardConfig) -> dict:
     )
     if agent_secret:
         headers["x-aegis-agent-secret"] = agent_secret
+    agent_token = (
+        getattr(config, "agent_token", None)
+        or os.environ.get("AEGIS_AGENT_TOKEN")
+    )
+    if agent_token:
+        headers["x-aegis-agent-token"] = agent_token
     session_id = (
         getattr(config, "session_id", None)
         or os.environ.get("AEGIS_SESSION_ID")
     )
     if session_id:
         headers["x-aegis-session-id"] = session_id
+    # Build provenance — sent on every call (cheap, lets the gateway
+    # auto-fill the agent's provenance on first sighting).
+    build_artifact = (
+        getattr(config, "build_artifact", None)
+        or os.environ.get("AEGIS_BUILD_ARTIFACT")
+        or os.environ.get("BUILD_ARTIFACT")
+    )
+    if build_artifact:
+        headers["x-aegis-build-artifact"] = build_artifact
+    source_commit = (
+        getattr(config, "source_commit", None)
+        or os.environ.get("AEGIS_SOURCE_COMMIT")
+        or os.environ.get("GIT_COMMIT_SHA")
+    )
+    if source_commit:
+        headers["x-aegis-source-commit"] = source_commit
     return headers
 
 

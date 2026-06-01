@@ -34,7 +34,7 @@ const HOP_BY_HOP = new Set([
   'keep-alive', 'te', 'trailer', 'upgrade', 'proxy-connection',
   'expect',
 ]);
-const AEGIS_HEADERS = ['x-aegis-key', 'x-aegis-agent-id', 'x-aegis-agent-secret', 'x-aegis-agent-token', 'x-aegis-session-id'];
+const AEGIS_HEADERS = ['x-aegis-key', 'x-aegis-agent-id', 'x-aegis-agent-secret', 'x-aegis-agent-token', 'x-aegis-session-id', 'x-aegis-build-artifact', 'x-aegis-source-commit'];
 
 export class AnthropicMessagesAdapter implements ProxyAdapter {
   readonly name = 'anthropic-messages' as const;
