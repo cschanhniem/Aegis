@@ -166,8 +166,23 @@ export class AgentRegistryService {
   }
 
   /** Auth-time identity check. Returns block decision + attribution
-   *  strength for the audit layer. */
-  authorize(opts: { orgId: string; agentId: string; presentedSecret?: string }): AuthorizeResult | null {
+   *  strength for the audit layer.
+   *
+   *  Identity material precedence:
+   *    1. `presentedJwt`  — signed AEGIS Agent ID card (strong)
+   *    2. `presentedSecret` — legacy shared secret (still strong, but
+   *       no offline-verifiable claim payload)
+   *    3. neither — falls through to the agent's `has_secret` gate:
+   *       agents with a secret REQUIRE one to pass. */
+  authorize(opts: {
+    orgId: string;
+    agentId: string;
+    presentedSecret?: string;
+    /** Already-verified JWT claim payload (the caller invokes
+     *  AgentIdCardService.verify() first; this just plumbs through
+     *  the result so authorize() can decide on attribution). */
+    presentedJwtValid?: boolean;
+  }): AuthorizeResult | null {
     this.touch(opts);
     const agent = this.get(opts.agentId);
     if (!agent) return null;   // touch should have created it; defensive
@@ -178,6 +193,14 @@ export class AgentRegistryService {
     }
     if (agent.status === 'deprecated') {
       return { agent, blocked: true, blockReason: 'agent deprecated', attributionStrength: 'weak' };
+    }
+
+    // A valid JWT is a strictly stronger proof of identity than the
+    // shared secret (the JWT carries claims signed by the gateway and
+    // verifies offline). If a JWT verified, treat the call as
+    // authenticated regardless of whether a secret was also configured.
+    if (opts.presentedJwtValid) {
+      return { agent, blocked: false, attributionStrength: 'strong' };
     }
 
     // If a secret is required on the row but the caller didn't present

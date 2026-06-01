@@ -35,7 +35,7 @@ const HOP_BY_HOP = new Set([
   'keep-alive', 'te', 'trailer', 'upgrade', 'proxy-connection',
   'expect',
 ]);
-const AEGIS_HEADERS = ['x-aegis-key', 'x-aegis-agent-id', 'x-aegis-agent-secret', 'x-aegis-session-id'];
+const AEGIS_HEADERS = ['x-aegis-key', 'x-aegis-agent-id', 'x-aegis-agent-secret', 'x-aegis-agent-token', 'x-aegis-session-id'];
 
 function parseJsonArgs(s: unknown): Record<string, unknown> {
   if (typeof s !== 'string') return (s as any) ?? {};

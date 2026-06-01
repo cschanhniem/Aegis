@@ -24,6 +24,7 @@ import { DetectorRegistry } from '../detectors/registry';
 import { AuditLogService } from '../services/audit-log';
 import { calculateCost } from '../services/cost';
 import { AgentRegistryService } from '../services/agent-registry';
+import { AgentIdCardService } from '../services/agent-id-card';
 import { CrossAgentCorrelatorService } from '../services/cross-agent-correlator';
 import { TaintTrackerService } from '../services/taint-tracker';
 import {
@@ -45,6 +46,13 @@ export interface ProxyHandlerDeps {
    *  its required secret. Backward-compatible: missing agentRegistry =
    *  no identity enforcement. */
   agentRegistry?: AgentRegistryService;
+  /** Optional — when provided, the proxy accepts X-AEGIS-Agent-Token
+   *  (AEGIS Agent ID v1 JWT) as an alternative to the legacy
+   *  X-AEGIS-Agent-Secret. Valid JWT → strong attribution. The agent_id
+   *  resolved comes from the JWT's sub claim, not the X-AEGIS-Agent-Id
+   *  header — so a stolen agent_id can't be paired with a JWT for a
+   *  different agent. */
+  agentIdCards?: AgentIdCardService;
   /** Optional — when provided, every proxy evaluation observes
    *  signals so the cross-agent detector can spot multi-agent
    *  inheritance on subsequent calls in the same session. */
@@ -98,7 +106,32 @@ export class ProxyHandler {
     }
 
     const headers = lowerCaseHeaders(req.headers);
-    const ctx = adapter.extractAegisContext(headers, req.body);
+    let ctx = adapter.extractAegisContext(headers, req.body);
+
+    // ── JWT identity (AEGIS Agent ID v1) ─────────────────────────────
+    // If the caller presented an X-AEGIS-Agent-Token, verify it and
+    // resolve the agent identity from the JWT's `sub` claim — not the
+    // header-claimed X-AEGIS-Agent-Id. This means a stolen agent_id
+    // header can't be paired with a JWT for a different agent.
+    let jwtValid = false;
+    let agentTokenInfo: { kid?: string; exp?: number } | undefined;
+    const presentedJwt = headers['x-aegis-agent-token'];
+    if (presentedJwt && this.deps.agentIdCards) {
+      const v = this.deps.agentIdCards.verify(presentedJwt);
+      if (v.ok && v.claims) {
+        jwtValid = true;
+        // JWT sub WINS over the header agent id — fewer ways to spoof.
+        ctx = { ...ctx, agentId: v.claims.sub, sessionId: ctx.sessionId };
+        agentTokenInfo = { exp: v.claims.exp };
+      } else {
+        // Caller sent a token but it's bad — fail fast rather than fall
+        // through to header-claimed identity.
+        res.status(403).json({
+          error: { code: 'AGENT_TOKEN_INVALID', message: v.reason ?? 'JWT verification failed' },
+        });
+        return;
+      }
+    }
 
     // Agent identity gate. Auto-records unknown agent_ids as 'unregistered'
     // (backward compat); blocks if the agent is suspended/deprecated or
@@ -112,6 +145,7 @@ export class ProxyHandler {
         orgId: auth.orgId,
         agentId: ctx.agentId,
         presentedSecret,
+        presentedJwtValid: jwtValid,
       });
       if (authz?.blocked) {
         res.status(403).json({
@@ -223,6 +257,9 @@ export class ProxyHandler {
           upstream_ms: upstreamMs,
           upstream_status: (upstreamRes as globalThis.Response).status,
           attribution_strength: attributionStrength,
+          identity_proof: agentTokenInfo
+            ? { type: 'jwt', token_exp: agentTokenInfo.exp }
+            : (headers['x-aegis-agent-secret'] ? { type: 'secret' } : { type: 'header-only' }),
         },
         cost: {
           input_tokens: usage?.promptTokens ?? 0,

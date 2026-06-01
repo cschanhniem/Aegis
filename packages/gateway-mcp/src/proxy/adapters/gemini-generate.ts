@@ -45,7 +45,7 @@ const HOP_BY_HOP = new Set([
   'host', 'connection', 'content-length', 'transfer-encoding',
   'keep-alive', 'te', 'trailer', 'upgrade', 'proxy-connection', 'expect',
 ]);
-const AEGIS_HEADERS = ['x-aegis-key', 'x-aegis-agent-id', 'x-aegis-agent-secret', 'x-aegis-session-id'];
+const AEGIS_HEADERS = ['x-aegis-key', 'x-aegis-agent-id', 'x-aegis-agent-secret', 'x-aegis-agent-token', 'x-aegis-session-id'];
 
 export class GeminiGenerateAdapter implements ProxyAdapter {
   readonly name = 'gemini-generate' as const;

@@ -557,6 +557,7 @@ async function main() {
       new GeminiGenerateAdapter(),
     ],
     agentRegistry,
+    agentIdCards,
     crossAgent,
     taintTracker,
   });
