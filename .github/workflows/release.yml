@@ -323,15 +323,18 @@ jobs:
         with:
           python-version: '3.11'
 
-      # better-sqlite3 + other native modules go through node-gyp →
-      # MSBuild on Windows. The windows-latest runner ships VS 2022
-      # Build Tools but node-gyp needs an explicit MSVS version hint
-      # when there's ambiguity. Pinning here keeps prebuild + fallback
-      # paths deterministic.
-      - name: Configure npm for Windows native builds
+      # node-gyp picks up MSVS version from the GYP_MSVS_VERSION env
+      # variable (NOT from `npm config` — that's the trap the previous
+      # attempt fell into). windows-latest runners ship VS 2022 as the
+      # only installed compiler, so node-gyp will auto-detect when env
+      # is unset; we set it anyway to be deterministic across runner
+      # image rolls.
+      #
+      # legacy-peer-deps / fund / audit are valid npm options, set
+      # separately for forward-compat with newer npm versions.
+      - name: Configure npm + node-gyp for Windows
         shell: bash
         run: |
-          npm config set msvs_version 2022
           npm config set legacy-peer-deps true
           npm config set fund false
           npm config set audit false
@@ -349,6 +352,8 @@ jobs:
 
       - name: Install monorepo deps
         shell: bash
+        env:
+          GYP_MSVS_VERSION: '2022'
         run: npm install --legacy-peer-deps
 
       # Explicit rebuild for better-sqlite3 in case the prebuild swap
@@ -357,6 +362,8 @@ jobs:
       # local Node ABI, which is what Tauri ultimately bundles.
       - name: Rebuild native modules against local Node
         shell: bash
+        env:
+          GYP_MSVS_VERSION: '2022'
         run: npm rebuild better-sqlite3
 
       - name: Install Rust toolchain
