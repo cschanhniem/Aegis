@@ -293,38 +293,71 @@ jobs:
           if-no-files-found: warn
 
   # ────────────────────────────────────────────────────────────────────
-  # Desktop app — Windows · x64  (provisional / WIP)
-  # First runs are expected to fail — prepare-sidecars.sh assumes a
-  # .tar.gz Node tarball but the Windows binary ships as .zip, and the
-  # gateway's better-sqlite3 native module needs VS Build Tools that
-  # aren't yet wired through the script. `continue-on-error: true` keeps
-  # the failure from blocking the macOS asset upload while we iterate.
+  # Desktop app — Windows · x64
+  # prepare-sidecars.mjs handles the .zip vs .tar.gz split + PowerShell
+  # Expand-Archive fallback. better-sqlite3 native build runs against
+  # VS 2022 Build Tools (pre-installed on windows-latest); we pin the
+  # msvs_version + force `npm rebuild better-sqlite3` against the
+  # local Node ABI so prebuild/ABI mismatches surface deterministically.
+  # NO continue-on-error — the build is expected to succeed; a failure
+  # blocks the release deliberately.
   # ────────────────────────────────────────────────────────────────────
   desktop-windows-x64:
-    name: Build desktop (Windows x64) [WIP]
+    name: Build desktop (Windows x64)
     runs-on: windows-latest
     needs: [create-release]
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.create-release.result == 'success') }}
     timeout-minutes: 45
-    continue-on-error: true
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node 20
+      - name: Use Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Set up Python 3.11 (node-gyp distutils compat)
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      # better-sqlite3 + other native modules go through node-gyp →
+      # MSBuild on Windows. The windows-latest runner ships VS 2022
+      # Build Tools but node-gyp needs an explicit MSVS version hint
+      # when there's ambiguity. Pinning here keeps prebuild + fallback
+      # paths deterministic.
+      - name: Configure npm for Windows native builds
+        shell: bash
+        run: |
+          npm config set msvs_version 2022
+          npm config set legacy-peer-deps true
+          npm config set fund false
+          npm config set audit false
+
+      # Print toolchain versions up-front — when something fails this
+      # is the single most useful piece of triage data.
+      - name: Toolchain versions
+        shell: bash
+        run: |
+          node --version
+          npm --version
+          python --version
+          where cl.exe || true
+          where MSBuild.exe || true
+
       - name: Install monorepo deps
         shell: bash
         run: npm install --legacy-peer-deps
+
+      # Explicit rebuild for better-sqlite3 in case the prebuild swap
+      # was rejected (different Node ABI than the prebuild expected).
+      # On Windows the rebuild compiles the native bindings against the
+      # local Node ABI, which is what Tauri ultimately bundles.
+      - name: Rebuild native modules against local Node
+        shell: bash
+        run: npm rebuild better-sqlite3
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -355,6 +388,7 @@ jobs:
           fail_on_unmatched_files: false
 
       - name: Upload as workflow artifact (always)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: aegis-desktop-${{ github.run_id }}-${{ github.job }}
