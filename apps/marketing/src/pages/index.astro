@@ -1,0 +1,356 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="AEGIS — runtime safety for AI agents"
+  description="Stop hallucinated tool calls before they hit production. Open-source agent firewall — zero code change, cryptographic audit, multi-tenant, SOC 2 framework. MIT licensed."
+>
+  <Header current="home" />
+
+  <!-- ── HERO ─────────────────────────────────────────────────────── -->
+  <main>
+    <section class="hero">
+      <div class="container">
+        <p class="eyebrow">Open-source · MIT licensed · v0.1.0</p>
+        <h1>
+          The runtime <em>safety layer</em><br/>
+          for AI agents.
+        </h1>
+        <p class="lede">
+          Every tool call your agent makes — classified, run through
+          rules / ML / LLM-judge / DSL, and matched against per-tenant
+          policy with fail-safe semantics. Before execution. Zero code
+          change.
+        </p>
+        <div class="hero-cta">
+          <a href="https://app.aegis.dev/signup" class="btn">Start free → app.aegis.dev</a>
+          <a href="https://github.com/Justin0504/Aegis" class="btn-secondary" target="_blank" rel="noopener">View source</a>
+        </div>
+        <p class="hero-trust">
+          Self-hosted via Docker · Hosted SaaS · Enterprise on-prem
+          available · No credit card required for Free tier
+        </p>
+      </div>
+    </section>
+
+    <!-- ── ZERO CODE CHANGE ────────────────────────────────────────── -->
+    <section class="zero-code">
+      <div class="container">
+        <p class="section-eyebrow">Zero code change · 5 minute integration</p>
+        <h2>Two lines of env, no SDK rewrite.</h2>
+        <p class="lede-2">
+          AEGIS ships as an LLM egress proxy — point your existing
+          OpenAI / Anthropic / Mistral / Gemini SDK at the gateway URL
+          and every call flows through the detector chain, audit, and
+          transparency log. Your code stays untouched.
+        </p>
+        <div class="snippet-grid">
+          <div class="snippet">
+            <div class="snippet-label">Before</div>
+            <pre><code>import openai
+client = openai.OpenAI(
+    api_key="sk-xxxx"
+)</code></pre>
+          </div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="snippet">
+            <div class="snippet-label">After (env only)</div>
+            <pre><code><span class="hl">OPENAI_BASE_URL=https://gateway.aegis.dev/openai/v1
+AEGIS_API_KEY=aeg_xxx</span>
+
+# code unchanged</code></pre>
+          </div>
+        </div>
+        <p class="four-modes">
+          Four integration modes: <strong>LLM egress proxy</strong> (zero
+          code), <strong>SDK auto-instrument</strong> (1 line init),
+          <strong>MCP proxy</strong> (one config field), or
+          <strong>HTTP gateway</strong> (direct calls). Pick whichever
+          matches your stack.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── CAPABILITIES ──────────────────────────────────────────── -->
+    <section class="caps">
+      <div class="container">
+        <p class="section-eyebrow">What AEGIS does that the rest doesn't</p>
+        <h2>SOTA agent-security stack.</h2>
+
+        <div class="cap-grid">
+          <article class="cap">
+            <h3>Cryptographic audit</h3>
+            <p>RFC 6962 Merkle log + Sigstore-style witness cosignature.
+              Customers verify any past event offline against a cached
+              signed root — without trusting AEGIS infrastructure.</p>
+          </article>
+          <article class="cap">
+            <h3>Sequence-aware anomaly</h3>
+            <p>Per-agent n-gram language model over tool-call sequences
+              (Witten-Bell smoothing). Catches the adversarial-shuffle
+              attack class that independent-call scoring misses.</p>
+          </article>
+          <article class="cap">
+            <h3>Multi-agent collusion</h3>
+            <p>Cross-agent communication graph with handoff burst,
+              sensitive relay, and cycle detection. Targets the SOTA
+              failure mode named by Anthropic Agentic Misalignment 2025.</p>
+          </article>
+          <article class="cap">
+            <h3>Workflow-aware policy gen</h3>
+            <p>Scanner extracts LangGraph / CrewAI / AutoGen / Mastra /
+              Vercel AI topology. AI generator writes per-node policies
+              keyed on your real node ids — no inventing tool names.</p>
+          </article>
+          <article class="cap">
+            <h3>NIST AI RMF risk scoring</h3>
+            <p>Five-dimension capability scorer (action / egress /
+              secrets / pii / scale). 0-100 composite with LOW / MEDIUM
+              / HIGH / CRITICAL class and posture recommendations.</p>
+          </article>
+          <article class="cap">
+            <h3>Built-in PI corpus</h3>
+            <p>26 prompt-injection patterns × 6 categories from OWASP
+              LLM Top 10, Promptfoo, Anthropic 2025, GandalfPro.
+              Coverage report against your live policies.</p>
+          </article>
+          <article class="cap">
+            <h3>Counterfactual explainer</h3>
+            <p>When AEGIS blocks a call, it returns the minimum edit
+              that WOULD have passed, verified by re-running the
+              validator. NIST AI RMF + EU AI Act Art. 14 ready.</p>
+          </article>
+          <article class="cap">
+            <h3>Policy effectiveness</h3>
+            <p>Per-policy precision / recall / F1 over rolling window.
+              Signal each policy HEALTHY / TIGHTEN / RETIRE / PROBE so
+              operators retire noisy rules instead of acrobatic tuning.</p>
+          </article>
+        </div>
+
+        <p class="caps-foot">
+          See the <a href="https://github.com/Justin0504/Aegis/blob/main/CHANGELOG.md" rel="noopener">changelog</a>
+          for the full set — 1,129 tests across 80+ suites, 25/25
+          tables Postgres-ready, SCIM + SAML + OIDC for enterprise IdP.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── COMPARISON ────────────────────────────────────────────── -->
+    <section class="vs">
+      <div class="container">
+        <p class="section-eyebrow">How AEGIS compares</p>
+        <h2>Versus the AI-guardrail category.</h2>
+        <p class="lede-2">
+          The runtime safety layer for AI agents has converged on a
+          handful of capabilities. Here is what AEGIS does versus
+          Lakera Guard, Robust Intelligence (Cisco), Protect AI
+          Guardian, and Calypso AI.
+        </p>
+        <div class="vs-scroll">
+          <table>
+            <thead>
+              <tr><th>Capability</th><th>AEGIS</th><th>Others</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Cryptographic audit (Merkle + witness)</th><td class="y">Built-in, RFC 6962</td><td class="n">none</td></tr>
+              <tr><th scope="row">Sequence-aware anomaly</th><td class="y">n-gram LM, per-agent</td><td class="n">independent-call only</td></tr>
+              <tr><th scope="row">Multi-agent collusion detection</th><td class="y">3 signals</td><td class="n">single-agent only</td></tr>
+              <tr><th scope="row">Workflow-graph → per-node policy</th><td class="y">5 frameworks</td><td class="n">none</td></tr>
+              <tr><th scope="row">Counterfactual explainer</th><td class="y">Verified by re-validation</td><td class="p">partial / log-only</td></tr>
+              <tr><th scope="row">Custom AST scan rules</th><td class="y">Tree-sitter + YAML</td><td class="p">regex only</td></tr>
+              <tr><th scope="row">GenAI OpenTelemetry semconv</th><td class="y">Full + guardrail ext</td><td class="p">proprietary</td></tr>
+              <tr><th scope="row">SCIM 2.0 + SAML + OIDC</th><td class="y">All three</td><td class="p">one or the other</td></tr>
+              <tr><th scope="row">Policy effectiveness scoring</th><td class="y">P/R/F1 + retire signal</td><td class="n">none</td></tr>
+              <tr><th scope="row">License</th><td class="y">MIT</td><td class="n">closed source</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="vs-foot">
+          "Others" reflects the largest public documentation across
+          Lakera Guard, Robust Intelligence AI Firewall, Protect AI
+          Guardian, Calypso AI Moderator circa June 2026. Send
+          corrections to
+          <a href="mailto:security@aegis.dev">security@aegis.dev</a>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── CTA STRIP ─────────────────────────────────────────────── -->
+    <section class="cta-strip">
+      <div class="container">
+        <h2>Ship one env var. Block your first hallucinated tool call this afternoon.</h2>
+        <div class="cta-buttons">
+          <a href="https://app.aegis.dev/signup" class="btn">Start free</a>
+          <a href="/pricing" class="btn-secondary">See pricing</a>
+        </div>
+        <p class="muted small">
+          1,000 requests/month + 7-day audit retention on the Free
+          tier. No credit card. Self-host the same gateway via
+          <code>docker compose up</code> if you'd rather run it locally.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+
+  <style>
+    main { padding: 0; }
+    .hero { padding: 6rem 0 4rem; }
+    .eyebrow {
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 0.5rem;
+      font-weight: 500;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .lede {
+      max-width: 56ch;
+      font-size: 1.18rem;
+      color: var(--muted);
+      margin: 1.2rem 0 2rem;
+    }
+    .hero-cta {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .hero-trust {
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin: 0.8rem 0 0;
+    }
+
+    /* Zero code change */
+    .zero-code { padding: 4rem 0; border-top: 1px solid var(--hairline); }
+    .section-eyebrow {
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 0.5rem;
+      font-weight: 500;
+    }
+    .lede-2 {
+      max-width: 60ch;
+      font-size: 1.04rem;
+      color: var(--muted);
+      margin: 0 0 2rem;
+    }
+    .snippet-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: stretch;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .snippet {
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+    .snippet pre {
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 0;
+    }
+    .snippet-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+    .hl { background: var(--accent); color: var(--bg); padding: 0 2px; }
+    .arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      color: var(--muted);
+    }
+    .four-modes {
+      color: var(--muted);
+      font-size: 0.92rem;
+      max-width: 70ch;
+    }
+    .four-modes strong { color: var(--text); }
+    @media (max-width: 760px) {
+      .snippet-grid { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); }
+    }
+
+    /* Capability grid */
+    .caps { padding: 4rem 0; border-top: 1px solid var(--hairline); }
+    .cap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.4rem;
+      margin: 2rem 0 1.5rem;
+    }
+    .cap {
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      padding: 1.2rem 1.2rem;
+    }
+    .cap h3 { font-size: 1.1rem; margin: 0 0 0.5rem; }
+    .cap p { margin: 0; color: var(--muted); font-size: 0.93rem; line-height: 1.55; }
+    .caps-foot { color: var(--muted); margin-top: 1.5rem; font-size: 0.92rem; }
+
+    /* Comparison */
+    .vs { padding: 4rem 0; border-top: 1px solid var(--hairline); }
+    .vs-scroll { overflow-x: auto; }
+    .vs table {
+      width: 100%;
+      min-width: 620px;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+    }
+    .vs thead th {
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .vs tbody th[scope="row"] {
+      text-align: left;
+      font-weight: 500;
+      padding: 0.72rem 0.9rem;
+      color: var(--text);
+      width: 48%;
+    }
+    .vs tbody td { padding: 0.72rem 0.9rem; width: 26%; vertical-align: top; }
+    .vs tbody tr + tr { border-top: 1px solid var(--hairline); }
+    .vs tbody td.y { color: var(--text); font-weight: 500; }
+    .vs tbody td.y::before { content: "✓ "; color: var(--accent-positive); font-weight: 700; }
+    .vs tbody td.p { color: var(--muted); }
+    .vs tbody td.p::before { content: "◐ "; color: var(--accent-warn); font-weight: 700; }
+    .vs tbody td.n { color: var(--muted); }
+    .vs tbody td.n::before { content: "✗ "; color: var(--accent-error); font-weight: 700; }
+    .vs-foot { color: var(--muted); margin-top: 1.2rem; font-size: 0.82rem; max-width: 62ch; }
+
+    /* CTA strip */
+    .cta-strip {
+      padding: 4rem 0;
+      border-top: 1px solid var(--hairline);
+      background: var(--surface);
+    }
+    .cta-strip h2 { max-width: 22ch; margin-bottom: 1.5rem; }
+    .cta-buttons { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.86rem; max-width: 60ch; }
+  </style>
+</Layout>

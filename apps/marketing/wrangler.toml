@@ -1,0 +1,25 @@
+# Cloudflare Pages config for the AEGIS marketing site.
+#
+# Two ways to deploy:
+#
+#   1. Manual (via Cloudflare dashboard) — no API token needed.
+#      Push this repo to GitHub, then go to Cloudflare dashboard →
+#      Workers & Pages → Create application → Pages → Connect to Git
+#      → pick this repo → set the build settings as below.
+#
+#   2. CLI (via wrangler) — needs a Cloudflare API token.
+#      Generate at https://dash.cloudflare.com/profile/api-tokens
+#      with the "Cloudflare Pages — Edit" template, then:
+#         export CLOUDFLARE_API_TOKEN=…
+#         export CLOUDFLARE_ACCOUNT_ID=…
+#         npm run deploy
+#
+# Build settings (mirror these in the dashboard if going manual):
+#   - Build command:    npm run build
+#   - Build output:     dist
+#   - Root directory:   apps/marketing
+#   - Node version:     22 (set NODE_VERSION env to 22)
+
+name = "aegis-marketing"
+compatibility_date = "2026-06-09"
+pages_build_output_dir = "dist"

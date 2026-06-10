@@ -1,0 +1,80 @@
+---
+interface Props {
+  current?: 'home' | 'pricing' | 'docs' | 'security' | 'blog';
+}
+const { current } = Astro.props;
+---
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="brand" aria-label="AEGIS home">
+      <span class="mark" aria-hidden="true">⌬</span>
+      <span class="brand-name">AEGIS</span>
+    </a>
+    <nav class="primary">
+      <a href="/pricing"  class:list={[{ active: current === 'pricing' }]}>Pricing</a>
+      <a href="https://docs.aegis.dev"  rel="noopener">Docs</a>
+      <a href="/security" class:list={[{ active: current === 'security' }]}>Security</a>
+      <a href="https://github.com/Justin0504/Aegis" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <div class="cta">
+      <a href="https://app.aegis.dev/login" class="btn-secondary">Sign in</a>
+      <a href="https://app.aegis.dev/signup" class="btn">Start free</a>
+    </div>
+  </div>
+  <style>
+    .site-header {
+      border-bottom: 1px solid var(--hairline);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 50;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      color: var(--text);
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      letter-spacing: -0.01em;
+    }
+    .brand-name { font-weight: 400; }
+    .mark { font-size: 1.6rem; line-height: 1; }
+    .primary {
+      display: flex;
+      gap: 1.5rem;
+      margin-left: auto;
+      font-size: 0.95rem;
+    }
+    .primary a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.3rem 0;
+    }
+    .primary a:hover, .primary a.active {
+      color: var(--text);
+    }
+    .cta {
+      display: flex;
+      gap: 0.6rem;
+      margin-left: 1rem;
+    }
+    .cta .btn,
+    .cta .btn-secondary {
+      padding: 0.55rem 0.95rem;
+      font-size: 0.92rem;
+    }
+    @media (max-width: 760px) {
+      .header-inner { flex-wrap: wrap; gap: 1rem; }
+      .primary { order: 3; width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 1rem; }
+      .cta { margin-left: 0; }
+    }
+  </style>
+</header>
