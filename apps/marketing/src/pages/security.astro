@@ -1,0 +1,330 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+
+// Status table — keep this honest. Update when something ships. The
+// reason customers visit this page is to confirm what's REAL versus
+// roadmap; lying here will end the deal and the company.
+const certifications = [
+  { name: 'SOC 2 Type II',  status: 'in-progress', target: 'Q1 2027', vendor: 'Drata + CPA-firm audit', notes: 'Policies + evidence pipeline live; CPA engagement signed' },
+  { name: 'ISO/IEC 27001',  status: 'planned',     target: 'Q3 2027', vendor: '—', notes: 'Follows SOC 2 — same control set, additive review' },
+  { name: 'HIPAA BAA',      status: 'on-request',  target: '—',        vendor: '—', notes: 'Available to Enterprise tier on contract; ePHI handling pre-approved' },
+  { name: 'GDPR / DPA',     status: 'shipping',    target: 'now',      vendor: '—', notes: 'DPA template available at /dpa; data processor terms standard' },
+  { name: 'EU AI Act Art. 14 (transparency)', status: 'shipping', target: 'now', vendor: '—', notes: 'Counterfactual explainer + audit log meet decision-explainability requirement' },
+];
+
+const dataHandling = [
+  { topic: 'Encryption in transit',   value: 'TLS 1.3 + ALPN preferred; HSTS preload-eligible domains.' },
+  { topic: 'Encryption at rest',      value: 'AES-256 disk encryption on all managed deployments; SQLite + Postgres rows are not application-layer encrypted (workload requires regex/JSON predicates).' },
+  { topic: 'Hash algorithms',         value: 'SHA-256 for content fingerprints + transparency log leaf hashes. Ed25519 for transparency-log root signatures.' },
+  { topic: 'Secrets storage',         value: 'Hashed at rest (SHA-256). Bearer tokens & API keys are emitted exactly once; we cannot retrieve a key you lost.' },
+  { topic: 'PII handling',            value: 'Built-in PII detector runs on every trace ingestion. Detected fields are flagged on the trace + redacted from the cockpit view at the org admin’s option.' },
+  { topic: 'Data retention',          value: 'Per-plan (Free 7d / Pro 30d / Team 90d / Enterprise contractual). Customers can delete data via API or with a single request.' },
+  { topic: 'Sub-processors',          value: 'See https://aegis.dev/subprocessors. Notification on change ≥ 30 days advance.' },
+  { topic: 'Right to deletion',       value: 'Self-service via the cockpit; cascade across traces, audit log, transparency log, and DLQ.' },
+];
+
+const cryptoCapabilities = [
+  { name: 'RFC 6962 transparency log',  detail: 'Every audit event appends to a Merkle tree. Tree heads signed Ed25519. Customers cache signed roots locally for offline non-repudiation.' },
+  { name: 'Witness cosignature protocol', detail: 'Multiple independent signers verify the same tree head — Sigstore-style. Customers verify against ANY witness without trusting AEGIS infrastructure.' },
+  { name: 'Zero-dep offline verifier',   detail: 'A 245-line CLI (`tools/verify-log/index.mjs`) verifies inclusion + consistency proofs with no Node deps beyond the standard library. Runs in any air-gapped environment.' },
+  { name: 'Signed release artifacts',    detail: 'Every npm tarball, PyPI wheel, and gateway Docker image ships with an Ed25519 signature + CycloneDX SBOM + SLSA-compatible attestation. Pin trust on the public key once.' },
+];
+---
+
+<Layout
+  title="Security & Compliance — AEGIS"
+  description="AEGIS security posture, certifications, cryptographic audit, vulnerability disclosure, sub-processors. SOC 2 in progress, GDPR DPA available, RFC 6962 transparency log shipped."
+>
+  <Header current="security" />
+
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Security & Compliance</p>
+        <h1>Audit-ready by design.</h1>
+        <p class="lede">
+          AEGIS is the audit infrastructure for AI agents — it would be
+          embarrassing if our own posture were weaker than what we ship
+          to customers. This page lists exactly what's certified, what's
+          shipped, and what's in progress. Send corrections to
+          <a href="mailto:security@aegis.dev">security@aegis.dev</a>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── CERTIFICATIONS ──────────────────────────────────────────── -->
+    <section class="section">
+      <div class="container container-narrow">
+        <h2 id="certs">Certifications & frameworks</h2>
+        <div class="cert-grid">
+          {certifications.map(c => (
+            <article class={`cert ${c.status}`}>
+              <header>
+                <h3>{c.name}</h3>
+                <span class={`badge ${c.status}`}>{c.status}</span>
+              </header>
+              <dl>
+                <div><dt>Target</dt><dd>{c.target}</dd></div>
+                <div><dt>Vendor / auditor</dt><dd>{c.vendor}</dd></div>
+              </dl>
+              <p>{c.notes}</p>
+            </article>
+          ))}
+        </div>
+        <p class="callout">
+          <strong>Trust Center.</strong> A SafeBase / Whistic-style
+          single-page audit portal launches with the SOC 2 Type II
+          report. In the interim, enterprise customers under NDA can
+          request the policy bundle, network diagram, and detector
+          architecture brief from
+          <a href="mailto:security@aegis.dev">security@aegis.dev</a>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── CRYPTOGRAPHIC AUDIT ─────────────────────────────────────── -->
+    <section class="section alt">
+      <div class="container container-narrow">
+        <h2 id="crypto">Cryptographic audit primitives</h2>
+        <p class="lede-2">
+          Auditors don't trust vendors — they trust mathematics. Every
+          AEGIS deployment ships with cryptographic primitives that
+          make our own infrastructure non-repudiable to your team.
+        </p>
+        <div class="crypto-list">
+          {cryptoCapabilities.map(c => (
+            <article class="crypto">
+              <h3>{c.name}</h3>
+              <p>{c.detail}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DATA HANDLING ───────────────────────────────────────────── -->
+    <section class="section">
+      <div class="container container-narrow">
+        <h2 id="data">Data handling</h2>
+        <div class="data-table">
+          {dataHandling.map(d => (
+            <div class="data-row">
+              <div class="data-topic">{d.topic}</div>
+              <div class="data-value">{d.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VULN DISCLOSURE ─────────────────────────────────────────── -->
+    <section class="section alt">
+      <div class="container container-narrow">
+        <h2 id="disclosure">Vulnerability disclosure</h2>
+        <p>
+          We follow standard coordinated disclosure. If you find a
+          security issue, please email
+          <a href="mailto:security@aegis.dev"><strong>security@aegis.dev</strong></a>
+          (PGP key at
+          <a href="/.well-known/security.txt">.well-known/security.txt</a>)
+          with reproduction steps. We acknowledge within 48 hours and
+          target a fix within 30 days for HIGH/CRITICAL severity, 90
+          days otherwise. We credit you in the
+          <a href="https://github.com/Justin0504/Aegis/security/advisories" rel="noopener">advisories list</a>
+          unless you ask to stay anonymous.
+        </p>
+
+        <h3>What's in scope</h3>
+        <ul class="list">
+          <li>The hosted gateway at <code>gateway.aegis.dev</code></li>
+          <li>The cockpit app at <code>app.aegis.dev</code></li>
+          <li>This marketing site at <code>aegis.dev</code></li>
+          <li>The npm + PyPI release artifacts</li>
+          <li>The desktop installer (any platform we ship)</li>
+        </ul>
+
+        <h3>What's NOT in scope</h3>
+        <ul class="list">
+          <li>Denial-of-service via volumetric traffic (use the rate-limit instead)</li>
+          <li>Issues that only affect customers' own self-hosted gateways with default test credentials</li>
+          <li>Findings on dependencies that don't materially impact AEGIS</li>
+          <li>Social engineering of staff or contractors</li>
+        </ul>
+
+        <p class="note">
+          <strong>Bug bounty.</strong> The HackerOne program launches
+          with the v1.0 GA release. Until then, severity-weighted
+          monetary rewards are paid out of band by direct transfer.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── CONTACT STRIP ───────────────────────────────────────────── -->
+    <section class="section contact">
+      <div class="container container-narrow">
+        <h2>Need a deeper review?</h2>
+        <p>
+          Enterprise security reviews, custom DPA / BAA, SOC 2
+          evidence shares (under NDA), and architecture deep-dives —
+          all go through
+          <a href="mailto:security@aegis.dev"><strong>security@aegis.dev</strong></a>.
+        </p>
+        <div class="contact-actions">
+          <a class="btn" href="mailto:security@aegis.dev">Email security@aegis.dev</a>
+          <a class="btn-secondary" href="https://github.com/Justin0504/Aegis/security/advisories" target="_blank" rel="noopener">View advisories</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow {
+      font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); font-weight: 500; margin: 0 0 0.5rem;
+    }
+    .lede {
+      max-width: 60ch; color: var(--muted);
+      font-size: 1.08rem; margin: 1rem 0 0;
+    }
+    .lede-2 {
+      max-width: 60ch; color: var(--muted);
+      font-size: 1.02rem; margin: 0.6rem 0 1.5rem;
+    }
+
+    .section { padding: 3rem 0; border-top: 1px solid var(--hairline); }
+    .section.alt { background: var(--surface); }
+
+    /* Cert grid */
+    .cert-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.2rem;
+      margin: 1.5rem 0 1.5rem;
+    }
+    .cert {
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      padding: 1.2rem 1.2rem 1.1rem;
+    }
+    .section.alt .cert {
+      background: var(--bg);
+    }
+    .cert header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.8rem; margin-bottom: 0.7rem;
+    }
+    .cert h3 { font-size: 1.1rem; margin: 0; }
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.55rem;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+    .badge.shipping    { background: hsl(150 30% 88%); color: hsl(150 50% 22%); }
+    .badge.in-progress { background: hsl(36 50% 85%);  color: hsl(36 60% 28%); }
+    .badge.planned     { background: hsl(0 0% 88%);    color: hsl(0 0% 30%); }
+    .badge.on-request  { background: hsl(220 25% 88%); color: hsl(220 40% 28%); }
+
+    .cert dl {
+      margin: 0 0 0.6rem;
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 0.2rem 0.8rem;
+      font-size: 0.86rem;
+    }
+    .cert dt {
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .cert dd { margin: 0; color: var(--text); }
+    .cert p { color: var(--muted); margin: 0; font-size: 0.9rem; }
+
+    .callout {
+      margin: 1.5rem 0 0;
+      padding: 1rem 1.2rem;
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+    .callout strong { color: var(--text); }
+
+    /* Crypto list */
+    .crypto-list {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .crypto {
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+    .crypto h3 { font-size: 1.05rem; margin: 0 0 0.4rem; }
+    .crypto p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+    /* Data table */
+    .data-table {
+      margin-top: 1rem;
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .data-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 1rem;
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid var(--hairline);
+      font-size: 0.92rem;
+    }
+    .data-row:last-child { border-bottom: 0; }
+    .data-topic { font-weight: 500; color: var(--text); }
+    .data-value { color: var(--muted); }
+
+    @media (max-width: 760px) {
+      .data-row { grid-template-columns: 1fr; gap: 0.2rem; }
+    }
+
+    /* Disclosure */
+    .list {
+      margin: 0.4rem 0 1rem 1.2rem;
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .list code { background: var(--surface); padding: 1px 4px; border-radius: 3px; }
+    h3 { margin-top: 1.4rem; }
+    .note {
+      margin: 1.5rem 0 0;
+      padding: 0.8rem 1rem;
+      background: var(--surface);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .note strong { color: var(--text); }
+
+    /* Contact */
+    .contact { background: var(--surface); border-top: 1px solid var(--hairline); }
+    .contact h2 { margin-bottom: 0.6rem; }
+    .contact-actions {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+  </style>
+</Layout>

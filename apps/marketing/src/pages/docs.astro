@@ -1,0 +1,295 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+
+// Until docs.aegis.dev (Mintlify / Docusaurus) launches, /docs is a
+// single curated landing page that gives the same five answers any
+// dev needs in the first 10 minutes: install, integrate, test,
+// observe, escalate.
+
+const installPaths = [
+  {
+    id: 'saas',
+    title: 'Hosted SaaS (zero code change)',
+    blurb: 'Point your existing OpenAI / Anthropic / Mistral / Gemini SDK at the gateway URL. No code edits.',
+    snippet: `export OPENAI_BASE_URL=https://gateway.aegis.dev/openai/v1
+export AEGIS_API_KEY=aeg_xxx
+# upstream OpenAI key forwarded unchanged
+# your code stays untouched`,
+    cta: { label: 'Sign up for a key', href: 'https://app.aegis.dev/signup' },
+  },
+  {
+    id: 'desktop',
+    title: 'Desktop installer (macOS / Windows)',
+    blurb: 'One-file installer. Embeds the gateway + cockpit + Node runtime. Local-only by default.',
+    snippet: `# macOS Apple Silicon (M1+)
+open https://github.com/Justin0504/Aegis/releases/latest/download/AEGIS_0.1.0_aarch64.dmg
+
+# Windows .msi build is unblocked — see /download for the latest.`,
+    cta: { label: 'Download page', href: '/download' },
+  },
+  {
+    id: 'docker',
+    title: 'Docker Compose (self-hosted)',
+    blurb: 'Full stack — gateway + cockpit + Postgres + Redis — on a single host or in your VPC.',
+    snippet: `git clone https://github.com/Justin0504/Aegis
+cd Aegis
+docker compose -f docker/compose.yml up -d
+# → gateway on :8080, cockpit on :13003`,
+    cta: { label: 'Self-host guide', href: 'https://github.com/Justin0504/Aegis/blob/main/docs/self-host.md' },
+  },
+  {
+    id: 'sdk',
+    title: 'SDK (Python / JS / TS)',
+    blurb: 'In-process auto-instrumentation across 9 agent frameworks. One init() call.',
+    snippet: `# Python
+pip install agentguard
+# in your agent entrypoint:
+import agentguard; agentguard.init(api_key="aeg_xxx")
+
+# Node / TypeScript
+npm install @agentguard/sdk
+import { init } from '@agentguard/sdk'; init({ apiKey: process.env.AEGIS_API_KEY });`,
+    cta: { label: 'SDK reference', href: 'https://github.com/Justin0504/Aegis/tree/main/packages' },
+  },
+];
+
+const concepts = [
+  {
+    title: 'How AEGIS sees a tool call',
+    body: 'Every call hits the classifier, runs through L1 rules + L2 ML + (optionally) L3 LLM-judge, matches the per-tenant Policy DSL, and ends with one of three decisions: allow, pending (human review), block. Decision flows are documented at https://github.com/Justin0504/Aegis/blob/main/docs/decision-flow.md.',
+  },
+  {
+    title: 'Policies vs DSL rules',
+    body: 'Policies are JSON Schema validators that gate the call argument shape (e.g. SQL injection patterns, URL allowlists). DSL rules are the tenant-side overlay — "for THIS agent, ALSO require an approval if the call is HIGH risk during evening hours". Both run on every call; either can deny.',
+  },
+  {
+    title: 'Agent identity (Agent ID v1)',
+    body: 'AEGIS registers each agent and mints a signed JWT identity card. The SDK forwards X-AEGIS-Agent-Token; the gateway verifies. Lets policy + audit map every call to a stable agent identity even when an agent is renamed or migrated.',
+  },
+  {
+    title: 'Audit & transparency log',
+    body: 'Every decision is appended to a per-tenant RFC 6962 Merkle log. Tree heads are Ed25519-signed. Customers cache signed roots and verify inclusion offline via tools/verify-log/index.mjs. See Security → Cryptographic audit primitives.',
+  },
+  {
+    title: 'Observability — GenAI OTel',
+    body: 'Set OTEL_EXPORTER_OTLP_ENDPOINT to a Datadog / Honeycomb / Tempo / Grafana Cloud endpoint and every span ships with the full gen_ai.* attribute set + a gen_ai.guardrail.* extension for decision metadata. Zero-config dashboards on every major OTLP consumer.',
+  },
+  {
+    title: 'Integration modes (pick one)',
+    body: '1) LLM Egress Proxy — zero code change, just env vars; 2) SDK auto-instrument — one init() call; 3) MCP proxy — change one config field for Claude Desktop / Cursor / MCP hosts; 4) HTTP gateway direct — for custom agents. Mix freely — they all converge on the same gateway.',
+  },
+];
+
+const quickRefs = [
+  { name: 'GitHub repo',          href: 'https://github.com/Justin0504/Aegis', desc: 'Source, issues, discussions' },
+  { name: 'Changelog',            href: 'https://github.com/Justin0504/Aegis/blob/main/CHANGELOG.md', desc: 'Every shipped change since v0.1.0' },
+  { name: 'Roadmap',              href: 'https://github.com/Justin0504/Aegis/blob/main/ROADMAP.md',  desc: 'What lands next + how to influence it' },
+  { name: 'Threat ontology',      href: 'https://github.com/Justin0504/Aegis/blob/main/docs/ontology.md', desc: 'AAT-T* threat catalogue, per-deployment coverage' },
+  { name: 'API reference',        href: 'https://github.com/Justin0504/Aegis/blob/main/docs/api.md', desc: 'REST endpoints, request / response shapes' },
+  { name: 'Policy templates',     href: 'https://github.com/Justin0504/Aegis/blob/main/docs/policy-templates.md', desc: 'Built-in template library + AI generator' },
+  { name: 'Self-host runbook',    href: 'https://github.com/Justin0504/Aegis/blob/main/docs/self-host.md', desc: 'Docker / K8s / systemd deployment' },
+  { name: 'Compliance runbooks',  href: 'https://github.com/Justin0504/Aegis/tree/main/compliance/runbooks', desc: 'Postgres migration, audit evidence, breach response' },
+];
+---
+
+<Layout
+  title="Docs — AEGIS"
+  description="AEGIS documentation — install paths, core concepts, API reference, threat ontology, and compliance runbooks. Five minutes to first protected call."
+>
+  <Header current="docs" />
+
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Documentation</p>
+        <h1>Five minutes to your first protected call.</h1>
+        <p class="lede">
+          A full docs portal at <code>docs.aegis.dev</code> launches
+          with v1.0 (Mintlify-hosted). Until then, this page is the
+          curated index — pick an install path, learn six concepts, jump
+          to the deep references on GitHub.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── INSTALL PATHS ────────────────────────────────────────────── -->
+    <section class="section">
+      <div class="container container-narrow">
+        <h2 id="install">Install paths</h2>
+        <p class="lede-2">
+          Four ways to integrate. They all converge on the same
+          gateway. Pick the one that matches your stack and skip the
+          others.
+        </p>
+        <div class="install-grid">
+          {installPaths.map(p => (
+            <article class="install" id={`install-${p.id}`}>
+              <h3>{p.title}</h3>
+              <p class="install-blurb">{p.blurb}</p>
+              <pre><code>{p.snippet}</code></pre>
+              <a class="btn-secondary" href={p.cta.href}>{p.cta.label} →</a>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CONCEPTS ─────────────────────────────────────────────────── -->
+    <section class="section alt">
+      <div class="container container-narrow">
+        <h2 id="concepts">Six concepts that explain everything else</h2>
+        <p class="lede-2">
+          AEGIS has six core ideas. Internalise these and the rest of
+          the documentation is just "more buttons, same shape".
+        </p>
+        <div class="concepts">
+          {concepts.map((c, i) => (
+            <article class="concept">
+              <div class="concept-n">{String(i + 1).padStart(2, '0')}</div>
+              <div class="concept-body">
+                <h3>{c.title}</h3>
+                <p>{c.body}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── QUICK REFS ───────────────────────────────────────────────── -->
+    <section class="section">
+      <div class="container container-narrow">
+        <h2 id="reference">Reference shelf</h2>
+        <p class="lede-2">
+          Deep docs live in the repo until <code>docs.aegis.dev</code>
+          ships. Direct links below.
+        </p>
+        <div class="refs">
+          {quickRefs.map(r => (
+            <a class="ref" href={r.href} target="_blank" rel="noopener">
+              <div class="ref-name">{r.name} ↗</div>
+              <div class="ref-desc">{r.desc}</div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── COMMUNITY ────────────────────────────────────────────────── -->
+    <section class="section alt">
+      <div class="container container-narrow">
+        <h2 id="help">Stuck?</h2>
+        <p>
+          File a question or a bug on
+          <a href="https://github.com/Justin0504/Aegis/discussions" target="_blank" rel="noopener">GitHub Discussions</a>
+          — usually answered within a business day. Enterprise
+          customers get a dedicated Slack channel.
+        </p>
+        <div class="contact-actions">
+          <a class="btn" href="https://github.com/Justin0504/Aegis/discussions" target="_blank" rel="noopener">Ask on GitHub</a>
+          <a class="btn-secondary" href="mailto:support@aegis.dev">support@aegis.dev</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow {
+      font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); font-weight: 500; margin: 0 0 0.5rem;
+    }
+    .lede {
+      max-width: 60ch; color: var(--muted);
+      font-size: 1.08rem; margin: 1rem 0 0;
+    }
+    .lede-2 {
+      max-width: 60ch; color: var(--muted);
+      font-size: 1.02rem; margin: 0.6rem 0 1.5rem;
+    }
+    .lede code, .lede-2 code {
+      background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    }
+
+    .section { padding: 3rem 0; border-top: 1px solid var(--hairline); }
+    .section.alt { background: var(--surface); }
+
+    /* Install grid */
+    .install-grid {
+      display: grid;
+      gap: 1.2rem;
+      grid-template-columns: 1fr;
+    }
+    .install {
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem 1.2rem;
+    }
+    .install h3 { font-size: 1.15rem; margin: 0 0 0.3rem; }
+    .install-blurb { color: var(--muted); margin: 0 0 0.9rem; font-size: 0.95rem; }
+    .install pre {
+      background: var(--bg);
+      margin: 0 0 1rem;
+      font-size: 0.82rem;
+      max-height: 200px;
+      overflow: auto;
+    }
+
+    /* Concepts */
+    .concepts {
+      display: grid;
+      gap: 1.2rem;
+      grid-template-columns: 1fr;
+    }
+    .concept {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 1.2rem;
+      padding: 1rem 1.2rem;
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+    }
+    .concept-n {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      color: var(--muted);
+      line-height: 1;
+    }
+    .concept-body h3 { font-size: 1.05rem; margin: 0 0 0.4rem; }
+    .concept-body p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+    /* Refs */
+    .refs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 0.7rem;
+    }
+    .ref {
+      display: block;
+      padding: 0.9rem 1.1rem;
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.12s;
+    }
+    .ref:hover { border-color: var(--accent); }
+    .ref-name { font-weight: 500; }
+    .ref-desc { color: var(--muted); font-size: 0.85rem; margin-top: 0.2rem; }
+
+    /* Contact strip */
+    .contact-actions {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 1.2rem;
+    }
+  </style>
+</Layout>

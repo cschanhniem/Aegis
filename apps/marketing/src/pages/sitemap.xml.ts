@@ -7,6 +7,8 @@ const SITE = 'https://aegis.dev';
 const pages = [
   { path: '/',         priority: '1.0', changefreq: 'weekly'  },
   { path: '/pricing',  priority: '0.9', changefreq: 'monthly' },
+  { path: '/docs',     priority: '0.8', changefreq: 'weekly'  },
+  { path: '/security', priority: '0.8', changefreq: 'monthly' },
 ];
 
 export const GET: APIRoute = () => {

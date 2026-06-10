@@ -12,7 +12,7 @@ const { current } = Astro.props;
     </a>
     <nav class="primary">
       <a href="/pricing"  class:list={[{ active: current === 'pricing' }]}>Pricing</a>
-      <a href="https://docs.aegis.dev"  rel="noopener">Docs</a>
+      <a href="/docs"     class:list={[{ active: current === 'docs' }]}>Docs</a>
       <a href="/security" class:list={[{ active: current === 'security' }]}>Security</a>
       <a href="https://github.com/Justin0504/Aegis" target="_blank" rel="noopener">GitHub</a>
     </nav>
