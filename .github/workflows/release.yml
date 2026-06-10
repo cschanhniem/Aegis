@@ -304,7 +304,13 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   desktop-windows-x64:
     name: Build desktop (Windows x64)
-    runs-on: windows-latest
+    # Pin to windows-2022 (Server 2022) — GitHub recently rolled
+    # windows-latest to Server 2025 (10.0.26100), whose VS Build Tools
+    # layout breaks node-gyp's VS detection ("Could not find any Visual
+    # Studio installation to use"). 2022 has VS 2022 Build Tools in the
+    # path node-gyp expects, so better-sqlite3 builds fall through to
+    # the normal MSBuild flow.
+    runs-on: windows-2022
     needs: [create-release]
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.create-release.result == 'success') }}
     timeout-minutes: 45
