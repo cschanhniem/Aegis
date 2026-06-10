@@ -3,6 +3,7 @@ import Database from 'better-sqlite3';
 import { Logger } from 'pino';
 import { z } from 'zod';
 import { PolicyEngine } from '../policies/policy-engine';
+import { AuditLogService } from '../services/audit-log';
 
 const CreatePolicySchema = z.object({
   id: z.string(),
@@ -12,23 +13,41 @@ const CreatePolicySchema = z.object({
   risk_level: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
 });
 
+/** Resolve the requesting tenant. We honour, in priority order:
+ *    1. req.orgId set by upstream auth middleware (real production path)
+ *    2. X-Org-Id header (advanced ops / dogfood path)
+ *    3. 'default' — solo-deploy fallback
+ *  This mirrors WitnessAPI.orgIdOf so behaviour is uniform. */
+function orgIdOf(req: Request): string {
+  const fromCtx = (req as any).orgId;
+  if (typeof fromCtx === 'string' && fromCtx) return fromCtx;
+  const fromHeader = req.header('x-org-id');
+  if (typeof fromHeader === 'string' && fromHeader) return fromHeader;
+  return 'default';
+}
+
 export class PolicyAPI {
   public readonly router: Router;
 
   constructor(
     private db: Database.Database,
     private policyEngine: PolicyEngine,
-    private logger: Logger
+    private logger: Logger,
+    /** Optional — when present, every mutation here lands in the
+     *  audit_log. Older call-sites can omit it and the routes still
+     *  function (no audit row written). New deployments inject it
+     *  via server.ts; SOC 2 + ISO 27001 audit trails require it. */
+    private auditLog?: AuditLogService,
   ) {
     this.router = Router();
     this.setupRoutes();
   }
 
   private setupRoutes() {
-    // List all policies (enabled and disabled)
-    this.router.get('/', (req: Request, res: Response) => {
+    // List policies — wildcard platform defaults + this tenant's overrides
+    this.router.get('/', async (req: Request, res: Response) => {
       try {
-        const policies = this.policyEngine.getAllPolicies();
+        const policies = await this.policyEngine.getAllPolicies(orgIdOf(req));
         res.json(policies);
       } catch (error) {
         this.logger.error({ error }, 'Failed to list policies');
@@ -40,7 +59,14 @@ export class PolicyAPI {
     this.router.post('/', async (req: Request, res: Response) => {
       try {
         const policy = CreatePolicySchema.parse(req.body);
-        await this.policyEngine.addPolicy(policy as any);
+        const orgId = orgIdOf(req);
+        await this.policyEngine.addPolicy(policy as any, orgId);
+        this.auditLog?.log({
+          org_id: orgId, action: 'policy.create', resource_type: 'policy',
+          resource_id: policy.id,
+          details: { name: policy.name, risk_level: policy.risk_level },
+          ip_address: req.ip,
+        });
         res.status(201).json({ id: policy.id });
       } catch (error) {
         if (error instanceof z.ZodError) {
@@ -54,7 +80,13 @@ export class PolicyAPI {
     // Enable policy
     this.router.put('/:policyId/enable', async (req: Request, res: Response) => {
       try {
-        await this.policyEngine.enablePolicy(req.params.policyId);
+        const orgId = orgIdOf(req);
+        await this.policyEngine.enablePolicy(req.params.policyId, orgId);
+        this.auditLog?.log({
+          org_id: orgId, action: 'policy.toggle', resource_type: 'policy',
+          resource_id: req.params.policyId, details: { enabled: true },
+          ip_address: req.ip,
+        });
         res.json({ status: 'enabled' });
       } catch (error) {
         this.logger.error({ error }, 'Failed to enable policy');
@@ -65,7 +97,13 @@ export class PolicyAPI {
     // Disable policy
     this.router.put('/:policyId/disable', async (req: Request, res: Response) => {
       try {
-        await this.policyEngine.disablePolicy(req.params.policyId);
+        const orgId = orgIdOf(req);
+        await this.policyEngine.disablePolicy(req.params.policyId, orgId);
+        this.auditLog?.log({
+          org_id: orgId, action: 'policy.toggle', resource_type: 'policy',
+          resource_id: req.params.policyId, details: { enabled: false },
+          ip_address: req.ip,
+        });
         res.json({ status: 'disabled' });
       } catch (error) {
         this.logger.error({ error }, 'Failed to disable policy');
@@ -76,7 +114,13 @@ export class PolicyAPI {
     // Delete policy
     this.router.delete('/:policyId', async (req: Request, res: Response) => {
       try {
-        await this.policyEngine.deletePolicy(req.params.policyId);
+        const orgId = orgIdOf(req);
+        await this.policyEngine.deletePolicy(req.params.policyId, orgId);
+        this.auditLog?.log({
+          org_id: orgId, action: 'policy.delete', resource_type: 'policy',
+          resource_id: req.params.policyId,
+          ip_address: req.ip,
+        });
         res.json({ status: 'deleted' });
       } catch (error) {
         this.logger.error({ error }, 'Failed to delete policy');
@@ -88,10 +132,10 @@ export class PolicyAPI {
     this.router.post('/test', async (req: Request, res: Response) => {
       try {
         const { tool, arguments: args } = req.body;
-        const validation = await this.policyEngine.validateToolCall({
-          tool,
-          arguments: args,
-        });
+        const validation = await this.policyEngine.validateToolCall(
+          { tool, arguments: args },
+          orgIdOf(req),
+        );
         res.json(validation);
       } catch (error) {
         this.logger.error({ error }, 'Failed to test policy');

@@ -16,7 +16,8 @@
 
 import Database from 'better-sqlite3';
 import { Logger } from 'pino';
-import { createHash, randomBytes, randomUUID } from 'crypto';
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'crypto';
+import { EventEmitter } from 'events';
 import {
   AgentRegistrationInput,
   AgentRegistrationResponse,
@@ -24,6 +25,15 @@ import {
   AgentUpdateRequest,
   RegisteredAgent,
 } from '@agentguard/core-schema';
+
+export interface AgentFirstSightingEvent {
+  orgId: string;
+  agentId: string;
+  /** ISO 8601 timestamp captured at insert time. */
+  timestamp: string;
+  /** Provenance backfilled from SDK headers, if any. */
+  provenance?: { build_artifact?: string; source_commit?: string };
+}
 
 const SECRET_PREFIX = 'aegis_a_';
 
@@ -71,10 +81,23 @@ export interface AuthorizeResult {
 }
 
 export class AgentRegistryService {
+  /** In-process event bus for lifecycle events. Subscribers (e.g. the
+   *  onboarding SSE endpoint) listen for `first_sighting`. Single process
+   *  only; multi-replica deployments should fan out via the audit-log
+   *  pipeline instead. */
+  readonly events = new EventEmitter();
+
   constructor(
     private db: Database.Database,
     private logger: Logger,
-  ) {}
+  ) {
+    this.events.setMaxListeners(64);
+  }
+
+  onFirstSighting(listener: (e: AgentFirstSightingEvent) => void): () => void {
+    this.events.on('first_sighting', listener);
+    return () => this.events.off('first_sighting', listener);
+  }
 
   /** Operator-initiated registration. If `id` is supplied and an
    *  unregistered row exists, it's promoted to active in place; otherwise
@@ -178,10 +201,33 @@ export class AgentRegistryService {
             source_commit: opts.provenance.source_commit,
           })
         : null;
-      this.db.prepare(
+      const result = this.db.prepare(
         `INSERT OR IGNORE INTO agents (id, org_id, status, last_seen_at, provenance)
          VALUES (?, ?, 'unregistered', datetime('now'), ?)`,
       ).run(opts.agentId, opts.orgId, prov);
+      if (result.changes > 0) {
+        // Emit first-sighting event on the in-process bus. Wrapped in a
+        // setImmediate so a slow subscriber can never starve the hot
+        // path. Errors inside listeners are swallowed.
+        const evt: AgentFirstSightingEvent = {
+          orgId: opts.orgId,
+          agentId: opts.agentId,
+          timestamp: new Date().toISOString(),
+          provenance: opts.provenance && (opts.provenance.build_artifact || opts.provenance.source_commit)
+            ? {
+                build_artifact: opts.provenance.build_artifact,
+                source_commit:  opts.provenance.source_commit,
+              }
+            : undefined,
+        };
+        setImmediate(() => {
+          try {
+            this.events.emit('first_sighting', evt);
+          } catch (err) {
+            this.logger.warn({ err: (err as Error).message, agentId: opts.agentId }, 'first_sighting listener error');
+          }
+        });
+      }
     } catch (err) {
       this.logger.warn({ err: (err as Error).message, agentId: opts.agentId }, 'agent touch failed');
     }
@@ -235,7 +281,13 @@ export class AgentRegistryService {
         return { agent, blocked: true, blockReason: 'agent secret required', attributionStrength: 'weak' };
       }
       const row = this.getRow(opts.agentId);
-      if (sha256(opts.presentedSecret) !== row!.secret_hash) {
+      // Constant-time compare on the sha256 hex strings. Both sides are
+      // 64-char hex so the length-check fast path never fires on a real
+      // mismatch; this defeats per-byte timing attacks on the secret.
+      const presented = sha256(opts.presentedSecret);
+      const stored    = row!.secret_hash;
+      if (presented.length !== stored.length
+          || !timingSafeEqual(Buffer.from(presented, 'utf8'), Buffer.from(stored, 'utf8'))) {
         return { agent, blocked: true, blockReason: 'agent secret mismatch', attributionStrength: 'weak' };
       }
     }

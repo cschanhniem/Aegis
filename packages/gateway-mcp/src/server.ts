@@ -11,6 +11,21 @@ import { PolicyAPI } from './api/policies';
 import { ApprovalAPI } from './api/approvals';
 import { CheckAPI } from './api/check';
 import { AgentsAPI } from './api/agents';
+import { OnboardingAPI } from './api/onboarding';
+import { RollbackAPI } from './api/rollback';
+import { RollbackService } from './services/rollback';
+import { ReversibilityClassifier } from './services/reversibility';
+import { CompensationRegistry } from './services/compensation-registry';
+import { SnapshotCaptureService } from './services/snapshot-capture';
+import { SagaService } from './services/saga';
+import { RollbackMetricsService } from './services/rollback-metrics';
+import { DlqService } from './services/dlq';
+import { WitnessService } from './services/witness';
+import { WitnessAPI } from './api/witness';
+import { EffectOutboxService } from './services/effect-outbox';
+import { PredeployScanService } from './services/predeploy-scan';
+import { ScanHistoryService } from './services/scan-history';
+import { PredeployScanAPI } from './api/predeploy-scan';
 import { PolicyEngine } from './policies/policy-engine';
 import { KillSwitchService } from './services/kill-switch';
 import { WebhookService } from './services/webhooks';
@@ -18,6 +33,7 @@ import { WebhookAPI } from './api/webhooks';
 import { ProxyRegistryAPI } from './api/proxy-registry';
 import { SlidingWindowStats } from './services/sliding-window';
 import { AnomalyDetector } from './services/anomaly-detector';
+import { TenantBaselineService } from './services/tenant-baseline';
 import { ProfileManager } from './services/profile-manager';
 import { createErrorMiddleware, HttpError } from './middleware/error';
 import { createAuthMiddleware } from './middleware/auth';
@@ -30,8 +46,9 @@ import { RBACService } from './services/rbac';
 import { RetentionService } from './services/retention';
 import { UsageMeteringService } from './services/usage-metering';
 import { SLAMetricsService } from './services/sla-metrics';
+import { GatewayMetricsService } from './services/gateway-metrics';
 import { AdminAPI } from './api/admin';
-import { ConfigBus } from './services/config-bus';
+import { ConfigBus, type ConfigEvent } from './services/config-bus';
 import { TenantConfigService } from './services/tenant-config';
 import { TenantConfigAPI } from './api/tenant-config';
 import { DslPolicyService } from './services/policy-dsl';
@@ -67,6 +84,9 @@ import { OntologyAPI } from './api/ontology';
 import { ComplianceBundleService } from './services/compliance-bundle';
 import { ComplianceControlSource } from './services/compliance-source';
 import { ComplianceAPI } from './api/compliance';
+import { ComplianceEvidenceAPI } from './api/compliance-evidence';
+import { ScimService } from './services/scim-service';
+import { ScimAPI } from './api/scim';
 import { SinkOrchestrator } from './services/sink-orchestrator';
 import { SinksAPI } from './api/sinks';
 import { BudgetAPI } from './api/budget';
@@ -142,12 +162,14 @@ async function main() {
     config.anomaly.slidingWindow.maxAgents,
     config.anomaly.slidingWindow.bufferSize,
   );
+  const tenantBaseline  = new TenantBaselineService(db, logger);
   const anomalyDetector = new AnomalyDetector(
     slidingWindow,
     undefined,
     config.anomaly.thresholds,
     config.anomaly.isolationForest,
     config.anomaly.ppm,
+    tenantBaseline,
   );
   const profileManager  = new ProfileManager(db, logger, {
     minTraces: config.anomaly.minTraces,
@@ -163,6 +185,7 @@ async function main() {
   const retention     = new RetentionService(db, logger);
   const usageMetering = new UsageMeteringService(db, logger);
   const slaMetrics    = new SLAMetricsService(db, logger);
+  const gatewayMetrics = new GatewayMetricsService();
 
   // Per-tenant runtime config (deployment mode, layer toggles, thresholds)
   const configBus     = new ConfigBus(logger);
@@ -251,6 +274,80 @@ async function main() {
   // MCP proxy (instantiated after dslPolicy + tenantConfig so DSL flows through)
   const mcpProxy = new MCPProxyService(db, policyEngine, killSwitch, logger, dslPolicy, tenantConfig);
 
+  // ── Rollback layer (saga-style compensating actions) ───────────────────
+  // Tied to transparencyLog so every rollback writes a signed Merkle
+  // receipt — the cryptographic differentiator vs seclaw / NeMo.
+  const reversibilityClassifier = new ReversibilityClassifier();
+  const compensationRegistry    = new CompensationRegistry(logger);
+  const snapshotCapture         = new SnapshotCaptureService(db, logger);
+  const sagaService             = new SagaService(db, logger);
+  const rollbackMetrics         = new RollbackMetricsService();
+  const dlqService              = new DlqService(db, logger);
+  const witnessService          = new WitnessService(db, logger, transparencyLog, new SigningService(db, logger));
+  const rollbackService         = new RollbackService(
+    db, logger, auditLog, transparencyLog, compensationRegistry, reversibilityClassifier,
+    snapshotCapture, sagaService, rollbackMetrics, dlqService,
+  );
+  // Hot-reload tenant-supplied reversibility overrides + compensators
+  // from tenant_config.rollback whenever it changes.
+  const loadRollbackConfig = (orgId: string) => {
+    try {
+      const tc = tenantConfig.get(orgId);
+      // `rollback` isn't yet in the TenantConfigSchema (it's read here as
+      // an "experimental" namespace tenants can set freely via
+      // settings.rollback.*). The schema gap is a deliberate TODO —
+      // once the rollback config surface stabilises it should be added
+      // to core-schema's TenantConfigSchema with proper Zod validation
+      // so per-tenant nonsense can't crash the loader silently.
+      const r = ((tc as any)?.rollback ?? {}) as {
+        reversibility_overrides?: unknown[];
+        compensators?: unknown;
+        snapshots?: unknown;
+        outbox?: unknown;
+      };
+      if (Array.isArray(r.reversibility_overrides)) {
+        reversibilityClassifier.setOverrides(r.reversibility_overrides as any);
+      }
+      compensationRegistry.setConfig(orgId, r.compensators ? { compensators: r.compensators as any } : null);
+      snapshotCapture.setConfig(orgId, r.snapshots ? { snapshots: r.snapshots as any } : null);
+    } catch (err) {
+      logger.warn({ err: (err as Error).message, orgId }, 'rollback config load failed');
+    }
+  };
+  for (const o of orgIds) loadRollbackConfig(o.id);
+  configBus.onConfigChange((evt: ConfigEvent) => {
+    if (evt?.orgId) loadRollbackConfig(evt.orgId);
+  });
+
+  // ── Effect outbox (delayed-effect queue) ───────────────────────────────
+  // External side effects (email send, payment, social post) that the
+  // operator wants to be able to cancel-before-fire go through here.
+  // Configured via tenant_config.rollback.outbox.
+  const effectOutbox = new EffectOutboxService(db, logger, auditLog, transparencyLog);
+  const loadOutboxConfig = (orgId: string) => {
+    try {
+      const tc = tenantConfig.get(orgId);
+      // See loadRollbackConfig — rollback is an as-yet unschematised
+      // namespace, cast narrowly here so the next dev knows it's intentional.
+      const r = ((tc as any)?.rollback ?? {}) as { outbox?: unknown };
+      effectOutbox.setConfig(orgId, r.outbox ? { tools: r.outbox as any } : null);
+    } catch (err) {
+      logger.warn({ err: (err as Error).message, orgId }, 'outbox config load failed');
+    }
+  };
+  for (const o of orgIds) loadOutboxConfig(o.id);
+  configBus.onConfigChange((evt: ConfigEvent) => {
+    if (evt?.orgId) loadOutboxConfig(evt.orgId);
+  });
+  effectOutbox.startDispatcher();
+
+  // ── Pre-deployment scan (agent-audit subprocess) ───────────────────────
+  // Static AST scan that runs BEFORE traffic flows; complements the
+  // runtime audit / rollback layers. Shells out to HeadyZhang/agent-audit
+  // (MIT) which we discovery-resolve at request time.
+  const predeployScan = new PredeployScanService(logger, auditLog, transparencyLog);
+  const scanHistory   = new ScanHistoryService(db, logger);
+
   // Start background schedulers
   if (isFeatureEnabled('data-retention')) {
     retention.start(3600_000);
@@ -265,6 +362,12 @@ async function main() {
 
   // Request ID + access logging (before everything else)
   app.use(requestContextMiddleware(logger));
+
+  // Prometheus middleware — must mount BEFORE any route handler so the
+  // res.on('finish') callback observes the final status code + matched
+  // route template. Mounted unconditionally because the metrics are
+  // cardinality-bounded and Ops teams universally expect /metrics.
+  app.use(gatewayMetrics.httpMiddleware());
 
   // CORS — production-safe origin handling
   app.use((req, res, next) => {
@@ -301,9 +404,14 @@ async function main() {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '0');
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    // Gateway is API-only; it serves no HTML to a browser, so even
+    // legitimate inline styles never apply. Drop `unsafe-inline` from
+    // style-src so a future regression that does emit HTML inherits a
+    // strict baseline. style-src 'self' is the right "no inline styles"
+    // signal a security review wants to see.
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'",
+      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'",
     );
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
@@ -347,6 +455,15 @@ async function main() {
     }
   });
 
+  // Prometheus scrape target — convention says no auth, but the path
+  // SHOULD be network-restricted by the operator's ingress (k8s service
+  // type ClusterIP, AWS SG, etc.). We keep the convention so Grafana
+  // Agent / vmagent / cloud-managed Prometheus all "just work".
+  app.get('/metrics', (req, res) => {
+    res.setHeader('Content-Type', 'text/plain; version=0.0.4');
+    res.status(200).send(gatewayMetrics.prometheus());
+  });
+
   // Auth bootstrap: return key (no auth required — should be network-restricted in prod)
   app.get('/api/v1/auth/key', (req, res) => {
     if (config.server.isProduction) {
@@ -370,9 +487,28 @@ async function main() {
   });
 
   // ── Rate limiter (sliding window, per agent_id) ──────────────────────────
+  // We cap distinct keys at RATE_LIMIT_MAX_KEYS to bound memory: a
+  // burst of attacker-controlled org_id:agent_id combinations cannot
+  // cause unbounded Map growth → OOM. When the map fills we evict the
+  // oldest key (the one whose most-recent timestamp is furthest in the
+  // past) — same LRU-ish strategy as the SCIM discovery limiter.
   const rateLimitWindow = new Map<string, number[]>();
   const RATE_LIMIT_MAX = config.rateLimit.max;
   const RATE_LIMIT_MS  = config.rateLimit.windowMs;
+  const RATE_LIMIT_MAX_KEYS = Math.max(
+    1_000,
+    Number(process.env.AEGIS_RATE_LIMIT_MAX_KEYS ?? 50_000),
+  );
+
+  function evictOldestRateLimitKey(): void {
+    let oldestKey: string | null = null;
+    let oldestTs = Infinity;
+    for (const [k, ts] of rateLimitWindow) {
+      const newest = ts.length > 0 ? ts[ts.length - 1] : 0;
+      if (newest < oldestTs) { oldestTs = newest; oldestKey = k; }
+    }
+    if (oldestKey) rateLimitWindow.delete(oldestKey);
+  }
 
   // Cleanup stale entries every 5 minutes
   const rateLimitCleanup = setInterval(() => {
@@ -407,6 +543,13 @@ async function main() {
       });
     }
     timestamps.push(now);
+    // Enforce cap BEFORE inserting so we don't grow past the limit even
+    // for one tick. New keys steal the oldest key's slot — legitimate
+    // traffic almost never hits this (50k orgs × 1 agent each = quiet
+    // org evictions only); pathological cardinality (DoS) does.
+    if (!rateLimitWindow.has(key) && rateLimitWindow.size >= RATE_LIMIT_MAX_KEYS) {
+      evictOldestRateLimitKey();
+    }
     rateLimitWindow.set(key, timestamps);
     next();
   });
@@ -470,7 +613,7 @@ async function main() {
   };
 
   // ── SDK ingest routes (public — no auth required) ────────────────────────
-  app.use('/api/v1/traces', new TraceAPI(db, logger).router);
+  app.use('/api/v1/traces', new TraceAPI(db, logger, agentRegistry).router);
   app.use('/api/v1/check',  new CheckAPI(
     db, policyEngine, logger, webhooks, undefined,
     config.anomaly.enabled ? anomalyDetector : undefined,
@@ -478,14 +621,23 @@ async function main() {
     config.anomaly.enabled ? slidingWindow : undefined,
     dslPolicy,
     tenantConfig,
+    agentRegistry,
+    gatewayMetrics,
   ).router);
 
   // ── Management routes (auth required) ────────────────────────────────────
-  app.use('/api/v1/policies',  requireAuth, new PolicyAPI(db, policyEngine, logger).router);
+  app.use('/api/v1/policies',  requireAuth, new PolicyAPI(db, policyEngine, logger, auditLog).router);
   app.use('/api/v1/approvals', requireAuth, new ApprovalAPI(db, logger).router);
   app.use('/api/v1/webhooks',  requireAuth, new WebhookAPI(webhooks).router);
   app.use('/api/v1/agents',    requireAuth, new AgentsAPI(db, logger, agentRegistry, auditLog, agentIdCards).router);
   app.use('/api/v1/proxy',     requireAuth, new ProxyRegistryAPI(db, logger).router);
+
+  // First-run onboarding wizard hooks. SSE stream pushes
+  // agent.first_sighting events as soon as the SDK ingests its first
+  // trace; the Cockpit's /onboarding route hangs on it during step 3.
+  app.use('/api/v1/onboarding', requireAuth, new OnboardingAPI(agentRegistry, logger).router);
+  app.use('/api/v1/rollback',   requireAuth, new RollbackAPI(rollbackService, logger, sagaService, rollbackMetrics, dlqService).router);
+  app.use('/api/v1/scan',       requireAuth, new PredeployScanAPI(predeployScan, scanHistory, logger).router);
 
   // Enterprise admin routes (auth + feature gate)
   app.use('/api/v1/admin', requireAuth, requireFeature('multi-tenancy'),
@@ -524,6 +676,9 @@ async function main() {
   // Transparency log — append-only Merkle tree of audit + evidence-pack
   // events. Customers verify inclusion offline against the signed root.
   app.use('/api/v1/transparency-log', requireAuth, new TransparencyLogAPI(transparencyLog).router);
+  // Witness protocol — external co-signing of STHs to prevent split-view
+  // attacks (Sigstore Rekor pattern).
+  app.use('/api/v1',                  requireAuth, new WitnessAPI(witnessService, logger).router);
 
   // Per-framework compliance bundles (SOC 2 / ISO 27001 / NIST AI RMF /
   // EU AI Act). Hands the auditor a signed, transparency-logged artifact
@@ -540,6 +695,21 @@ async function main() {
     requireAuth,
     new ComplianceAPI(complianceBundles, auditLog, complianceSource, tenantConfig).router,
   );
+  // SOC 2 evidence tap (auditor read-only). Sits on the same prefix as
+  // the framework-management API but exposes distinct routes
+  // (/evidence + /evidence/manifest).
+  app.use(
+    '/api/v1/compliance',
+    requireAuth,
+    new ComplianceEvidenceAPI(db, logger, gatewayMetrics, policyEngine).router,
+  );
+
+  // SCIM 2.0 — IdP-driven user provisioning. Auth is bearer-only (the
+  // IdP sends `Authorization: Bearer scim_...`). NOT under requireAuth
+  // because requireAuth speaks X-API-Key, which is the wrong auth shape
+  // for IdPs. The ScimAPI's own bearer middleware resolves the org_id.
+  const scimService = new ScimService(db, logger);
+  app.use('/scim/v2', new ScimAPI(scimService, logger).router);
 
   // LLM egress proxy — universal substrate for "any workflow" coverage.
   // Customer sets OPENAI_BASE_URL / ANTHROPIC_BASE_URL to this prefix and
@@ -944,6 +1114,21 @@ async function main() {
 
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
+
+  // Catch escaped promise rejections + sync uncaught exceptions so the
+  // process doesn't die silently on a bad async path (webhook fire,
+  // OTLP export, background profile rebuild). Log + keep running —
+  // Node's default is going to terminate on uncaughtException as of
+  // v15+, but we'd rather log loudly and trigger ops alerting than
+  // crash the worker on a non-fatal async path. SIGTERM-style shutdown
+  // remains the right behaviour for legitimate termination.
+  process.on('unhandledRejection', (reason, promise) => {
+    const err = reason instanceof Error ? reason : new Error(String(reason));
+    logger.error({ err: err.message, stack: err.stack }, 'unhandledRejection — see stack for source');
+  });
+  process.on('uncaughtException', (err) => {
+    logger.error({ err: err.message, stack: err.stack }, 'uncaughtException — keeping process alive');
+  });
 }
 
 // Import FEATURE_GATES for gate messages

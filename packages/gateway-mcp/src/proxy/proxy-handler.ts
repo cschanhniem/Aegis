@@ -15,7 +15,7 @@
  */
 
 import { Request, Response } from 'express';
-import { createHash, randomUUID } from 'crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import Database from 'better-sqlite3';
 import { Logger } from 'pino';
 
@@ -81,7 +81,12 @@ export class ProxyHandler {
     const path = req.path.replace(/^\/api\/v1\/llm-proxy/, '');
     const m = PROXY_PATH_RE.exec(path);
     if (!m) {
-      res.status(404).json({ error: { code: 'UNKNOWN_PROVIDER', path } });
+      // Reflecting the user-supplied path back in the error body is
+      // gratuitous info-disclosure (aids reconnaissance + hands attackers
+      // their own canonicalised path) — keep the full path in the audit
+      // log instead so operators still have it for triage.
+      this.deps.logger.info({ path }, 'UNKNOWN_PROVIDER on llm-proxy route');
+      res.status(404).json({ error: { code: 'UNKNOWN_PROVIDER' } });
       return;
     }
     const provider = m[1];
@@ -169,6 +174,17 @@ export class ProxyHandler {
     const upstreamHeaders = adapter.upstreamHeaders(headers);
     const upstreamUrl = adapter.upstreamUrl(tail, queryStringFrom(req));
     const t0 = Date.now();
+    // Upstream LLM call has to time out. Without an AbortSignal the
+    // node fetch() will hold the worker forever on a hung connection
+    // (Anthropic / OpenAI cold-start spikes, network partition, etc.).
+    // 120 s is the practical p99 for a long generation; can be tuned
+    // per-org later via tenant config.
+    const upstreamTimeoutMs = Math.max(
+      1_000,
+      Number(process.env.AEGIS_PROXY_UPSTREAM_TIMEOUT_MS ?? 120_000),
+    );
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), upstreamTimeoutMs);
     let upstreamRes: Response | globalThis.Response;
     let upstreamJson: any;
     try {
@@ -176,15 +192,24 @@ export class ProxyHandler {
         method: req.method,
         headers: upstreamHeaders,
         body: req.method === 'GET' || req.method === 'HEAD' ? undefined : JSON.stringify(req.body),
+        signal: ac.signal,
       });
       upstreamRes = fetchRes;
       const text = await fetchRes.text();
       try { upstreamJson = JSON.parse(text); }
       catch { upstreamJson = { raw: text }; }
     } catch (err) {
-      this.deps.logger.warn({ err: (err as Error).message, upstreamUrl }, 'proxy upstream call failed');
-      res.status(502).json({ error: { code: 'PROXY_UPSTREAM_FAILED', message: (err as Error).message } });
+      const aborted = (err as Error).name === 'AbortError';
+      const code = aborted ? 'PROXY_UPSTREAM_TIMEOUT' : 'PROXY_UPSTREAM_FAILED';
+      const status = aborted ? 504 : 502;
+      this.deps.logger.warn(
+        { err: (err as Error).message, upstreamUrl, aborted, timeout_ms: upstreamTimeoutMs },
+        aborted ? 'proxy upstream timed out' : 'proxy upstream call failed',
+      );
+      res.status(status).json({ error: { code, message: (err as Error).message } });
       return;
+    } finally {
+      clearTimeout(timer);
     }
     const upstreamMs = Date.now() - t0;
 
@@ -340,14 +365,28 @@ export class ProxyHandler {
     }
 
     // Legacy single-key fallback (community mode).
+    // Constant-time compare prevents timing-channel byte-by-byte key
+    // recovery: `===` short-circuits at the first mismatched byte, so
+    // an attacker could measure response timing to map prefix correctness.
+    // timingSafeEqual takes O(length) on every comparison regardless of
+    // where the divergence is.
     const dashRow = this.deps.db.prepare(
       `SELECT value FROM gateway_config WHERE key = 'dashboard_api_key'`,
     ).get() as { value: string } | undefined;
-    if (dashRow && dashRow.value === key) {
+    if (dashRow && constantTimeStringEqual(dashRow.value, key)) {
       return { orgId: 'default', keyName: 'dashboard' };
     }
     return null;
   }
+}
+
+/** Constant-time string equality. Returns false on length mismatch
+ *  (length is not secret — the length of an API key isn't sensitive
+ *  data, and pretending it is would require padding every comparison
+ *  to a fixed max length, which has its own footguns). */
+function constantTimeStringEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
 }
 
 function lowerCaseHeaders(h: Request['headers']): Record<string, string> {

@@ -44,27 +44,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <head>
         {/*
-         * No-flash theme bootstrap. Runs before paint, reads the user's
-         * saved preference from localStorage, and sets the .dark class
-         * on <html> if they explicitly chose dark — or if they're on
-         * 'system' and the OS prefers dark. Anything that depends on
-         * CSS variables now renders correctly on first paint.
+         * No-flash theme bootstrap — moved from `dangerouslySetInnerHTML`
+         * to a static asset at /theme-bootstrap.js so React can never
+         * template user input into the script body. The file is served
+         * with the standard Next.js public/ MIME + same-origin headers,
+         * runs before paint, and sets .dark / .light on <html>.
          */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function () {
-                try {
-                  var stored = localStorage.getItem('aegis:theme');
-                  var sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var apply = stored === 'dark' || ((stored === 'system' || !stored) && sysDark);
-                  if (apply) document.documentElement.classList.add('dark');
-                  else if (stored === 'light') document.documentElement.classList.add('light');
-                } catch (_) {}
-              })();
-            `,
-          }}
-        />
+        <script src="/theme-bootstrap.js" />
       </head>
       <body style={{ fontFamily: 'var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif' }}>
         <Providers>{children}</Providers>

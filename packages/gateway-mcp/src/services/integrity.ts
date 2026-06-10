@@ -36,7 +36,7 @@
 
 import Database from 'better-sqlite3';
 import type { Logger } from 'pino';
-import { computeContentHash } from '../api/traces';
+import { computeContentHash } from './content-hash';
 
 export type IntegrityBreakReason = 'link_broken' | 'content_tamper';
 

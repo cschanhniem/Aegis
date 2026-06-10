@@ -33,6 +33,8 @@ import { SlidingWindowStats } from '../services/sliding-window';
 import { DslPolicyService } from '../services/policy-dsl';
 import { TenantConfigService } from '../services/tenant-config';
 import { MatchResult } from '../policies/dsl/evaluator';
+import { GatewayMetricsService } from '../services/gateway-metrics';
+import { setSpanAttributes, emitGuardrailSpan } from '../services/otel';
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
@@ -94,6 +96,8 @@ export class CheckAPI {
     private slidingWindow?: SlidingWindowStats,
     private dslPolicy?: DslPolicyService,
     private tenantConfig?: TenantConfigService,
+    private agentRegistry?: import('../services/agent-registry').AgentRegistryService,
+    private gatewayMetrics?: GatewayMetricsService,
   ) {
     this.router = Router()
     this.initTable()
@@ -130,13 +134,27 @@ export class CheckAPI {
       try {
         const body = CheckRequestSchema.parse(req.body)
 
+        // Register the sighting so first-call traffic flips the
+        // onboarding wizard's "waiting" panel and the agents table
+        // gets a row even before any trace is ingested.
+        if (this.agentRegistry) {
+          const orgId = (req as any).orgId ?? 'default';
+          const buildArtifact = req.headers['x-aegis-build-artifact'] as string | undefined;
+          const sourceCommit  = req.headers['x-aegis-source-commit']  as string | undefined;
+          const provenance = (buildArtifact || sourceCommit)
+            ? { build_artifact: buildArtifact, source_commit: sourceCommit }
+            : undefined;
+          this.agentRegistry.touch({ orgId, agentId: body.agent_id, provenance });
+        }
+
         // user_category_overrides from client is ignored for security —
         // a compromised agent could reclassify dangerous tools to bypass policies.
         // Category overrides should be configured server-side only.
-        const validation = await this.policyEngine.validateToolCall({
-          tool: body.tool_name,
-          arguments: body.arguments,
-        })
+        const requestOrgId = (req as any).orgId ?? 'default'
+        const validation = await this.policyEngine.validateToolCall(
+          { tool: body.tool_name, arguments: body.arguments },
+          requestOrgId,
+        )
 
         const { classification } = validation
         const checkId = randomUUID()
@@ -352,6 +370,7 @@ export class CheckAPI {
             timestamp: pendingTs,
           })
 
+          this.gatewayMetrics?.recordCheck('pending', requestOrgId)
           return res.json({
             decision:   'pending',
             check_id:   checkId,
@@ -415,6 +434,32 @@ export class CheckAPI {
           decision,
           latency_ms: Date.now() - start,
         }, `Pre-check ${decision.toUpperCase()}`)
+        this.gatewayMetrics?.recordCheck(decision, requestOrgId)
+        if (anomalyResult?.decision === 'block') this.gatewayMetrics?.recordAnomaly(requestOrgId)
+        // Distributed-trace attributes — picked up by the customer's
+        // OTel collector if they configured OTEL_EXPORTER_OTLP_ENDPOINT.
+        setSpanAttributes({
+          org_id:     requestOrgId,
+          agent_id:   body.agent_id,
+          tool_name:  body.tool_name,
+          decision,
+          risk_level: validation.risk_level,
+          category:   classification.category,
+        })
+        // GenAI semconv guardrail extension — surfaces a dedicated span
+        // each time the gateway makes a decision so the customer's APM
+        // (Datadog / Honeycomb / Grafana) shows "Guardrail Violations"
+        // out of the box. Emitted fire-and-forget; failure cannot block
+        // the check response.
+        emitGuardrailSpan({
+          decision,
+          policy: validation.policy_name,
+          category: classification.category,
+          riskLevel: validation.risk_level,
+          reason: decision === 'block' ? (validation.violations?.[0] ?? 'policy violation') : undefined,
+          orgId: requestOrgId,
+          agentId: body.agent_id,
+        })
 
         return res.json({
           decision,
@@ -527,43 +572,65 @@ export class CheckAPI {
           return res.status(400).json({ error: 'decision must be "allow" or "block"' })
         }
 
-        // Fetch the check to get agent_id for feedback loop
-        const check = this.db.prepare(
-          'SELECT agent_id, tool_name, arguments FROM pending_checks WHERE check_id = ?'
-        ).get(req.params.checkId) as { agent_id: string; tool_name: string; arguments: string } | undefined
+        // Wrap the SELECT → UPDATE pending_checks → UPDATE anomaly_feedback
+        // chain in a single transaction so two concurrent PATCHes on the
+        // same check_id can't observe inconsistent intermediate state.
+        // better-sqlite3 transactions are synchronous + reentrant; the
+        // returned closure runs the whole block atomically (BEGIN
+        // IMMEDIATE under the hood). Either every row updates or none do.
+        const tx = this.db.transaction(() => {
+          const check = this.db.prepare(
+            'SELECT agent_id, tool_name, arguments FROM pending_checks WHERE check_id = ?'
+          ).get(req.params.checkId) as { agent_id: string; tool_name: string; arguments: string } | undefined
 
-        const result = this.db.prepare(`
-          UPDATE pending_checks
-          SET decision = ?, decided_by = ?, decided_at = datetime('now')
-          WHERE check_id = ? AND decision = 'pending'
-        `).run(decision, decided_by ?? 'dashboard-user', req.params.checkId)
+          const result = this.db.prepare(`
+            UPDATE pending_checks
+            SET decision = ?, decided_by = ?, decided_at = datetime('now')
+            WHERE check_id = ? AND decision = 'pending'
+          `).run(decision, decided_by ?? 'dashboard-user', req.params.checkId)
 
-        if (result.changes === 0) {
+          if (result.changes === 0) {
+            return { ok: false as const }
+          }
+
+          // Read the stored feature vector inside the tx so the
+          // accompanying UPDATE anomaly_feedback below commits with
+          // the same view of the row that drove this decision.
+          let feedbackRow: { feature_vector: string } | undefined
+          if (check) {
+            feedbackRow = this.db.prepare(
+              'SELECT feature_vector FROM anomaly_feedback WHERE check_id = ?'
+            ).get(req.params.checkId) as any
+            if (feedbackRow) {
+              this.db.prepare(
+                'UPDATE anomaly_feedback SET human_decision = ?, decided_at = datetime(\'now\') WHERE check_id = ?'
+              ).run(decision, req.params.checkId)
+            }
+          }
+          return { ok: true as const, check, feedbackRow }
+        })
+
+        const txResult = tx()
+        if (!txResult.ok) {
           return res.status(404).json({ error: 'Check not found or already decided' })
         }
 
         // ── Feedback loop: flow human decision back to anomaly model ──────
-        if (check && this.anomalyDetector && this.profileManager) {
-          const profile = this.profileManager.getProfile(check.agent_id)
+        // Done OUTSIDE the tx because anomalyDetector.ingestFeedback is
+        // an in-memory mutation (not transactional), and we want it to
+        // run after the row is durably committed — never before.
+        if (txResult.check && txResult.feedbackRow && this.anomalyDetector && this.profileManager) {
+          const profile = this.profileManager.getProfile(txResult.check.agent_id)
           if (profile) {
-            // Look up the stored feature vector from anomaly_feedback
-            const feedbackRow = this.db.prepare(
-              'SELECT feature_vector FROM anomaly_feedback WHERE check_id = ?'
-            ).get(req.params.checkId) as { feature_vector: string } | undefined
-
-            if (feedbackRow) {
-              try {
-                const featureVector = JSON.parse(feedbackRow.feature_vector) as number[]
-                this.anomalyDetector.ingestFeedback(
-                  check.agent_id, profile, featureVector, decision === 'allow',
-                )
-                this.db.prepare(
-                  'UPDATE anomaly_feedback SET human_decision = ?, decided_at = datetime(\'now\') WHERE check_id = ?'
-                ).run(decision, req.params.checkId)
-              } catch { /* best-effort feedback */ }
-            }
+            try {
+              const featureVector = JSON.parse(txResult.feedbackRow.feature_vector) as number[]
+              this.anomalyDetector.ingestFeedback(
+                txResult.check.agent_id, profile, featureVector, decision === 'allow',
+              )
+            } catch { /* best-effort feedback */ }
           }
         }
+        const check = txResult.check
 
         this.logger.info({
           check_id:   req.params.checkId,

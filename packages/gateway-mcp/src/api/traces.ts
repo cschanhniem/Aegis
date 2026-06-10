@@ -12,36 +12,74 @@ import {
 import { calculateCost } from '../services/cost';
 import { redactObjectPii } from '../services/pii';
 import { emitTraceSpan } from '../services/otel';
+import { AgentRegistryService } from '../services/agent-registry';
+import { computeContentHash } from '../services/content-hash';
 
-/**
- * SHA-256 of the four content fields *as stored* (post-redaction).
- * Used by IntegrityService for single-row content-tamper detection.
- * Canonical form: deterministic JSON of {input_context, thought_chain,
- * tool_call, observation} — each is the same object we stringify into
- * its column, so verifier and producer share one source of truth.
- */
-export function computeContentHash(
-  input_context: unknown,
-  thought_chain: unknown,
-  tool_call: unknown,
-  observation: unknown,
-): string {
-  return createHash('sha256')
-    .update(
-      JSON.stringify({ input_context, thought_chain, tool_call, observation }),
-    )
-    .digest('hex');
+/** Map a model string + tool name to the GenAI semconv `gen_ai.system`
+ *  value. Used to populate the span attribute Datadog GenAI / Honeycomb
+ *  LLM templates filter on. */
+function inferProvider(model: string | undefined, toolName: string): string {
+  const m = (model ?? '').toLowerCase();
+  const t = toolName.toLowerCase();
+  if (m.startsWith('claude') || m.startsWith('anthropic'))           return 'anthropic';
+  if (m.startsWith('gpt') || m.startsWith('o1') || m.startsWith('o3')
+      || m.startsWith('o4') || m.startsWith('chatgpt') || m.startsWith('davinci')) return 'openai';
+  if (m.startsWith('gemini') || m.startsWith('text-bison')
+      || m.startsWith('chat-bison'))                                  return 'google';
+  if (m.startsWith('mistral') || m.startsWith('mixtral'))             return 'mistral';
+  if (m.startsWith('command')) /* cohere */                           return 'cohere';
+  if (m.startsWith('llama') || m.startsWith('codellama'))             return 'meta';
+  if (m.includes('claude') && m.includes('bedrock'))                  return 'aws.bedrock';
+  if (m.startsWith('amazon.'))                                        return 'aws.bedrock';
+  if (m.startsWith('groq'))                                           return 'groq';
+  if (t.includes('anthropic'))                                        return 'anthropic';
+  if (t.includes('openai'))                                           return 'openai';
+  if (t.includes('gemini') || t.includes('google'))                   return 'google';
+  return 'unknown';
 }
+
+/** Map our SDK's tool call shape onto the GenAI semconv operation name.
+ *  Keeps the bucket count small (chat / text_completion / embedding /
+ *  tool_call) so cardinality stays bounded. */
+function inferOperation(toolName: string, toolCall: any): 'chat' | 'text_completion' | 'embedding' | 'tool_call' {
+  const t = toolName.toLowerCase();
+  if (t.includes('embed'))                                            return 'embedding';
+  if (t.includes('chat') || t.includes('message')
+      || (toolCall?.arguments?.messages || toolCall?.messages))       return 'chat';
+  if (t.includes('complet') || t.includes('generate'))                return 'text_completion';
+  return 'tool_call';
+}
+
+// computeContentHash moved to services/content-hash.ts. Re-exported
+// for backwards compat with tests / older call-sites; new code should
+// import from `../services/content-hash` directly. This avoids the
+// `services/ → api/` layering violation the old definition caused.
+export { computeContentHash };
 
 export class TraceAPI {
   public readonly router: Router;
 
   constructor(
     private db: Database.Database,
-    private logger: Logger
+    private logger: Logger,
+    private agentRegistry?: AgentRegistryService,
   ) {
     this.router = Router();
     this.setupRoutes();
+  }
+
+  /** Record the sighting so the agents table, last_seen_at, and the
+   *  first-sighting event bus all stay in sync with the trace ingest
+   *  hot path. Provenance gets backfilled from SDK headers when present. */
+  private noteSighting(req: Request, agentId: string): void {
+    if (!this.agentRegistry) return;
+    const orgId = (req as any).orgId ?? 'default';
+    const buildArtifact = req.headers['x-aegis-build-artifact'] as string | undefined;
+    const sourceCommit  = req.headers['x-aegis-source-commit']  as string | undefined;
+    const provenance = (buildArtifact || sourceCommit)
+      ? { build_artifact: buildArtifact, source_commit: sourceCommit }
+      : undefined;
+    this.agentRegistry.touch({ orgId, agentId, provenance });
   }
 
   private setupRoutes() {
@@ -60,6 +98,7 @@ export class TraceAPI {
         }
 
         await this.storeTrace(trace, req.body);
+        this.noteSighting(req, trace.agent_id as string);
         res.status(201).json({ trace_id: trace.trace_id });
       } catch (error) {
         if (error instanceof z.ZodError) {
@@ -82,6 +121,7 @@ export class TraceAPI {
           for (const { parsed, raw } of rows) this.insertTrace(parsed, raw);
         });
         transaction(validTraces);
+        for (const { parsed } of validTraces) this.noteSighting(req, parsed.agent_id as string);
         res.status(201).json({ created: validTraces.length, trace_ids: validTraces.map(({ parsed }) => parsed.trace_id) });
       } catch (error) {
         this.logger.error({ error }, 'Failed to create batch traces');
@@ -427,6 +467,17 @@ export class TraceAPI {
     const blocked = trace.safety_validation?.passed === false;
     const durationMs = raw.observation?.duration_ms ?? 0;
     const errorMsg = raw.observation?.error ?? null;
+    // Derive the GenAI semconv fields from the tool-call body. We
+    // detect the LLM provider from the trace's `model` column +
+    // tool_call args; this mirrors the columns the SDK already populates
+    // via auto-instrumentation across Anthropic / OpenAI / Gemini /
+    // Mistral / Bedrock.
+    const spanModel = (model ?? raw.tool_call?.arguments?.model ?? raw.tool_call?.model ?? undefined) as string | undefined;
+    const provider = inferProvider(spanModel, toolName);
+    const operationName = inferOperation(toolName, raw.tool_call);
+    const conversationId = (raw as any).session_id ?? (trace as any).session_id ?? undefined;
+    const finishReason = raw.observation?.finish_reason ?? raw.observation?.stop_reason ?? undefined;
+
     setImmediate(() => emitTraceSpan({
       traceId: String(trace.trace_id),
       agentId: String(trace.agent_id),
@@ -437,6 +488,13 @@ export class TraceAPI {
       piiDetected,
       durationMs,
       error: errorMsg,
+      model: spanModel ?? undefined,
+      provider,
+      inputTokens,
+      outputTokens,
+      operationName,
+      conversationId,
+      finishReason,
     }));
   }
 

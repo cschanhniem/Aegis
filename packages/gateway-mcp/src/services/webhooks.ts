@@ -124,7 +124,11 @@ export class WebhookService {
 
   // ── Fire ────────────────────────────────────────────────────────────────
 
-  fire(payload: WebhookPayload): void {
+  /** Fire a webhook to every registered subscriber. `traceContext`
+   *  carries the inbound W3C traceparent / tracestate from the
+   *  originating request so customer SIEMs can correlate the webhook
+   *  payload back to the gateway check that produced it. */
+  fire(payload: WebhookPayload, traceContext?: { traceparent?: string; tracestate?: string }): void {
     const webhooks = this.list()
     for (const wh of webhooks) {
       const events = JSON.parse(wh.events) as string[]
@@ -136,7 +140,7 @@ export class WebhookService {
       `).run(wh.id, payload.event, JSON.stringify(payload)).lastInsertRowid;
 
       // Fire async with retry
-      this._sendWithRetry(wh.url, wh.id, payload, wh.secret ?? undefined, Number(deliveryId)).catch(err => {
+      this._sendWithRetry(wh.url, wh.id, payload, wh.secret ?? undefined, Number(deliveryId), traceContext).catch(err => {
         this.logger.error({ url: wh.url, err, webhook_id: wh.id }, 'Webhook delivery failed after all retries')
       })
     }
@@ -145,12 +149,13 @@ export class WebhookService {
   private async _sendWithRetry(
     url: string, webhookId: string, payload: WebhookPayload,
     secret: string | undefined, deliveryId: number,
+    traceContext?: { traceparent?: string; tracestate?: string },
   ): Promise<void> {
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
-        await this._send(url, payload, secret);
+        await this._send(url, payload, secret, traceContext);
 
         // Mark delivery as successful
         this.db.prepare(`
@@ -161,10 +166,16 @@ export class WebhookService {
         return;
       } catch (err: any) {
         lastError = err;
-        this.logger.warn({
+        // Per-attempt log was warn-level; that's wrong for SRE: a 3-retry
+        // failure storm against a flaky webhook receiver fan-outs to
+        // 3*N log lines per delivery and buries real issues. Drop to
+        // debug-level for in-flight retry attempts; the final-failure
+        // path below stays at warn. Counts + last-error still land in
+        // webhook_deliveries so the operator can pivot per delivery.
+        this.logger.debug({
           url, webhook_id: webhookId, attempt: attempt + 1,
           max_retries: this.maxRetries, error: err.message,
-        }, 'Webhook delivery attempt failed');
+        }, 'Webhook attempt failed (will retry)');
 
         // Update attempt count
         this.db.prepare(`
@@ -176,6 +187,12 @@ export class WebhookService {
           const backoff = this.retryBaseMs * Math.pow(2, attempt);
           const jitter = Math.random() * this.retryBaseMs;
           await new Promise(r => setTimeout(r, backoff + jitter));
+        } else {
+          // Last attempt failed — promote to warn so on-call sees it.
+          this.logger.warn({
+            url, webhook_id: webhookId, attempts: attempt + 1,
+            error: err.message,
+          }, 'Webhook delivery failed after all retries');
         }
       }
     }
@@ -188,7 +205,10 @@ export class WebhookService {
     throw lastError;
   }
 
-  private async _send(url: string, payload: WebhookPayload, secret?: string): Promise<void> {
+  private async _send(
+    url: string, payload: WebhookPayload, secret?: string,
+    traceContext?: { traceparent?: string; tracestate?: string },
+  ): Promise<void> {
     const isSlack = url.includes('hooks.slack.com') || url.includes('slack.com/services')
     const isPagerDuty = url.includes('events.pagerduty.com')
 
@@ -205,6 +225,12 @@ export class WebhookService {
       'Content-Type': 'application/json',
       'User-Agent':   'AEGIS-Webhook/2.0',
     }
+
+    // Propagate W3C trace context to the webhook receiver so customer
+    // SIEMs can correlate the inbound alert to the originating gateway
+    // span. Same convention OpenTelemetry uses for outbound HTTP.
+    if (traceContext?.traceparent) headers['traceparent'] = traceContext.traceparent;
+    if (traceContext?.tracestate)  headers['tracestate']  = traceContext.tracestate;
 
     if (secret) {
       const sig = crypto.createHmac('sha256', secret).update(body).digest('hex')

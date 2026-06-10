@@ -292,10 +292,19 @@ export function auto(
   const patched = results.filter((r) => r.ok).map((r) => r.framework);
   const failed  = results.filter((r) => !r.ok).map((r) => r.framework);
 
-  console.log(
-    `[AgentGuard] Auto-patched: ${patched.join(', ') || 'none'}` +
-    (failed.length ? ` | Not found (ok): ${failed.join(', ')}` : '')
-  );
+  // Silent by default — production deployments shouldn't see a console
+  // log line on every cold start. Opt-in via `verbose: true` in the
+  // options object or AGENTGUARD_VERBOSE=1 in the env. Dev gets a clear
+  // confirmation; prod stays clean.
+  const verbose =
+    (options as any)?.verbose === true ||
+    /^(1|true|yes)$/i.test(String(process.env.AGENTGUARD_VERBOSE ?? ''));
+  if (verbose) {
+    console.log(
+      `[AgentGuard] Auto-patched: ${patched.join(', ') || 'none'}` +
+      (failed.length ? ` | Not found (ok): ${failed.join(', ')}` : '')
+    );
+  }
 
   _defaultGuard = guard;
   return guard;
