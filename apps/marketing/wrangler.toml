@@ -22,4 +22,11 @@
 
 name = "aegis-marketing"
 compatibility_date = "2026-06-09"
-pages_build_output_dir = "dist"
+
+# New unified Workers + Pages format: a pure static site declares its
+# output directory via [assets] instead of the legacy
+# `pages_build_output_dir`. wrangler v4 rejects the legacy key.
+# Reference: https://developers.cloudflare.com/workers/static-assets/
+[assets]
+directory = "./dist"
+not_found_handling = "404-page"
