@@ -1,0 +1,166 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="Policy DSL + templates — Docs"
+  description="Write AEGIS policies. Six grammar-constrained templates + DSL combinators. AI generator + AJV self-test loop."
+>
+  <Header current="docs" />
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Docs · Policy DSL</p>
+        <h1>Write policy in <em>seconds</em>, not hours.</h1>
+        <p class="lede">
+          AEGIS ships six grammar-constrained templates that cover the
+          policy patterns guardrail products actually use. The AI
+          generator produces these templates from a one-paragraph
+          description + your tool inventory; the AJV validator
+          self-tests them on the same shot.
+        </p>
+      </div>
+    </section>
+
+    <section class="body">
+      <div class="container container-narrow">
+
+        <h2>The six templates</h2>
+        <p>Each template compiles to a JSON Schema fragment applied to a tool call's <code>arguments</code> object.</p>
+
+        <ol>
+          <li>
+            <h3>forbid_argument</h3>
+            <p>An argument MUST be absent or empty. Use for "no shell commands", "no raw SQL".</p>
+            <pre><code>{`{ "kind": "forbid_argument", "field": "command" }`}</code></pre>
+          </li>
+          <li>
+            <h3>require_pattern</h3>
+            <p>An argument MUST match a regex (allowlist).</p>
+            <pre><code>{`{ "kind": "require_pattern", "field": "url",
+  "pattern": "^https://api\\\\.example\\\\.com/" }`}</code></pre>
+          </li>
+          <li>
+            <h3>forbid_pattern</h3>
+            <p>An argument MUST NOT match a regex (denylist).</p>
+            <pre><code>{`{ "kind": "forbid_pattern", "field": "sql",
+  "pattern": "DROP\\\\s+TABLE" }`}</code></pre>
+          </li>
+          <li>
+            <h3>max_length</h3>
+            <p>String length cap. Use for prompt-injection caps.</p>
+            <pre><code>{`{ "kind": "max_length", "field": "note", "max": 4096 }`}</code></pre>
+          </li>
+          <li>
+            <h3>enum_values</h3>
+            <p>Argument MUST be one of a fixed set.</p>
+            <pre><code>{`{ "kind": "enum_values", "field": "method",
+  "allowed": ["GET", "HEAD"] }`}</code></pre>
+          </li>
+          <li>
+            <h3>require_https</h3>
+            <p>Argument MUST be an HTTPS URL.</p>
+            <pre><code>{`{ "kind": "require_https", "field": "callback" }`}</code></pre>
+          </li>
+        </ol>
+
+        <h2>Composite policies (AND / OR)</h2>
+        <p>Combine multiple templates against the same call:</p>
+        <pre><code>{`{
+  "all_of": true,
+  "templates": [
+    { "kind": "require_https", "field": "url" },
+    { "kind": "enum_values", "field": "method", "allowed": ["GET", "HEAD"] },
+    { "kind": "max_length", "field": "body", "max": 4096 }
+  ]
+}`}</code></pre>
+        <p>Same-field templates fold into <code>allOf</code> (or <code>anyOf</code> if <code>all_of=false</code>).</p>
+
+        <h2>DSL combinators (top-level)</h2>
+        <p>Outside the template grammar, AEGIS exposes a small expression DSL for policies that key on classification / anomaly / agent identity:</p>
+        <pre><code>{`{
+  "when": {
+    "all": [
+      { "classifier.category": "shell" },
+      { "anomaly.score": { ">": 0.7 } },
+      { "agent.id": { "in": ["agent-x", "agent-y"] } }
+    ]
+  },
+  "then": { "decision": "block", "reason": "shell + anomalous + risky agent" }
+}`}</code></pre>
+        <p>Comparators: <code>==</code> <code>!=</code> <code>&gt;</code> <code>&lt;</code> <code>&gt;=</code> <code>&lt;=</code> <code>in</code> <code>matches</code>. Combinators: <code>all</code> <code>any</code> <code>not</code>.</p>
+
+        <h2>AI policy generator</h2>
+        <p>Don't want to write templates by hand? Run the generator with a description + tool inventory + (optional) workflow graph:</p>
+        <pre><code>{`POST /api/ai/generate-policy-bundle
+{
+  "description": "Customer support copilot; never shell, never email outside our domain",
+  "tool_inventory": [
+    { "name": "shell" }, { "name": "send_email" }, { "name": "search_kb" }
+  ],
+  "workflow_graph": { /* from the scanner */ }
+}
+
+→ Returns: policies[] + DSL rules, each with should_block / should_allow tests AEGIS pre-runs through AJV.`}</code></pre>
+
+        <h2>Self-testing</h2>
+        <p>Every generated (or hand-written) policy ships with a <code>tests</code> block:</p>
+        <pre><code>{`{
+  "id": "no-shell",
+  "policy_schema": { ... },
+  "tests": {
+    "should_block": [
+      { "tool": "shell", "arguments": { "command": "rm -rf /" } }
+    ],
+    "should_allow": [
+      { "tool": "search_kb", "arguments": { "q": "refund policy" } }
+    ]
+  }
+}`}</code></pre>
+        <p>AEGIS compiles the schema, runs the tests, and rejects the policy if any assertion fails. No bad-actor-shaped policies ever land in production.</p>
+
+        <h2>Counterfactual explainer</h2>
+        <p>When a policy blocks a call, AEGIS computes the minimum edit that would have passed, re-runs the validator, and surfaces it in the audit:</p>
+        <pre><code>{`{
+  "decision": "block",
+  "policy_name": "https-only",
+  "counterfactual": {
+    "any_suggestion": true,
+    "suggestions": [{
+      "description": "Change field \\"url\\" to a value matching ^https://",
+      "proposed_arguments": { "url": "https://example.com/x" },
+      "verified": true,
+      "fix_kind": "pattern"
+    }]
+  }
+}`}</code></pre>
+
+        <h2>Effectiveness scoring</h2>
+        <p>Per-policy precision / recall / F1 over a rolling window. Cockpit surfaces a HEALTHY / TIGHTEN / RETIRE / PROBE signal so operators know which policies are noise vs catching real risk.</p>
+
+        <h2>Next</h2>
+        <ul>
+          <li><a href="/docs">Docs index</a></li>
+          <li><a href="/docs/api">REST API reference</a></li>
+          <li><a href="/docs/ontology">Threat ontology (AAT-T*)</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { font-size: 1.06rem; color: var(--muted); margin-top: 1rem; }
+    .body { padding: 2rem 0 5rem; }
+    h2 { font-family: var(--font-serif); font-size: 1.4rem; margin: 2.4rem 0 0.6rem; }
+    h3 { font-family: var(--font-mono); font-size: 0.92rem; color: var(--accent); margin: 1rem 0 0.3rem; text-transform: none; letter-spacing: 0; }
+    p, ul, ol { color: var(--text); line-height: 1.65; }
+    ul, ol { padding-left: 1.2rem; }
+    li { margin: 0.4rem 0; }
+    pre { background: var(--surface); padding: 1rem 1.1rem; border-radius: 8px; overflow-x: auto; border: 1px solid var(--hairline); font-size: 0.88rem; }
+  </style>
+</Layout>

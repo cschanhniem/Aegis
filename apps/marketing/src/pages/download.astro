@@ -1,0 +1,190 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+
+// Pinned release tag. When v0.2 ships, bump both this and the URLs.
+const LATEST = 'v0.1.0';
+const REPO   = 'https://github.com/Justin0504/Aegis';
+const REL    = `${REPO}/releases/download/${LATEST}`;
+
+const platforms = [
+  {
+    id: 'mac-arm',
+    title: 'macOS · Apple Silicon',
+    state: 'shipping',
+    desc: 'M1, M2, M3, M4 Macs. 164 MB DMG.',
+    download_label: 'Download .dmg',
+    download_url:   `${REL}/AEGIS_0.1.0_aarch64.dmg`,
+    hint: 'Unsigned first-launch. Right-click AEGIS → Open → Open.',
+  },
+  {
+    id: 'win',
+    title: 'Windows · x64',
+    state: 'shipping',
+    desc: '85 MB MSI installer. Built on Server 2022 + VS 2022.',
+    download_label: 'Download .msi',
+    download_url:   `${REL}/AEGIS_0.1.0_x64_en-US.msi`,
+    hint: 'Unsigned. First launch shows SmartScreen — More info → Run anyway.',
+  },
+  {
+    id: 'mac-x64',
+    title: 'macOS · Intel',
+    state: 'shipping',
+    desc: 'x86_64 build for older Macs.',
+    download_label: 'Download .dmg',
+    download_url:   `${REL}/AEGIS_0.1.0_x64.dmg`,
+    hint: 'Same Gatekeeper handling as Apple Silicon.',
+  },
+  {
+    id: 'linux',
+    title: 'Linux · x64 / arm64',
+    state: 'shipping',
+    desc: '.deb on Debian/Ubuntu, AppImage on others.',
+    download_label: 'Download .deb',
+    download_url:   `${REL}/aegis_0.1.0_amd64.deb`,
+    hint: 'Or use Docker Compose if you prefer containerised.',
+  },
+  {
+    id: 'ios',
+    title: 'iOS · iPhone / iPad',
+    state: 'not-applicable',
+    desc: 'AEGIS embeds Node.js + SQLite + local-port gateway — all forbidden by the iOS sandbox.',
+    nope_text: 'For mobile, use the cockpit web app against a hosted gateway.',
+  },
+  {
+    id: 'android',
+    title: 'Android',
+    state: 'not-applicable',
+    desc: 'Same architectural reason as iOS. Cockpit web app works in Chrome on Android.',
+    nope_text: 'For mobile, use the cockpit web app against a hosted gateway.',
+  },
+];
+---
+<Layout
+  title="Download AEGIS"
+  description="Download AEGIS — open-source runtime safety layer for AI agents. macOS Apple Silicon + Intel, Windows x64, Linux. Free + MIT licensed."
+>
+  <Header />
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Download</p>
+        <h1>One file. Double-click. <em>Done.</em></h1>
+        <p class="lede">
+          The desktop bundle ships the gateway + cockpit + a portable
+          Node runtime + every tool sidecar. Protection is on the
+          second the app launches. No Docker, no <code>npm install</code>,
+          no shell paste.
+        </p>
+        <p class="lede small">
+          Latest release: <strong>{LATEST}</strong> · MIT licensed ·
+          <a href={REPO} target="_blank" rel="noopener">View source</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="grid-wrap">
+      <div class="container">
+        <div class="grid">
+          {platforms.map(p => (
+            <article class={`card ${p.state}`} data-platform={p.id}>
+              <header>
+                <h2>{p.title}</h2>
+                {p.state === 'shipping'      && <span class="badge ok">{LATEST}</span>}
+                {p.state === 'not-applicable'&& <span class="badge nope">not applicable</span>}
+              </header>
+              <p>{p.desc}</p>
+              {p.state === 'shipping' && (
+                <>
+                  <a class="btn" href={p.download_url}>{p.download_label} →</a>
+                  <p class="hint">{p.hint}</p>
+                </>
+              )}
+              {p.state === 'not-applicable' && (
+                <p class="hint">{p.nope_text}</p>
+              )}
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="alt-install">
+      <div class="container container-narrow">
+        <h2>Prefer Docker?</h2>
+        <p>
+          The same gateway + cockpit + sidecars ship as a Docker Compose
+          stack. One command, no native install, equivalent feature
+          surface to the desktop bundle.
+        </p>
+        <pre><code>{`git clone ${REPO}
+cd Aegis
+docker compose -f docker/compose.yml up -d
+# → gateway on :8080, cockpit on :13003`}</code></pre>
+        <p class="muted small">
+          Or use the install script: <code>curl -fsSL {REPO}/raw/main/scripts/install.sh | bash</code>
+        </p>
+      </div>
+    </section>
+
+    <section class="below">
+      <div class="container container-narrow">
+        <h3>What you get</h3>
+        <ul>
+          <li><strong>Embedded gateway + cockpit</strong> bound to <code>127.0.0.1:18080</code> / <code>:13003</code> — won't conflict with anything else.</li>
+          <li><strong>Tray icon</strong> with a one-click "stop / restart gateway" menu.</li>
+          <li><strong>Full SDK ecosystem</strong> — Python and JS/TS SDKs covering 9 frameworks (Anthropic, OpenAI, LangChain, CrewAI, LlamaIndex, Mistral, Gemini, Bedrock, smolagents).</li>
+          <li><strong>Repo scanner</strong> + <strong>code injector</strong> sidecars — point at any folder, AEGIS detects the agent workflows automatically.</li>
+          <li><strong>Demo seed</strong> — one command and the cockpit fills with believable traces / violations / approvals so you can poke around without writing code.</li>
+        </ul>
+
+        <p class="muted small">
+          Hosted SaaS coming on a custom domain — see <a href="/signup">/signup</a> if
+          you'd rather not operate the gateway yourself.
+        </p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { font-size: 1.1rem; color: var(--muted); margin: 1rem 0 0; max-width: 60ch; }
+    .lede.small { font-size: 0.9rem; margin-top: 0.6rem; }
+
+    .grid-wrap { padding: 2rem 0 3rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+      padding: 1.4rem 1.3rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .card header { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; margin-bottom: 0.4rem; }
+    .card h2 { font-family: var(--font-serif); font-size: 1.3rem; margin: 0; }
+    .badge { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.18rem 0.5rem; border-radius: 99px; white-space: nowrap; }
+    .badge.ok   { background: hsl(140 30% 90%); color: hsl(140 40% 25%); }
+    .badge.nope { background: hsl(0 30% 92%);   color: hsl(0 40% 32%); }
+    .card p { color: var(--muted); font-size: 0.92rem; margin: 0.4rem 0 1rem; }
+    .card .btn { justify-content: center; }
+    .hint { color: var(--muted); font-size: 0.82rem; margin-top: 0.8rem; }
+    .card.not-applicable { opacity: 0.78; }
+
+    .alt-install { padding: 3rem 0; border-top: 1px solid var(--hairline); background: var(--surface); }
+    .alt-install h2 { font-family: var(--font-serif); margin-bottom: 0.6rem; }
+    .alt-install pre { background: var(--bg); }
+
+    .below { padding: 3rem 0 5rem; border-top: 1px solid var(--hairline); }
+    .below h3 { font-family: var(--font-serif); font-size: 1.4rem; margin: 0 0 1rem; }
+    .below ul { padding-left: 1.2rem; }
+    .below li { margin: 0.4rem 0; color: var(--text); }
+    .below li strong { font-weight: 600; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+  </style>
+</Layout>

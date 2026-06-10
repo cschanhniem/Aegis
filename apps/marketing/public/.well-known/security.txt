@@ -1,0 +1,10 @@
+# If you found a vulnerability in AEGIS, thanks for taking the time
+# to report it responsibly. We aim to acknowledge within 24 hours.
+
+Contact: mailto:security@aegis.dev
+Contact: https://github.com/Justin0504/Aegis/security/advisories
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://aegis.dev/.well-known/security.txt
+Policy: https://aegis.dev/security
+Acknowledgments: https://aegis.dev/security#hall-of-fame

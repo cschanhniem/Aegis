@@ -17,7 +17,7 @@ const installPaths = [
 export AEGIS_API_KEY=aeg_xxx
 # upstream OpenAI key forwarded unchanged
 # your code stays untouched`,
-    cta: { label: 'Sign up for a key', href: 'https://app.aegis.dev/signup' },
+    cta: { label: 'Sign up for a key', href: '/signup' },
   },
   {
     id: 'desktop',
@@ -37,7 +37,7 @@ open https://github.com/Justin0504/Aegis/releases/latest/download/AEGIS_0.1.0_aa
 cd Aegis
 docker compose -f docker/compose.yml up -d
 # → gateway on :8080, cockpit on :13003`,
-    cta: { label: 'Self-host guide', href: 'https://github.com/Justin0504/Aegis/blob/main/docs/self-host.md' },
+    cta: { label: 'Self-host guide', href: '/docs/self-host' },
   },
   {
     id: 'sdk',
@@ -51,14 +51,14 @@ import agentguard; agentguard.init(api_key="aeg_xxx")
 # Node / TypeScript
 npm install @agentguard/sdk
 import { init } from '@agentguard/sdk'; init({ apiKey: process.env.AEGIS_API_KEY });`,
-    cta: { label: 'SDK reference', href: 'https://github.com/Justin0504/Aegis/tree/main/packages' },
+    cta: { label: 'SDK reference', href: '/docs/sdk' },
   },
 ];
 
 const concepts = [
   {
     title: 'How AEGIS sees a tool call',
-    body: 'Every call hits the classifier, runs through L1 rules + L2 ML + (optionally) L3 LLM-judge, matches the per-tenant Policy DSL, and ends with one of three decisions: allow, pending (human review), block. Decision flows are documented at https://github.com/Justin0504/Aegis/blob/main/docs/decision-flow.md.',
+    body: 'Every call hits the classifier, runs through L1 rules + L2 ML + (optionally) L3 LLM-judge, matches the per-tenant Policy DSL, and ends with one of three decisions: allow, pending (human review), block. See /docs/policy-templates for how the DSL composes, /docs/api for the decision endpoint shape.',
   },
   {
     title: 'Policies vs DSL rules',
@@ -82,15 +82,19 @@ const concepts = [
   },
 ];
 
+// Internal-first reference list. Each link points to a real page on
+// aegis.dev rather than bouncing readers off to GitHub. The repo +
+// changelog + roadmap stay on GitHub because that's where they live;
+// everything substantive is rendered into the site itself.
 const quickRefs = [
-  { name: 'GitHub repo',          href: 'https://github.com/Justin0504/Aegis', desc: 'Source, issues, discussions' },
-  { name: 'Changelog',            href: 'https://github.com/Justin0504/Aegis/blob/main/CHANGELOG.md', desc: 'Every shipped change since v0.1.0' },
-  { name: 'Roadmap',              href: 'https://github.com/Justin0504/Aegis/blob/main/ROADMAP.md',  desc: 'What lands next + how to influence it' },
-  { name: 'Threat ontology',      href: 'https://github.com/Justin0504/Aegis/blob/main/docs/ontology.md', desc: 'AAT-T* threat catalogue, per-deployment coverage' },
-  { name: 'API reference',        href: 'https://github.com/Justin0504/Aegis/blob/main/docs/api.md', desc: 'REST endpoints, request / response shapes' },
-  { name: 'Policy templates',     href: 'https://github.com/Justin0504/Aegis/blob/main/docs/policy-templates.md', desc: 'Built-in template library + AI generator' },
-  { name: 'Self-host runbook',    href: 'https://github.com/Justin0504/Aegis/blob/main/docs/self-host.md', desc: 'Docker / K8s / systemd deployment' },
-  { name: 'Compliance runbooks',  href: 'https://github.com/Justin0504/Aegis/tree/main/compliance/runbooks', desc: 'Postgres migration, audit evidence, breach response' },
+  { name: 'Threat ontology',   href: '/docs/ontology',         desc: 'AAT-T* threat catalogue, per-deployment coverage' },
+  { name: 'API reference',     href: '/docs/api',              desc: 'REST endpoints, request / response shapes' },
+  { name: 'Policy templates',  href: '/docs/policy-templates', desc: 'Built-in template library + AI generator' },
+  { name: 'Self-host runbook', href: '/docs/self-host',        desc: 'Docker / K8s / systemd deployment' },
+  { name: 'Compliance + audit',href: '/docs/compliance',       desc: 'SOC 2 / ISO 27001 / NIST AI RMF / EU AI Act mappings' },
+  { name: 'SDK reference',     href: '/docs/sdk',              desc: 'Python + JS / TS auto-instrumentation' },
+  { name: 'Security posture',  href: '/security',              desc: 'Cryptographic audit, pen-test, vuln disclosure' },
+  { name: 'GitHub repo',       href: 'https://github.com/Justin0504/Aegis', desc: 'Source, issues, discussions (external)', external: true },
 ];
 ---
 
@@ -163,15 +167,24 @@ const quickRefs = [
       <div class="container container-narrow">
         <h2 id="reference">Reference shelf</h2>
         <p class="lede-2">
-          Deep docs live in the repo until <code>docs.aegis.dev</code>
-          ships. Direct links below.
+          Each topic has its own page on this site; the GitHub repo
+          link is the one external pointer for source + community.
         </p>
         <div class="refs">
-          {quickRefs.map(r => (
-            <a class="ref" href={r.href} target="_blank" rel="noopener">
-              <div class="ref-name">{r.name} ↗</div>
-              <div class="ref-desc">{r.desc}</div>
-            </a>
+          {quickRefs.map((r: any) => (
+            r.external
+              ? (
+                <a class="ref" href={r.href} target="_blank" rel="noopener">
+                  <div class="ref-name">{r.name} ↗</div>
+                  <div class="ref-desc">{r.desc}</div>
+                </a>
+              )
+              : (
+                <a class="ref" href={r.href}>
+                  <div class="ref-name">{r.name} →</div>
+                  <div class="ref-desc">{r.desc}</div>
+                </a>
+              )
           ))}
         </div>
       </div>

@@ -1,0 +1,106 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+const lastUpdated = 'June 10, 2026';
+---
+<Layout
+  title="Data Processing Addendum — AEGIS"
+  description="AEGIS DPA for GDPR / UK GDPR / EEA processing. Standard Contractual Clauses incorporated."
+>
+  <Header />
+  <main>
+    <section class="legal">
+      <div class="container container-narrow">
+        <p class="eyebrow">Legal</p>
+        <h1>Data Processing Addendum</h1>
+        <p class="lede small">Effective <strong>{lastUpdated}</strong> · Applies when AEGIS processes Customer Personal Data under GDPR, UK GDPR, or EEA equivalents.</p>
+
+        <div class="tldr">
+          <h2 class="inline">TL;DR for legal review</h2>
+          <ul>
+            <li>AEGIS acts as <strong>processor</strong>; Customer is <strong>controller</strong>.</li>
+            <li>EU Standard Contractual Clauses (2021/914) are incorporated by reference for transfers out of the EEA.</li>
+            <li>Sub-processors are listed publicly at <a href="/privacy">/privacy</a> §6; 30 days notice for additions on Enterprise tier.</li>
+            <li>Breach notification within 72 hours of confirmed incident.</li>
+            <li>Data deletion within 30 days of termination; on-request export in JSON or CSV.</li>
+          </ul>
+        </div>
+
+        <h2>1. Roles + scope</h2>
+        <p>Customer is the controller of all Customer Personal Data submitted via the AEGIS hosted gateway. AEGIS is a processor acting strictly on Customer's documented instructions, which are the contents of this DPA and Customer's normal use of the service.</p>
+
+        <h2>2. Permitted purposes</h2>
+        <p>AEGIS processes Customer Personal Data solely to:</p>
+        <ul>
+          <li>Provide the AEGIS service (intercept, classify, audit, retain tool-call traces).</li>
+          <li>Maintain security (detect abuse, block attacks).</li>
+          <li>Bill the Customer.</li>
+          <li>Respond to Customer instructions and legal requests.</li>
+        </ul>
+        <p>AEGIS will not use Customer Personal Data to train models or for any commercial purpose beyond providing the service.</p>
+
+        <h2>3. Sub-processors</h2>
+        <p>AEGIS engages the sub-processors listed at <a href="/privacy">/privacy</a> §6. Enterprise customers are notified at least 30 days before a new sub-processor is added; you can object in writing and we will work in good faith to resolve.</p>
+
+        <h2>4. International transfers</h2>
+        <p>Where Customer Personal Data is transferred from the EEA, UK, or Switzerland to a third country without an adequacy decision, the EU Standard Contractual Clauses (Commission Implementing Decision (EU) 2021/914) — Module Two (Controller → Processor) — are incorporated into this DPA by reference. The UK Addendum to the SCCs applies for UK GDPR transfers.</p>
+
+        <h2>5. Security</h2>
+        <p>AEGIS maintains technical and organisational measures including:</p>
+        <ul>
+          <li>TLS 1.2+ in transit; AES-256 at rest.</li>
+          <li>RBAC + SCIM + SAML + OIDC for identity.</li>
+          <li>Immutable audit log on RFC 6962 Merkle tree.</li>
+          <li>Quarterly access reviews.</li>
+          <li>Penetration test annually (first one scheduled 2026 Q4).</li>
+        </ul>
+        <p>Full technical posture at <a href="/security">/security</a>.</p>
+
+        <h2>6. Personal Data breach notification</h2>
+        <p>AEGIS will notify Customer of any confirmed Personal Data Breach affecting Customer Personal Data without undue delay and in any event within 72 hours of confirmation. The notification will include the nature of the breach, affected data categories, estimated number of data subjects, and mitigation steps.</p>
+
+        <h2>7. Data subject rights</h2>
+        <p>Customer is the contact point for data subject requests. AEGIS will assist Customer in responding to requests under Articles 15-22 GDPR within 14 days of a written request, at no additional cost.</p>
+
+        <h2>8. Audits</h2>
+        <p>Customer may audit AEGIS's compliance with this DPA up to once per calendar year, on 30 days written notice. AEGIS may meet audit obligations by providing third-party audit reports (SOC 2 Type II, ISO 27001) when available.</p>
+
+        <h2>9. Deletion + return</h2>
+        <p>On termination, AEGIS will delete Customer Personal Data within 30 days unless Customer requests export first. Free-tier data is deleted on account deletion; paid-tier data on the contract end date.</p>
+
+        <h2>10. Liability + governing law</h2>
+        <p>Liability under this DPA is subject to the cap in the main Terms of Service. Governing law: California (US), or as agreed in a separate signed MSA.</p>
+
+        <h2>11. Signature</h2>
+        <p>This DPA forms part of the AEGIS Terms of Service. Acceptance of the Terms (online click-through or signed MSA) constitutes acceptance of this DPA for any Customer Personal Data subject to GDPR / UK GDPR / EEA equivalents.</p>
+        <p>Customers requiring a counter-signed PDF version with their own legal entity details: email <a href="mailto:legal@aegis.dev">legal@aegis.dev</a>.</p>
+
+        <hr />
+        <p class="muted small">
+          This DPA is the v1 self-drafted version. A professionally-reviewed
+          revision is planned for 2026 Q3 alongside SOC 2 Type II.
+          Enterprise customers signing the v2 will be notified.
+        </p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .legal { padding: 5rem 0 5rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 { font-family: var(--font-serif); }
+    h2 { font-family: var(--font-serif); font-size: 1.3rem; margin: 2.2rem 0 0.6rem; }
+    h2.inline { font-size: 0.95rem; font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 0.6rem; }
+    .tldr { background: var(--surface); padding: 1.2rem 1.4rem; border-left: 3px solid var(--accent); margin: 1.4rem 0 2rem; border-radius: 0 6px 6px 0; }
+    .tldr ul { margin: 0; padding-left: 1.2rem; }
+    .lede.small { font-size: 0.95rem; color: var(--muted); margin-bottom: 2rem; }
+    p, ul { color: var(--text); line-height: 1.65; }
+    ul { padding-left: 1.2rem; }
+    li { margin: 0.3rem 0; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+    hr { border: 0; border-top: 1px solid var(--hairline); margin: 2.5rem 0; }
+  </style>
+</Layout>

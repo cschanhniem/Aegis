@@ -1,0 +1,155 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="REST API reference — Docs"
+  description="AEGIS REST API. Tool-call check, traces, policies, anomalies, SCIM 2.0, transparency log."
+>
+  <Header current="docs" />
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Docs · REST API</p>
+        <h1>REST API reference.</h1>
+        <p class="lede">
+          Every endpoint the gateway exposes. Authenticate with
+          <code>X-AEGIS-API-Key</code> (org-scoped). SCIM uses
+          <code>Authorization: Bearer scim_xxx</code> (RFC 7644). All
+          times ISO 8601, all IDs UUID v4.
+        </p>
+      </div>
+    </section>
+
+    <section class="body">
+      <div class="container container-narrow">
+
+        <h2>Base URL</h2>
+        <pre><code>https://gateway.aegis.dev    # hosted
+http://localhost:8080         # self-host / desktop</code></pre>
+
+        <h2>Authentication</h2>
+        <pre><code>{`# Org API key — for /api/v1/*
+curl -H "X-AEGIS-API-Key: aeg_xxx" https://gateway.aegis.dev/api/v1/check
+
+# Agent JWT — preferred for SDK-side identity
+curl -H "X-AEGIS-Agent-Token: eyJhbG..." https://gateway.aegis.dev/api/v1/check
+
+# SCIM bearer — for IdP user provisioning at /scim/v2/*
+curl -H "Authorization: Bearer scim_xxx" https://gateway.aegis.dev/scim/v2/Users`}</code></pre>
+
+        <h2>Core endpoints</h2>
+
+        <h3>POST /api/v1/check</h3>
+        <p>Gate a single tool call. Returns <code>allow</code> / <code>block</code> / <code>pending</code>.</p>
+        <pre><code>{`POST /api/v1/check
+{
+  "agent_id":  "my-agent",
+  "tool_name": "db_query",
+  "arguments": { "sql": "SELECT 1" }
+}
+
+→ 200 OK
+{
+  "decision":         "allow",
+  "policy_name":      "sql-injection",
+  "risk_level":       "LOW",
+  "classification":   { "category": "database", "signals": [] },
+  "anomaly_score":    0.12,
+  "check_id":         "..."
+}`}</code></pre>
+
+        <h3>GET /api/v1/check/:id/decision</h3>
+        <p>Poll a pending check (blocking mode). Returns latest verdict + decided_by.</p>
+
+        <h3>PATCH /api/v1/check/:id</h3>
+        <p>Human reviewer resolves a pending check. Body: <code>{`{ "decision": "allow" | "block", "decided_by": "alice@acme.com" }`}</code>.</p>
+
+        <h3>POST /api/v1/traces</h3>
+        <p>Ingest a tool-call trace (SDK uses this). Async — returns 201 immediately.</p>
+
+        <h3>GET /api/v1/traces</h3>
+        <p>List traces with filtering: <code>?agent_id=</code> <code>&from=</code> <code>&to=</code> <code>&blocked=true</code> <code>&limit=</code> <code>&offset=</code>.</p>
+
+        <h2>Policies</h2>
+        <h3>GET /api/v1/policies</h3>
+        <p>List policies including platform defaults + this tenant's overrides.</p>
+
+        <h3>POST /api/v1/policies</h3>
+        <p>Create a policy. Body: <code>{`{ id, name, description, policy_schema, risk_level }`}</code>. AJV schema or template.</p>
+
+        <h3>DELETE /api/v1/policies/:id</h3>
+        <p>Remove. Audited automatically.</p>
+
+        <h2>Anomalies + audit</h2>
+        <h3>GET /api/v1/anomalies</h3>
+        <p>Layer-2 events. <code>?min_score=0.7</code> <code>&agent_id=</code> <code>&decision=block</code>.</p>
+
+        <h3>GET /api/v1/audit-log</h3>
+        <p>Admin audit log — every policy create / update / delete / kill-switch / config write. Filter by <code>?action=</code> <code>&resource_type=</code> <code>&q=</code> substring.</p>
+
+        <h2>Transparency log</h2>
+        <h3>GET /api/v1/transparency-log/size</h3>
+        <p>Current Merkle tree size.</p>
+
+        <h3>GET /api/v1/transparency-log/sth</h3>
+        <p>Signed tree head — anchor for offline verification.</p>
+
+        <h3>GET /api/v1/transparency-log/proof/:leaf_index</h3>
+        <p>Inclusion proof for a specific leaf. Verifiable with the zero-dep CLI under <code>tools/verify-log/</code>.</p>
+
+        <h2>SCIM 2.0 (RFC 7644)</h2>
+        <p>For IdP user / group provisioning. All standard SCIM verbs:</p>
+        <ul>
+          <li><code>GET /scim/v2/Users</code> · <code>POST /scim/v2/Users</code> · <code>PATCH /scim/v2/Users/:id</code> · <code>DELETE /scim/v2/Users/:id</code></li>
+          <li><code>GET /scim/v2/Groups</code> · <code>POST /scim/v2/Groups</code> · <code>PATCH /scim/v2/Groups/:id</code></li>
+          <li><code>GET /scim/v2/ServiceProviderConfig</code> · <code>GET /scim/v2/ResourceTypes</code> · <code>GET /scim/v2/Schemas</code></li>
+        </ul>
+        <p>Filter syntax: <code>userName eq "alice@acme.com"</code> / <code>active eq false</code> / <code>email co "@acme"</code> / etc.</p>
+
+        <h2>Billing (Stripe webhook)</h2>
+        <h3>POST /api/v1/stripe/webhook</h3>
+        <p>Stripe → AEGIS lifecycle sync. Signature-verified. Handles <code>customer.subscription.created</code> / <code>.updated</code> / <code>.deleted</code> + <code>invoice.payment_succeeded</code> / <code>.failed</code>.</p>
+
+        <h2>Health + metrics</h2>
+        <ul>
+          <li><code>GET /health</code> — JSON: status, version, uptime, db reachable.</li>
+          <li><code>GET /ready</code> — 200 when accepting traffic; 503 otherwise.</li>
+          <li><code>GET /metrics</code> — Prometheus exposition. <strong>Not</strong> traced for OTel (cardinality + scrape noise).</li>
+        </ul>
+
+        <h2>Errors</h2>
+        <p>All errors are JSON: <code>{`{ "error": { "code", "message", ...detail } }`}</code>. Standard codes:</p>
+        <ul>
+          <li><code>UNAUTHORIZED</code> · <code>FORBIDDEN</code> · <code>RATE_LIMITED</code> (with <code>Retry-After</code>)</li>
+          <li><code>VALIDATION_ERROR</code> (with <code>details: [...]</code> from Zod)</li>
+          <li><code>POLICY_VIOLATION</code> (with <code>policy_name</code>, <code>counterfactual</code> hint)</li>
+          <li><code>PROXY_UPSTREAM_FAILED</code> / <code>PROXY_UPSTREAM_TIMEOUT</code></li>
+        </ul>
+
+        <h2>Next</h2>
+        <ul>
+          <li><a href="/docs">Docs index</a></li>
+          <li><a href="/docs/sdk">SDK reference</a></li>
+          <li><a href="/docs/policy-templates">Policy DSL + templates</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 { font-family: var(--font-serif); }
+    .lede { font-size: 1.06rem; color: var(--muted); margin-top: 1rem; }
+    .body { padding: 2rem 0 5rem; }
+    h2 { font-family: var(--font-serif); font-size: 1.4rem; margin: 2.4rem 0 0.6rem; }
+    h3 { font-family: var(--font-mono); font-size: 0.96rem; color: var(--accent); margin: 1.4rem 0 0.4rem; }
+    p, ul { color: var(--text); line-height: 1.65; }
+    ul { padding-left: 1.2rem; }
+    li { margin: 0.3rem 0; }
+    pre { background: var(--surface); padding: 1rem 1.1rem; border-radius: 8px; overflow-x: auto; border: 1px solid var(--hairline); }
+  </style>
+</Layout>

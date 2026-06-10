@@ -1,0 +1,142 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="SDK reference — Docs"
+  description="AEGIS SDK reference. Python + JS/TS auto-instrumentation across 9 frameworks. One init() call."
+>
+  <Header current="docs" />
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Docs · SDK reference</p>
+        <h1>One <em>init()</em>, 9 frameworks.</h1>
+        <p class="lede">
+          The AEGIS SDKs are auto-instrumentation libraries. Add one
+          line at process start and every supported framework's tool
+          calls flow through the gateway — no per-call rewriting, no
+          decorator goo, no LangChain handler glue.
+        </p>
+      </div>
+    </section>
+
+    <section class="body">
+      <div class="container container-narrow">
+
+        <h2>Supported frameworks</h2>
+        <ul class="frameworks">
+          <li>Anthropic SDK (Python + JS)</li>
+          <li>OpenAI SDK (Python + JS)</li>
+          <li>LangChain + LangGraph (Python + JS)</li>
+          <li>CrewAI</li>
+          <li>LlamaIndex</li>
+          <li>Mistral AI</li>
+          <li>Google Gemini / Vertex AI</li>
+          <li>AWS Bedrock (boto3)</li>
+          <li>smolagents</li>
+        </ul>
+        <p class="muted small">
+          If your framework isn't on this list, the LLM egress proxy
+          mode works for anything that respects <code>OPENAI_BASE_URL</code> /
+          <code>ANTHROPIC_BASE_URL</code> / equivalent.
+        </p>
+
+        <h2>Python SDK</h2>
+        <pre><code>{`pip install agentguard
+
+# in your agent entrypoint:
+import agentguard
+agentguard.init(
+    api_key="aeg_xxx",
+    gateway_url="https://gateway.aegis.dev",  # or your self-hosted URL
+    agent_id="my-agent",                       # optional but recommended
+)`}</code></pre>
+        <p>After <code>init()</code>:</p>
+        <ul>
+          <li>Anthropic / OpenAI / Mistral / Gemini / Cohere clients are monkey-patched at import time. Every call goes through the gateway.</li>
+          <li>LangChain <code>BaseTool.run</code> is patched — tool calls land as audit rows.</li>
+          <li>CrewAI agent handoffs are intercepted for the cross-agent / collusion detector.</li>
+          <li>Exceptions on blocked calls are <code>AgentGuardBlockedError</code>, with the policy id + reason.</li>
+        </ul>
+
+        <h2>JavaScript / TypeScript SDK</h2>
+        <pre><code>{`npm install @agentguard/sdk
+
+// in your entrypoint:
+import { init } from '@agentguard/sdk';
+init({
+  apiKey:     process.env.AEGIS_API_KEY,
+  gatewayUrl: 'https://gateway.aegis.dev',
+  agentId:    'my-agent',
+  verbose:    false,  // set true (or AGENTGUARD_VERBOSE=1) for cold-start logs
+});`}</code></pre>
+        <p>Same auto-instrumentation surface as Python.</p>
+
+        <h2>Configuration reference</h2>
+        <table class="config-table">
+          <thead><tr><th>Option</th><th>Required</th><th>Default</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>apiKey</code></td><td>yes</td><td>—</td><td>Org-scoped key from <a href="/signup">/signup</a> or the cockpit Settings page.</td></tr>
+            <tr><td><code>gatewayUrl</code></td><td>yes</td><td>—</td><td>Hosted: <code>https://gateway.aegis.dev</code>. Self-host: <code>http://localhost:8080</code>.</td></tr>
+            <tr><td><code>agentId</code></td><td>no</td><td>auto</td><td>If unset, derived from the host + process. Set explicitly for multi-agent apps.</td></tr>
+            <tr><td><code>blocking</code></td><td>no</td><td><code>true</code></td><td><code>false</code> = observe-only (no enforcement, just audit).</td></tr>
+            <tr><td><code>timeoutMs</code></td><td>no</td><td><code>5000</code></td><td>Gateway call deadline.</td></tr>
+            <tr><td><code>verbose</code></td><td>no</td><td><code>false</code></td><td>Cold-start "auto-patched: [...]" log line.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Manual mode (skip auto-instrumentation)</h2>
+        <p>If you want explicit checkpoints instead of monkey-patching:</p>
+        <pre><code>{`from agentguard import AgentGuard
+guard = AgentGuard(api_key="aeg_xxx", gateway_url="...", agent_id="my-agent")
+
+verdict = guard.check_tool_call(tool="db_query", arguments={"sql": "SELECT 1"})
+if verdict.decision == "block":
+    raise RuntimeError(verdict.reason)`}</code></pre>
+
+        <h2>Zero-code-change mode (no SDK)</h2>
+        <p>If you'd rather not install anything, point your existing SDK's base URL at the AEGIS proxy:</p>
+        <pre><code>{`# Anthropic / OpenAI / Mistral / Gemini all support a base URL env var.
+export OPENAI_BASE_URL=https://gateway.aegis.dev/openai/v1
+export AEGIS_API_KEY=aeg_xxx
+# your code is unchanged`}</code></pre>
+        <p>
+          AEGIS proxies the call to upstream, runs detectors on the
+          response (tool calls, embedded prompts, anomalies), writes
+          audit, returns. Every framework that respects <code>*_BASE_URL</code>
+          works zero-code.
+        </p>
+
+        <h2>Next</h2>
+        <ul>
+          <li><a href="/docs/api">REST API reference</a></li>
+          <li><a href="/docs/policy-templates">Policy DSL + templates</a></li>
+          <li><a href="/docs/self-host">Self-host guide</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { font-size: 1.06rem; color: var(--muted); margin-top: 1rem; }
+    .body { padding: 2rem 0 5rem; }
+    h2 { font-family: var(--font-serif); font-size: 1.4rem; margin: 2.4rem 0 0.6rem; }
+    p, ul { color: var(--text); line-height: 1.65; }
+    ul { padding-left: 1.2rem; }
+    li { margin: 0.3rem 0; }
+    .frameworks { columns: 2; column-gap: 1.5rem; max-width: 520px; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+    pre { background: var(--surface); padding: 1rem 1.1rem; border-radius: 8px; overflow-x: auto; border: 1px solid var(--hairline); }
+    table.config-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.94rem; }
+    table.config-table th { text-align: left; font-weight: 600; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--hairline-strong); }
+    table.config-table td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+    table.config-table code { background: var(--surface); padding: 0 4px; border-radius: 3px; }
+  </style>
+</Layout>

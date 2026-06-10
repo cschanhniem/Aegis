@@ -1,0 +1,186 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+
+// AAT-T* — AEGIS Agent Threat ontology v1.
+// Mirrors the MITRE ATT&CK structure: 10 tactics × 4 techniques each.
+// The full catalogue is published in the repo under docs/ontology.md;
+// this page renders a navigable summary for the marketing site.
+const tactics = [
+  {
+    id: 'T1', title: 'Indirect Prompt Injection',
+    techniques: [
+      { id: 'T1001', name: 'Embedded instruction in retrieved doc' },
+      { id: 'T1002', name: 'Zero-width unicode steganography' },
+      { id: 'T1003', name: 'Multilingual prompt-injection' },
+      { id: 'T1004', name: 'Tool result poisoning (server-side)' },
+    ],
+  },
+  {
+    id: 'T2', title: 'Override / Jailbreak',
+    techniques: [
+      { id: 'T2001', name: 'Ignore-previous-instructions' },
+      { id: 'T2002', name: 'Persona hijack (DAN / GPT-99)' },
+      { id: 'T2003', name: 'Roleplay escape' },
+      { id: 'T2004', name: 'Filter-suspend request' },
+    ],
+  },
+  {
+    id: 'T3', title: 'System-prompt Exfiltration',
+    techniques: [
+      { id: 'T3001', name: 'Verbatim system-prompt repeat' },
+      { id: 'T3002', name: 'Translate-to-other-language leak' },
+      { id: 'T3003', name: 'Bracket-marker leak (<system>...)' },
+      { id: 'T3004', name: 'Function-spec leak' },
+    ],
+  },
+  {
+    id: 'T4', title: 'Tool Abuse',
+    techniques: [
+      { id: 'T4001', name: 'Destructive SQL (DROP/TRUNCATE)' },
+      { id: 'T4002', name: 'Shell with sensitive path access' },
+      { id: 'T4003', name: 'Hijacked email recipient' },
+      { id: 'T4004', name: 'Outbound to attacker URL' },
+    ],
+  },
+  {
+    id: 'T5', title: 'Sensitive Context Exfiltration',
+    techniques: [
+      { id: 'T5001', name: 'PII relay (internal → external tool)' },
+      { id: 'T5002', name: 'Secret in argument (api keys, tokens)' },
+      { id: 'T5003', name: 'Encrypted-channel exfiltration' },
+      { id: 'T5004', name: 'Slow-drip exfiltration (rate-limit evasion)' },
+    ],
+  },
+  {
+    id: 'T6', title: 'Memory Poisoning',
+    techniques: [
+      { id: 'T6001', name: 'Vector-store inject (RAG corpus)' },
+      { id: 'T6002', name: 'Long-term memory inject' },
+      { id: 'T6003', name: 'Conversation history rewrite' },
+      { id: 'T6004', name: 'Cache poisoning' },
+    ],
+  },
+  {
+    id: 'T7', title: 'Discovery / Recon',
+    techniques: [
+      { id: 'T7001', name: 'Tool enumeration probe' },
+      { id: 'T7002', name: 'Credential discovery (env / FS scan)' },
+      { id: 'T7003', name: 'Workflow topology probe' },
+      { id: 'T7004', name: 'Rate-limit / quota probe' },
+    ],
+  },
+  {
+    id: 'T8', title: 'Resource Abuse',
+    techniques: [
+      { id: 'T8001', name: 'Token-quota exhaustion (cost attack)' },
+      { id: 'T8002', name: 'Tool-call fan-out (DoS via agent)' },
+      { id: 'T8003', name: 'Long-context inflation' },
+      { id: 'T8004', name: 'Recursive agent invocation' },
+    ],
+  },
+  {
+    id: 'T9', title: 'Output Tampering',
+    techniques: [
+      { id: 'T9001', name: 'Misformat as legitimate JSON' },
+      { id: 'T9002', name: 'Hallucinated citation injection' },
+      { id: 'T9003', name: 'Misleading user-facing response' },
+      { id: 'T9004', name: 'Function-call argument spoofing' },
+    ],
+  },
+  {
+    id: 'T10', title: 'Multi-agent Collusion',
+    techniques: [
+      { id: 'T10001', name: 'Cross-agent trust abuse' },
+      { id: 'T10002', name: 'Session / token replay across agents' },
+      { id: 'T10003', name: 'Sensitive-data relay (A→B→external)' },
+      { id: 'T10004', name: 'Handoff burst (A→B floods cycle)' },
+    ],
+  },
+];
+---
+<Layout
+  title="Threat ontology — Docs"
+  description="AEGIS Agent Threat ontology v1 (AAT-T*). 10 tactics × 40 techniques mapped to per-deployment coverage."
+>
+  <Header current="docs" />
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Docs · AAT-T* threat ontology</p>
+        <h1>Agent threats, <em>classified</em>.</h1>
+        <p class="lede">
+          AAT-T* (AEGIS Agent Threat) is our 10-tactic × 4-technique
+          ontology of attacks against LLM-driven agents. MITRE ATT&CK
+          for AI tools, basically. Every AEGIS detector is mapped to
+          one or more AAT-T* technique IDs so customers can audit
+          coverage gaps.
+        </p>
+      </div>
+    </section>
+
+    <section class="body">
+      <div class="container container-narrow">
+        {tactics.map(t => (
+          <article class="tactic">
+            <h2><span class="id">{t.id}</span> {t.title}</h2>
+            <ul>
+              {t.techniques.map(tech => (
+                <li><code class="tid">{tech.id}</code> {tech.name}</li>
+              ))}
+            </ul>
+          </article>
+        ))}
+
+        <h2>Coverage map</h2>
+        <p>
+          Each detector in AEGIS declares the AAT-T* technique IDs it
+          claims to catch. The cockpit <code>/coverage</code> page renders
+          this as a heat-map per deployment; the REST endpoint at
+          <code>GET /api/v1/ontology/coverage</code> emits the same data
+          for procurement spreadsheets.
+        </p>
+        <p class="muted small">
+          Want to compare AEGIS vs another guardrail vendor? Run their
+          equivalent claims through this ontology and the gaps fall
+          out by intersection.
+        </p>
+
+        <h2>Versioning</h2>
+        <p>
+          AAT-T* v1 freezes the 10 × 4 = 40 technique IDs. New techniques
+          land in v2 with new IDs; existing IDs never shift meaning.
+          Customers can pin detector → technique mappings to the major
+          version for compliance reports.
+        </p>
+
+        <h2>Next</h2>
+        <ul>
+          <li><a href="/docs">Docs index</a></li>
+          <li><a href="/docs/policy-templates">Policy DSL + templates</a></li>
+          <li><a href="/docs/compliance">Compliance + audit</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { font-size: 1.06rem; color: var(--muted); margin-top: 1rem; }
+    .body { padding: 2rem 0 5rem; }
+    .tactic { margin-bottom: 1.4rem; padding: 1rem 1.2rem; background: var(--surface); border-radius: 8px; border: 1px solid var(--hairline); }
+    .tactic h2 { font-family: var(--font-serif); font-size: 1.15rem; margin: 0 0 0.6rem; display: flex; gap: 0.5rem; align-items: baseline; }
+    .id { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-warn); }
+    .tid { font-family: var(--font-mono); font-size: 0.85rem; background: var(--bg); padding: 0 4px; border-radius: 3px; color: var(--accent); }
+    .tactic ul { list-style: none; padding: 0; margin: 0; }
+    .tactic li { padding: 0.18rem 0; font-size: 0.93rem; }
+    h2 { font-family: var(--font-serif); font-size: 1.4rem; margin: 2.4rem 0 0.6rem; }
+    p, ul { color: var(--text); line-height: 1.65; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+  </style>
+</Layout>

@@ -1,0 +1,108 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+const lastUpdated = 'June 10, 2026';
+---
+<Layout
+  title="Privacy Policy — AEGIS"
+  description="What data AEGIS collects, why, and how to control it. Last updated June 10, 2026."
+>
+  <Header />
+  <main>
+    <section class="legal">
+      <div class="container container-narrow">
+        <p class="eyebrow">Legal</p>
+        <h1>Privacy Policy</h1>
+        <p class="lede small">Last updated: <strong>{lastUpdated}</strong></p>
+
+        <p>
+          AEGIS is an open-source runtime safety layer for AI agents,
+          maintained by Aojie Yuan and operated as a hosted SaaS on
+          <code>aegis.dev</code>. This policy describes what data the
+          hosted service collects, why, and how you control it.
+          Self-hosted installations are out of scope — your data stays
+          on your infrastructure.
+        </p>
+
+        <h2>1. What we collect</h2>
+        <p>The hosted service collects:</p>
+        <ul>
+          <li><strong>Account data</strong> — your email, name (optional), org slug.</li>
+          <li><strong>Tool-call traces</strong> — the inputs, tool name, and outputs that flow through the gateway. This is the audit you signed up for.</li>
+          <li><strong>Telemetry</strong> — error reports and aggregate latency / throughput metrics so we can keep the gateway up.</li>
+          <li><strong>Billing</strong> — Stripe processes your payment; we store the Stripe customer + subscription id, not your card.</li>
+        </ul>
+        <p>The marketing site (<code>aegis.dev</code>) uses Cloudflare Web Analytics — no cookies, no per-user tracking.</p>
+
+        <h2>2. What we do not collect</h2>
+        <ul>
+          <li>We do <strong>not</strong> read tool-call traces for our own training data.</li>
+          <li>We do <strong>not</strong> share traces with anyone other than the providers you explicitly route through (OpenAI / Anthropic / your SIEM).</li>
+          <li>We do <strong>not</strong> sell user data.</li>
+        </ul>
+
+        <h2>3. Where data lives</h2>
+        <p>Hosted-tier data is stored in our cloud provider in the US (and EU starting in 2027 — opt-in). Backups are encrypted at rest. Stripe handles all card data in their PCI-DSS environment.</p>
+
+        <h2>4. How long we keep it</h2>
+        <ul>
+          <li>Free tier: 7-day audit retention.</li>
+          <li>Pro tier: 30 days.</li>
+          <li>Team tier: 90 days.</li>
+          <li>Enterprise: contractual (up to forever).</li>
+        </ul>
+        <p>Account metadata persists while your account is active. On deletion, your traces and account data are purged within 30 days.</p>
+
+        <h2>5. Your rights</h2>
+        <p>You can:</p>
+        <ul>
+          <li>Request a copy of your data — email <a href="mailto:privacy@aegis.dev">privacy@aegis.dev</a>.</li>
+          <li>Request deletion of your account and all associated traces.</li>
+          <li>Object to processing (we'll work with you to migrate to self-hosted).</li>
+          <li>Lodge a complaint with your local supervisory authority (EU users) or California AG (CCPA).</li>
+        </ul>
+
+        <h2>6. Sub-processors</h2>
+        <p>We rely on a small list of vendors to operate the hosted service:</p>
+        <ul>
+          <li><strong>Cloudflare</strong> — edge CDN, marketing site, Workers Builds, Web Analytics.</li>
+          <li><strong>Stripe</strong> — payment processing.</li>
+          <li><strong>Resend</strong> — transactional email.</li>
+          <li><strong>Sentry</strong> — error reporting.</li>
+          <li><strong>Instatus</strong> — public status page.</li>
+        </ul>
+        <p>If we add a sub-processor that touches customer data, we'll update this list with at least 30 days notice for enterprise customers.</p>
+
+        <h2>7. Security</h2>
+        <p>See <a href="/security">/security</a> for the technical posture: TLS in transit, AES-256 at rest, RBAC + SCIM + SAML + OIDC for identity, immutable audit log on a Merkle-anchored transparency tree. Vulnerability reports go to <a href="mailto:security@aegis.dev">security@aegis.dev</a>.</p>
+
+        <h2>8. Contact</h2>
+        <p>Privacy questions, requests, or complaints: <a href="mailto:privacy@aegis.dev">privacy@aegis.dev</a>.</p>
+
+        <hr />
+        <p class="muted small">
+          This is the v1 self-drafted policy. Once we engage outside
+          counsel (planned 2026 Q3), this page will be replaced with a
+          professionally-reviewed version. We will not weaken any
+          commitment listed above in that revision.
+        </p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .legal { padding: 5rem 0 5rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 { font-family: var(--font-serif); }
+    h2 { font-family: var(--font-serif); font-size: 1.3rem; margin: 2.2rem 0 0.6rem; }
+    .lede.small { font-size: 0.95rem; color: var(--muted); margin-bottom: 2rem; }
+    p, ul { color: var(--text); line-height: 1.65; }
+    ul { padding-left: 1.2rem; }
+    li { margin: 0.3rem 0; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+    hr { border: 0; border-top: 1px solid var(--hairline); margin: 2.5rem 0; }
+  </style>
+</Layout>

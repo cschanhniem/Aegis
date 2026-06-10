@@ -1,0 +1,133 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="Compliance + audit — Docs"
+  description="AEGIS compliance posture: cryptographic audit, SCIM + SAML + OIDC, SOC 2 framework, Common Criteria mapping."
+>
+  <Header current="docs" />
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Docs · Compliance + audit</p>
+        <h1>Compliance, <em>operational</em>.</h1>
+        <p class="lede">
+          AEGIS ships SOC 2 / ISO 27001 / NIST AI RMF / EU AI Act
+          control evidence as a live API. Auditors hit one endpoint and
+          get a signed JSON artifact mapping each control to AEGIS
+          runtime data — no slideware, no after-the-fact storytelling.
+        </p>
+      </div>
+    </section>
+
+    <section class="body">
+      <div class="container container-narrow">
+
+        <h2>Cryptographic audit (RFC 6962)</h2>
+        <p>
+          Every audit row and compliance bundle appends to an
+          append-only Merkle log. Tree roots are Ed25519-signed and
+          published daily. Customers can fetch a root + an inclusion
+          proof + the leaf, and verify the chain offline with a
+          zero-dependency CLI under <code>tools/verify-log/</code>.
+        </p>
+        <p>
+          Witness cosignature (Sigstore-style) is available — third
+          parties co-sign roots so a compromised AEGIS infrastructure
+          alone can't rewrite history.
+        </p>
+
+        <h2>Compliance bundle endpoint</h2>
+        <p>One endpoint, four frameworks. Each returns a JSON artifact mapping each control to live evidence (audit rows, policy enforcement counts, detector coverage, anomaly thresholds, etc.).</p>
+        <pre><code>{`POST /api/v1/compliance/bundle/soc2
+POST /api/v1/compliance/bundle/iso27001
+POST /api/v1/compliance/bundle/nist-ai-rmf
+POST /api/v1/compliance/bundle/eu-ai-act
+
+→ Signed JSON: { controls: [...], evidence: [...], signature: "..." }`}</code></pre>
+        <p>
+          The bundle's <code>signature</code> field is Ed25519 over a
+          canonical-JSON form of the body. Auditors verify with our
+          published public key at
+          <code>.well-known/aegis-release-pubkey.pem</code>.
+        </p>
+
+        <h2>SOC 2 Type II</h2>
+        <ul>
+          <li><strong>Current status:</strong> framework documents + evidence endpoint shipping. Drata / Vanta integration planned 2026 Q3.</li>
+          <li><strong>Target audit:</strong> 2026 Q4 with a regulated CPA.</li>
+          <li><strong>Scope:</strong> Security, Availability, Confidentiality (Trust Services Criteria).</li>
+          <li><strong>Common Criteria mapping:</strong> CC1.1 — CC9.2 each mapped to AEGIS evidence; see <a href="https://github.com/Justin0504/Aegis/blob/main/compliance/cc-mapping.md" target="_blank" rel="noopener">repo</a> for the full table.</li>
+        </ul>
+
+        <h2>ISO 27001 / 27018</h2>
+        <ul>
+          <li>Same evidence backbone as SOC 2; control mapping to ISO 27001 Annex A.</li>
+          <li>ISO 27018 (cloud-PII) controls included via the privacy-redaction + retention policy machinery.</li>
+        </ul>
+
+        <h2>NIST AI Risk Management Framework (AI 600-1)</h2>
+        <ul>
+          <li>Govern / Map / Measure / Manage functions mapped to AEGIS features.</li>
+          <li><strong>Map</strong>: capability risk scorer (action / egress / secrets / pii / scale dimensions).</li>
+          <li><strong>Measure</strong>: anomaly detector (Mahalanobis + IF + HST + Conformal + ADWIN ensemble), policy effectiveness scoring.</li>
+          <li><strong>Manage</strong>: policy enforcement, transparency log, witness cosignature.</li>
+        </ul>
+
+        <h2>EU AI Act</h2>
+        <ul>
+          <li><strong>Art. 14 (human oversight)</strong>: pending-checks flow + cockpit reviewer queue + counterfactual explainer.</li>
+          <li><strong>Art. 15 (accuracy + cybersecurity)</strong>: detector chain + transparency log audit.</li>
+          <li><strong>Art. 12 (record-keeping)</strong>: immutable audit log + per-call traces with PII redaction.</li>
+        </ul>
+
+        <h2>HIPAA / PCI / GDPR — case-by-case</h2>
+        <ul>
+          <li><strong>GDPR / UK GDPR</strong>: DPA at <a href="/dpa">/dpa</a>; SCCs incorporated.</li>
+          <li><strong>HIPAA</strong>: BAA available on Enterprise tier — email <a href="mailto:sales@aegis.dev">sales@aegis.dev</a>.</li>
+          <li><strong>PCI-DSS</strong>: Stripe handles card data; AEGIS itself stays out of PCI scope.</li>
+        </ul>
+
+        <h2>Pen-test posture</h2>
+        <ul>
+          <li>First external pen-test scheduled 2026 Q4 with one of Bishop Fox / NCC Group / Cure53.</li>
+          <li>Internal red-team via continuous prompt-injection corpus (26 patterns × 6 categories) — every deployment auto-scored on coverage.</li>
+          <li>Public security disclosure at <a href="/.well-known/security.txt">/.well-known/security.txt</a>; advisories at <a href="https://github.com/Justin0504/Aegis/security/advisories" target="_blank" rel="noopener">GitHub Security</a>.</li>
+        </ul>
+
+        <h2>Hall of fame</h2>
+        <p class="muted small">
+          Security researchers who report valid vulnerabilities are
+          credited here (with their consent) once the report is
+          remediated. <a href="/security#hall-of-fame">/security#hall-of-fame</a>.
+        </p>
+
+        <h2>Next</h2>
+        <ul>
+          <li><a href="/docs">Docs index</a></li>
+          <li><a href="/security">Security posture</a></li>
+          <li><a href="/dpa">DPA</a></li>
+          <li><a href="/privacy">Privacy policy</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { font-size: 1.06rem; color: var(--muted); margin-top: 1rem; }
+    .body { padding: 2rem 0 5rem; }
+    h2 { font-family: var(--font-serif); font-size: 1.4rem; margin: 2.4rem 0 0.6rem; }
+    p, ul { color: var(--text); line-height: 1.65; }
+    ul { padding-left: 1.2rem; }
+    li { margin: 0.4rem 0; }
+    pre { background: var(--surface); padding: 1rem 1.1rem; border-radius: 8px; overflow-x: auto; border: 1px solid var(--hairline); }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+  </style>
+</Layout>

@@ -1,0 +1,105 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="Sign in — AEGIS"
+  description="Sign in to your AEGIS cockpit."
+>
+  <Header />
+  <main>
+    <section class="login">
+      <div class="container container-narrow">
+        <p class="eyebrow">Sign in</p>
+        <h1>Welcome <em>back</em>.</h1>
+        <p class="lede">
+          The cockpit is at a tenant-scoped subdomain. If you signed up
+          for early access, you got the URL by email — it looks like
+          <code>your-org.cockpit.aegis.dev</code>.
+        </p>
+
+        <div class="paths">
+          <article class="path">
+            <h2>I have a cockpit URL</h2>
+            <p>Enter your org slug or the full subdomain.</p>
+            <form class="form" method="GET" id="goto-cockpit">
+              <input type="text" name="org" placeholder="your-org" required pattern="[a-z0-9\-]+" autocomplete="organization" />
+              <button class="btn" type="submit">Go to cockpit →</button>
+            </form>
+            <p class="hint">You'll land on the SSO / API-key login screen.</p>
+          </article>
+
+          <article class="path">
+            <h2>I have a desktop install</h2>
+            <p>Open AEGIS from your applications folder; the cockpit
+              auto-launches at <code>http://localhost:13003</code>.</p>
+            <a class="btn-secondary" href="http://localhost:13003">Open local cockpit</a>
+            <p class="hint">Don't have it? <a href="/download">Download here</a>.</p>
+          </article>
+
+          <article class="path">
+            <h2>I don't have either yet</h2>
+            <p>The Free tier is open — get an API key + cockpit URL in
+              your inbox the same day.</p>
+            <a class="btn-secondary" href="/signup">Sign up free →</a>
+            <p class="hint">No credit card required.</p>
+          </article>
+        </div>
+
+        <p class="muted small bottom">
+          Stuck? Email
+          <a href="mailto:support@aegis.dev">support@aegis.dev</a>.
+        </p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <script is:inline>
+    // Tiny progressive enhancement — bounce to <org>.cockpit.aegis.dev.
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('goto-cockpit');
+      if (!form) return;
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const slug = new FormData(form).get('org');
+        if (!slug) return;
+        const cleaned = String(slug).toLowerCase().replace(/[^a-z0-9\-]/g, '').replace(/^-+|-+$/g, '');
+        if (!cleaned) return;
+        // Until app.aegis.dev is live, send to a friendly landing on /signup
+        // so users know to expect an invite link rather than a 404.
+        location.href = `/signup?org=${encodeURIComponent(cleaned)}`;
+      });
+    });
+  </script>
+
+  <style>
+    .login { padding: 5rem 0 5rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { color: var(--muted); font-size: 1.06rem; margin: 1rem 0 2rem; max-width: 60ch; }
+
+    .paths {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.2rem;
+      margin: 1.5rem 0 2rem;
+    }
+    .path {
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      padding: 1.2rem 1.2rem 1.1rem;
+    }
+    .path h2 { font-family: var(--font-serif); font-size: 1.15rem; margin: 0 0 0.4rem; }
+    .path p { color: var(--muted); font-size: 0.92rem; margin: 0 0 0.8rem; }
+    .path .form { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .path .form input { flex: 1 1 140px; padding: 0.5rem 0.7rem; border: 1px solid var(--hairline-strong); border-radius: 6px; font-family: inherit; }
+    .path .btn, .path .btn-secondary { padding: 0.5rem 0.9rem; font-size: 0.92rem; }
+    .hint { color: var(--muted); font-size: 0.82rem; margin: 0.7rem 0 0; }
+    .bottom { margin-top: 1rem; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+  </style>
+</Layout>

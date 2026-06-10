@@ -1,0 +1,98 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+const lastUpdated = 'June 10, 2026';
+---
+<Layout
+  title="Terms of Service — AEGIS"
+  description="AEGIS terms of service. Plain-language summary plus full text. Last updated June 10, 2026."
+>
+  <Header />
+  <main>
+    <section class="legal">
+      <div class="container container-narrow">
+        <p class="eyebrow">Legal</p>
+        <h1>Terms of Service</h1>
+        <p class="lede small">Last updated: <strong>{lastUpdated}</strong></p>
+
+        <div class="tldr">
+          <h2 class="inline">TL;DR</h2>
+          <ul>
+            <li>Use the hosted service in good faith. No scraping, no abuse, no PII you don't have rights to.</li>
+            <li>The open-source code is MIT — fork it, change it, ship it, no permission needed.</li>
+            <li>The hosted service is no-warranty until SOC 2 Type II ships; enterprise customers get a real MSA with SLAs.</li>
+            <li>We can suspend abusive accounts. You can leave any time.</li>
+            <li>Disputes go to small-claims or arbitration in California unless we agree otherwise.</li>
+          </ul>
+        </div>
+
+        <h2>1. Who's offering this</h2>
+        <p>AEGIS is operated by Aojie Yuan ("we", "us"), pending incorporation. Once a US entity is formed in 2026 Q3, these terms will be re-issued under the company name. The substance of the agreement will not change.</p>
+
+        <h2>2. Acceptable use</h2>
+        <p>You agree not to:</p>
+        <ul>
+          <li>Use AEGIS to launder, hide, or anonymise traffic for illegal purposes.</li>
+          <li>Submit data through the gateway that you don't have rights to (other people's PII, regulated health data without a BAA, etc.).</li>
+          <li>Reverse-engineer the hosted service to clone it commercially — the source is MIT-open, fork the repo instead.</li>
+          <li>Interfere with the hosted service's availability (DDoS, abusive API hammering, etc.).</li>
+        </ul>
+        <p>We can suspend accounts that violate this section without notice for severe abuse; for everything else we'll email first.</p>
+
+        <h2>3. Plans + billing</h2>
+        <p>Pricing is at <a href="/pricing">/pricing</a>. Free is free forever within the documented limits. Paid plans bill monthly or annually via Stripe. Overage on Pro and Team is billed in 10,000-check blocks; Free hard-caps at the monthly limit.</p>
+        <p>Cancel any time — your plan stays active until the end of the paid period. No refunds for partial periods.</p>
+
+        <h2>4. Open-source vs hosted</h2>
+        <p>The source code at <code>github.com/Justin0504/Aegis</code> is licensed MIT. You can self-host with no obligations to us. These terms apply only to the hosted service at <code>*.aegis.dev</code>.</p>
+
+        <h2>5. Service availability</h2>
+        <p>The hosted service is provided "as is" until SOC 2 Type II is achieved (2026 Q4 target). After that, enterprise customers can sign an MSA with SLAs.</p>
+        <p>We aim for 99.9% monthly uptime even pre-SOC2. Status at <a href="/status">/status</a>. Material incidents get a written post-mortem within 14 days.</p>
+
+        <h2>6. Liability</h2>
+        <p>To the maximum extent allowed by law, our liability for any single claim is capped at the amount you paid in the 12 months before the claim. We are not liable for indirect, incidental, or consequential damages.</p>
+        <p>If you're an enterprise customer who needs a higher cap, sign a custom MSA — email <a href="mailto:sales@aegis.dev">sales@aegis.dev</a>.</p>
+
+        <h2>7. Data + privacy</h2>
+        <p>Data handling is governed by <a href="/privacy">/privacy</a>. Enterprise customers can sign a <a href="/dpa">DPA</a> for GDPR / EEA processing.</p>
+
+        <h2>8. Changes</h2>
+        <p>We can update these terms with 30 days notice for material changes. Continued use after the effective date counts as acceptance. The current version is always at <a href="/terms">/terms</a>; older versions are kept in git history.</p>
+
+        <h2>9. Governing law</h2>
+        <p>These terms are governed by the laws of California, USA. Disputes are resolved by binding arbitration in San Francisco County, unless we agree to litigate in your jurisdiction.</p>
+
+        <h2>10. Contact</h2>
+        <p>Questions: <a href="mailto:legal@aegis.dev">legal@aegis.dev</a>.</p>
+
+        <hr />
+        <p class="muted small">
+          This is the v1 self-drafted ToS. Once we engage outside counsel
+          (planned 2026 Q3), this page will be replaced with a
+          professionally-reviewed version. We will not weaken any
+          commitment listed above in that revision.
+        </p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .legal { padding: 5rem 0 5rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 { font-family: var(--font-serif); }
+    h2 { font-family: var(--font-serif); font-size: 1.3rem; margin: 2.2rem 0 0.6rem; }
+    h2.inline { font-size: 0.95rem; font-family: var(--font-sans); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 0.6rem; }
+    .tldr { background: var(--surface); padding: 1.2rem 1.4rem; border-left: 3px solid var(--accent); margin: 1.4rem 0 2rem; border-radius: 0 6px 6px 0; }
+    .tldr ul { margin: 0; padding-left: 1.2rem; }
+    .lede.small { font-size: 0.95rem; color: var(--muted); margin-bottom: 2rem; }
+    p, ul { color: var(--text); line-height: 1.65; }
+    ul { padding-left: 1.2rem; }
+    li { margin: 0.3rem 0; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+    hr { border: 0; border-top: 1px solid var(--hairline); margin: 2.5rem 0; }
+  </style>
+</Layout>

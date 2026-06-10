@@ -1,0 +1,127 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="Self-host AEGIS — Docs"
+  description="Run the AEGIS gateway in your own infrastructure. Docker Compose, Kubernetes Helm, systemd, or the desktop bundle."
+>
+  <Header current="docs" />
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Docs · Self-host</p>
+        <h1>Self-host AEGIS.</h1>
+        <p class="lede">
+          The hosted SaaS at <code>aegis.dev</code> is one way to run
+          AEGIS. The other is to run the exact same gateway in your
+          own infrastructure. Same code, same features, no quota.
+        </p>
+        <p class="muted small">
+          Source: <a href="https://github.com/Justin0504/Aegis" target="_blank" rel="noopener">github.com/Justin0504/Aegis</a> — MIT licensed.
+        </p>
+      </div>
+    </section>
+
+    <section class="body">
+      <div class="container container-narrow">
+
+        <h2>1. Desktop bundle (easiest)</h2>
+        <p>
+          A single installer — macOS .dmg, Windows .msi, Linux .deb —
+          that embeds the gateway + cockpit + portable Node runtime
+          + every tool sidecar. Double-click, done.
+        </p>
+        <p>→ <a class="btn-secondary" href="/download">Download page</a></p>
+
+        <h2>2. Docker Compose (single host)</h2>
+        <p>
+          For servers, VPCs, or homelab. One YAML, gateway + cockpit +
+          optional Postgres + optional Redis.
+        </p>
+        <pre><code>{`git clone https://github.com/Justin0504/Aegis
+cd Aegis
+docker compose -f docker/compose.yml up -d
+
+# gateway:  http://localhost:8080
+# cockpit:  http://localhost:13003`}</code></pre>
+        <p>
+          Configuration knobs:
+        </p>
+        <ul>
+          <li><code>DATABASE_URL=postgres://...</code> — switch from default SQLite to Postgres.</li>
+          <li><code>OTEL_EXPORTER_OTLP_ENDPOINT=https://...</code> — emit OTLP traces to Datadog / Honeycomb / Tempo.</li>
+          <li><code>STRIPE_WEBHOOK_SECRET=...</code> — if you're operating a paid SaaS on top.</li>
+          <li><code>AEGIS_API_KEY=...</code> — bootstrap key; the cockpit lets you rotate it.</li>
+        </ul>
+
+        <h2>3. Kubernetes (multi-replica)</h2>
+        <p>
+          For Pro / Team / Enterprise scale. The gateway is stateless;
+          state lives in Postgres + S3 (transparency log archive).
+        </p>
+        <pre><code>{`helm repo add aegis https://github.com/Justin0504/Aegis/releases/download/v0.1.0/helm
+helm install aegis aegis/aegis \\
+  --set image.tag=v0.1.0 \\
+  --set postgres.url=postgresql://aegis:...@postgres:5432/aegis \\
+  --set replicas=3`}</code></pre>
+        <p class="muted small">
+          Helm chart is in <code>deploy/helm/</code> in the repo.
+          BYOC and on-prem deployments get a tailored chart via
+          <a href="mailto:sales@aegis.dev">sales@aegis.dev</a>.
+        </p>
+
+        <h2>4. Bare metal / systemd</h2>
+        <pre><code>{`sudo useradd -m aegis
+sudo -u aegis git clone https://github.com/Justin0504/Aegis /opt/aegis
+cd /opt/aegis && sudo -u aegis npm install --omit=dev
+sudo -u aegis npm run build
+
+# /etc/systemd/system/aegis.service
+sudo systemctl enable --now aegis.service`}</code></pre>
+        <p>
+          A reference unit file ships at <code>deploy/systemd/aegis.service</code> in the repo.
+        </p>
+
+        <h2>What you give up vs hosted SaaS</h2>
+        <ul>
+          <li>You operate the gateway — patching, scaling, backups.</li>
+          <li>No SOC 2 attestation (yours to obtain if you need one).</li>
+          <li>No SLA from us — your infrastructure, your uptime.</li>
+        </ul>
+
+        <h2>What you keep</h2>
+        <ul>
+          <li>Every feature: detector chain, transparency log, policy DSL, witness, SCIM / SAML / OIDC, Stripe-aware billing scaffold.</li>
+          <li>Full source visibility — fork it, change it, ship it.</li>
+          <li>Zero data egress — traces never leave your perimeter.</li>
+        </ul>
+
+        <h2>Next</h2>
+        <ul>
+          <li><a href="/docs">Back to docs index</a></li>
+          <li><a href="/docs/api">REST API reference</a></li>
+          <li><a href="/docs/sdk">SDK reference</a></li>
+          <li><a href="/docs/compliance">Compliance + audit</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 { font-family: var(--font-serif); }
+    .lede { font-size: 1.06rem; color: var(--muted); margin-top: 1rem; }
+    .body { padding: 2rem 0 5rem; }
+    h2 { font-family: var(--font-serif); font-size: 1.4rem; margin: 2.4rem 0 0.6rem; }
+    p, ul { color: var(--text); line-height: 1.65; }
+    ul { padding-left: 1.2rem; }
+    li { margin: 0.3rem 0; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+    pre { background: var(--surface); padding: 1rem 1.1rem; border-radius: 8px; overflow-x: auto; border: 1px solid var(--hairline); }
+  </style>
+</Layout>

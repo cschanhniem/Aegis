@@ -1,0 +1,149 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+
+// Static status board until Instatus / Better Stack are wired in. Edit
+// the items below when an incident lands; bump the timestamp.
+const lastChecked = '2026-06-10';
+const components = [
+  { name: 'Marketing site (aegis.dev)',     state: 'operational', detail: 'Cloudflare Pages — multi-region edge' },
+  { name: 'Hosted gateway (gateway.aegis.dev)', state: 'launching', detail: 'Opening for early-access tenants; sign up via /signup' },
+  { name: 'Cockpit (cockpit.aegis.dev)',    state: 'launching', detail: 'Per-tenant subdomain, ships with each invite' },
+  { name: 'SDK packages (PyPI, npm)',       state: 'operational', detail: 'agentguard@latest, @agentguard/sdk@latest' },
+  { name: 'Desktop bundle (macOS + Windows + Linux)', state: 'operational', detail: 'Latest release v0.1.0 — see /download' },
+  { name: 'Transparency log',               state: 'operational', detail: 'Merkle root signing daily; witness cosignature on request' },
+  { name: 'GitHub repo + issue tracker',    state: 'operational', detail: 'github.com/Justin0504/Aegis' },
+];
+
+const incidents: Array<{
+  title: string;
+  status: 'resolved' | 'investigating' | 'identified' | 'monitoring';
+  started: string;
+  resolved?: string;
+  summary: string;
+}> = [
+  // Add resolved incidents here as the service ages. Format:
+  // { title: '...', status: 'resolved', started: '2026-...', resolved: '2026-...', summary: '...' }
+];
+---
+<Layout
+  title="Status — AEGIS"
+  description="Live operational status of AEGIS services."
+>
+  <Header />
+  <main>
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Service status</p>
+        <h1>Everything is <em>up</em>.</h1>
+        <p class="lede small">
+          Last checked: <strong>{lastChecked}</strong>. This page is
+          updated manually until the Instatus integration lands (planned
+          2026 Q3). For incident notifications today, subscribe via
+          <a href="mailto:status@aegis.dev?subject=subscribe">email</a>.
+        </p>
+      </div>
+    </section>
+
+    <section class="components">
+      <div class="container container-narrow">
+        <h2>Components</h2>
+        <ul class="comp-list">
+          {components.map(c => (
+            <li class={`comp ${c.state}`}>
+              <span class={`dot ${c.state}`} aria-hidden="true"></span>
+              <span class="name">{c.name}</span>
+              <span class="state">{c.state === 'operational' ? 'Operational' : c.state === 'launching' ? 'Launching' : c.state}</span>
+              <span class="detail">{c.detail}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section class="incidents">
+      <div class="container container-narrow">
+        <h2>Recent incidents</h2>
+        {incidents.length === 0 && (
+          <p class="muted">
+            No incidents to report. When something goes wrong, it'll
+            land here with a written post-mortem within 14 days. For
+            real-time updates during an incident, follow
+            <a href="https://github.com/Justin0504/Aegis/discussions" target="_blank" rel="noopener">GitHub Discussions</a>
+            or email <a href="mailto:status@aegis.dev">status@aegis.dev</a>.
+          </p>
+        )}
+        {incidents.map(i => (
+          <article class="incident">
+            <header>
+              <h3>{i.title}</h3>
+              <span class={`pill ${i.status}`}>{i.status}</span>
+            </header>
+            <p class="meta">Started {i.started}{i.resolved && ` · Resolved ${i.resolved}`}</p>
+            <p>{i.summary}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="below">
+      <div class="container container-narrow">
+        <h2>SLA targets</h2>
+        <ul>
+          <li><strong>Gateway uptime</strong> — 99.9% monthly (Pro), 99.95% (Enterprise contract).</li>
+          <li><strong>Detector latency</strong> — p95 &lt; 50 ms gate decision, p99 &lt; 200 ms.</li>
+          <li><strong>Webhook delivery</strong> — 3 retries with exponential backoff + jitter.</li>
+          <li><strong>Audit log durability</strong> — Merkle anchor daily; offline-verifiable.</li>
+        </ul>
+        <p class="muted small">
+          SLAs are contractual on Enterprise tier; documented targets
+          on Pro and Team. The Free tier is best-effort and may have
+          scheduled maintenance windows.
+        </p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent-positive); }
+    .lede.small { color: var(--muted); font-size: 0.95rem; margin-top: 1rem; }
+
+    .components { padding: 2rem 0; }
+    .components h2 { font-family: var(--font-serif); font-size: 1.3rem; margin: 0 0 1rem; }
+    .comp-list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; }
+    .comp { display: grid; grid-template-columns: auto 1fr auto auto; gap: 0.8rem; align-items: center; padding: 0.7rem 1rem; background: var(--surface); }
+    .comp + .comp { border-top: 1px solid var(--hairline); }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .dot.operational { background: hsl(140 40% 45%); box-shadow: 0 0 0 3px hsl(140 40% 90%); }
+    .dot.launching   { background: hsl(36 70% 50%); box-shadow: 0 0 0 3px hsl(36 70% 90%); }
+    .name { font-weight: 500; }
+    .state { font-size: 0.82rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .detail { font-size: 0.86rem; color: var(--muted); }
+    @media (max-width: 760px) {
+      .comp { grid-template-columns: auto 1fr; grid-auto-rows: auto; }
+      .state, .detail { grid-column: 1 / -1; padding-left: 1.2rem; }
+    }
+
+    .incidents { padding: 2.5rem 0; border-top: 1px solid var(--hairline); }
+    .incidents h2 { font-family: var(--font-serif); font-size: 1.3rem; margin: 0 0 1rem; }
+    .incident { padding: 1rem 0; border-top: 1px solid var(--hairline); }
+    .incident header { display: flex; gap: 0.8rem; align-items: baseline; justify-content: space-between; }
+    .incident h3 { font-family: var(--font-serif); font-size: 1.1rem; margin: 0; }
+    .pill { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.18rem 0.5rem; border-radius: 99px; }
+    .pill.resolved      { background: hsl(140 30% 90%); color: hsl(140 40% 25%); }
+    .pill.investigating, .pill.identified, .pill.monitoring { background: hsl(36 60% 90%); color: hsl(36 60% 30%); }
+    .meta { font-size: 0.82rem; color: var(--muted); margin: 0.3rem 0; }
+
+    .below { padding: 2.5rem 0 5rem; border-top: 1px solid var(--hairline); }
+    .below h2 { font-family: var(--font-serif); font-size: 1.3rem; margin: 0 0 1rem; }
+    .below ul { padding-left: 1.2rem; }
+    .below li { margin: 0.4rem 0; }
+    .below li strong { font-weight: 600; }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+  </style>
+</Layout>
