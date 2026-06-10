@@ -101,6 +101,9 @@ import { TemplatesAPI } from './api/templates';
 import { TransparencyLogService } from './services/transparency-log';
 import { TransparencyLogAPI } from './api/transparency-log';
 import { SigningService } from './services/signing';
+import { SqliteBillingStore } from './db/billing-store';
+import { BillingService, billingMiddleware } from './services/billing';
+import { StripeWebhookAPI } from './api/stripe';
 import {
   ProxyHandler,
   OpenAIChatAdapter,
@@ -519,6 +522,27 @@ async function main() {
       else rateLimitWindow.set(key, active);
     }
   }, 5 * 60_000);
+
+  // ── Stripe billing (plan-aware quota gate) ─────────────────────────────
+  // The BillingStore mirrors Stripe subscription state (active plan,
+  // status, period boundaries) so the gateway hot-path can gate every
+  // request in O(1) without an outbound API call. Updates land via the
+  // webhook handler at /api/v1/stripe/webhook on customer.subscription.*
+  // events from Stripe. The middleware on /api/v1/check turns "over plan
+  // cap" into a 429 with Retry-After for Free; Pro/Team get billed
+  // overage instead. Webhook signature verification uses
+  // STRIPE_WEBHOOK_SECRET; if unset the webhook route returns 503 so a
+  // misconfigured deploy fails loud.
+  const billingStore = new SqliteBillingStore(db);
+  await billingStore.init();
+  const billing = new BillingService(billingStore, logger);
+  app.use('/api/v1/stripe', new StripeWebhookAPI(billingStore, logger).router);
+  // Apply quota AFTER the existing rate-limit middleware so 429s from
+  // abuse get bounced before we even look at the customer's plan.
+  app.use('/api/v1/check', (req, res, next) => {
+    if (req.method !== 'POST') return next();
+    return billingMiddleware(billing)(req, res, next);
+  });
 
   app.use('/api/v1/check', (req, res, next) => {
     if (req.method !== 'POST') return next();
