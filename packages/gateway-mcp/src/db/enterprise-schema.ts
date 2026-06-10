@@ -41,6 +41,57 @@ export function initializeEnterpriseSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
   `);
 
+  // ── SCIM 2.0 columns + groups (RFC 7644) ───────────────────────────────
+  // external_id is the IdP-side stable identifier. It lets Okta / Azure AD
+  // map their own user to our row across renames / email changes — without
+  // this column we can't safely PATCH a SCIM resource.
+  // given_name / family_name carry the structured-name fields IdPs send;
+  // legacy `name` column stays as the display form for backwards compat.
+  try { db.exec(`ALTER TABLE users ADD COLUMN external_id TEXT`); } catch { /* exists */ }
+  try { db.exec(`ALTER TABLE users ADD COLUMN given_name TEXT`); } catch { /* exists */ }
+  try { db.exec(`ALTER TABLE users ADD COLUMN family_name TEXT`); } catch { /* exists */ }
+  // SCIM requires a per-org uniqueness guarantee on external_id (NULLs
+  // are not constrained, which lets legacy non-SCIM rows coexist).
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_scim_extid ON users(org_id, external_id) WHERE external_id IS NOT NULL`);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS groups (
+      id TEXT PRIMARY KEY,
+      org_id TEXT NOT NULL,
+      external_id TEXT,
+      display_name TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (org_id) REFERENCES organizations(id),
+      UNIQUE(org_id, display_name)
+    );
+    CREATE INDEX IF NOT EXISTS idx_groups_org ON groups(org_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_groups_scim_extid ON groups(org_id, external_id) WHERE external_id IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS group_members (
+      group_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      added_at TEXT DEFAULT (datetime('now')),
+      PRIMARY KEY (group_id, user_id),
+      FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
+
+    -- SCIM bearer tokens are issued per-org (typically one per IdP integration).
+    -- Stored hashed; plaintext only emitted at create time.
+    CREATE TABLE IF NOT EXISTS scim_tokens (
+      id TEXT PRIMARY KEY,
+      org_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      created_at TEXT DEFAULT (datetime('now')),
+      revoked_at TEXT,
+      FOREIGN KEY (org_id) REFERENCES organizations(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_scim_tokens_org ON scim_tokens(org_id);
+  `);
+
   // ── Sessions (SSO token store) ─────────────────────────────────────────────
   // Issued after a successful IdP callback (or local-password login if we
   // ever add one). Bearer tokens here grant access to authenticated REST

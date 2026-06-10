@@ -21,8 +21,49 @@ export const SsoProviderSchema = z.enum([
   'google',
   'oidc-generic',
   'workos',
+  /** Generic SAML 2.0 IdP. Pairs with the `saml` config block below.
+   *  Used for ADFS, Azure AD SAML, Okta SAML, OneLogin SAML, PingFederate,
+   *  Shibboleth — anything that speaks the SAML 2.0 web-browser SSO profile. */
+  'saml',
 ]);
 export type SsoProvider = z.infer<typeof SsoProviderSchema>;
+
+/** SAML-specific config. Required when `provider === 'saml'`. */
+export const SamlConfigSchema = z.object({
+  /** IdP-side entity ID — the value the IdP puts in the SAMLResponse's
+   *  <Issuer>. Must match exactly. */
+  idp_entity_id: z.string().min(1).max(500),
+  /** Where the gateway redirects the browser to start the SSO flow. */
+  idp_sso_url: z.string().url(),
+  /** IdP's PEM-encoded X.509 signing certificate. Used to verify the
+   *  <Signature> inside SAMLResponse. NOT the encryption certificate. */
+  idp_certificate_pem: z.string().min(40).max(20_000),
+  /** Our (SP) entity ID. Defaults to "agentguard". Many IdPs require a
+   *  unique value per integration so customers will override. */
+  sp_entity_id: z.string().min(1).max(500).optional(),
+  /** Assertion Consumer Service URL — the gateway endpoint the IdP posts
+   *  SAMLResponse to. Default: `<gateway>/api/v1/auth/saml/callback`. */
+  sp_acs_url: z.string().url().optional(),
+  /** When true, the SP signs the AuthnRequest. Required by some IdPs
+   *  (Azure AD SAML if "request signing" is enabled). The SP private
+   *  key + cert below are then mandatory. */
+  sign_authn_request: z.boolean().default(false),
+  sp_private_key_pem: z.string().min(40).max(20_000).optional(),
+  sp_certificate_pem: z.string().min(40).max(20_000).optional(),
+  /** NameID format the SP requests. Most enterprise setups use
+   *  "emailAddress"; transient is for short-lived sessions only. */
+  name_id_format: z.enum([
+    'emailAddress',
+    'persistent',
+    'transient',
+    'unspecified',
+  ]).default('emailAddress'),
+  /** Attribute path inside <AttributeStatement> that carries the groups
+   *  list (used for role mapping). IdP-specific: Okta uses "groups",
+   *  Azure AD uses "http://schemas.microsoft.com/ws/2008/06/identity/claims/groups". */
+  groups_attribute: z.string().min(1).max(500).optional(),
+}).strict();
+export type SamlConfig = z.infer<typeof SamlConfigSchema>;
 
 export const SsoConfigSchema = z.object({
   enabled: z.boolean().default(false),
@@ -50,6 +91,8 @@ export const SsoConfigSchema = z.object({
     auditor: z.array(z.string()).max(20).default([]),
     viewer:  z.array(z.string()).max(20).default([]),
   }).partial().optional(),
+  /** SAML-specific config; required when `provider === 'saml'`. */
+  saml: SamlConfigSchema.optional(),
 }).strict();
 export type SsoConfig = z.infer<typeof SsoConfigSchema>;
 export type SsoConfigInput = z.input<typeof SsoConfigSchema>;

@@ -32,7 +32,7 @@ export interface IdpUser {
   role_hint?: 'admin' | 'auditor' | 'viewer';
   /** Provider name — recorded on the session so audit log can
    *  attribute which IdP authenticated the login. */
-  provider: 'workos' | 'okta' | 'google' | 'azure-ad' | 'oidc-generic' | 'mock' | 'other';
+  provider: 'workos' | 'okta' | 'google' | 'azure-ad' | 'oidc-generic' | 'saml' | 'mock' | 'other';
 }
 
 export interface IdpAdapter {

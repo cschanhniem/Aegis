@@ -224,6 +224,19 @@ export async function initializeDatabase(dbPath: string): Promise<Database.Datab
     // INSERT time. IntegrityService recomputes it at verify time and
     // flags any mismatch as content_tamper.
     `ALTER TABLE traces ADD COLUMN content_hash TEXT`,
+    // ── B2B multi-tenant: policies per org ───────────────────────────
+    // Existing rows are the 7 platform-default policies; they get
+    // org_id='*' which the engine treats as "applies to every tenant
+    // unless they explicitly override by (org_id=<theirs>, name=...)".
+    //
+    // The 'default' org_id (non-asterisk) is for SINGLE-tenant
+    // deployments where the gateway sees `req.orgId === 'default'`
+    // everywhere — the engine still matches because '*' wildcards
+    // through. The wildcard semantics give us zero-config behaviour
+    // for solo deploys AND tenant-isolated policies for SaaS use,
+    // from the same schema. (See PolicyEngine.loadOrgPolicies.)
+    `ALTER TABLE policies ADD COLUMN org_id TEXT NOT NULL DEFAULT '*'`,
+    `CREATE INDEX IF NOT EXISTS idx_policies_org ON policies (org_id, enabled)`,
   ];
 
   for (const sql of migrations) {

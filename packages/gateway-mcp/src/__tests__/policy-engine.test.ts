@@ -19,7 +19,10 @@ function makeDb(): Database.Database {
       policy_schema TEXT NOT NULL,
       risk_level  TEXT NOT NULL DEFAULT 'MEDIUM',
       enabled     INTEGER NOT NULL DEFAULT 1,
-      created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      -- B2B multi-tenant column; '*' = platform default (applies to every org).
+      org_id      TEXT NOT NULL DEFAULT '*'
     )
   `)
 
@@ -229,5 +232,121 @@ describe('highest risk level is propagated', () => {
     })
     expect(result.passed).toBe(false)
     expect(result.risk_level).toBe('CRITICAL')
+  })
+})
+
+// ── Multi-tenant policy isolation (T1) ───────────────────────────────────
+//
+// The B2B requirement: tenant A and tenant B share a database but each
+// only sees their own overrides on top of the platform wildcards. These
+// tests pin the contract.
+
+describe('multi-tenant policy isolation', () => {
+  test('default org sees only wildcards when no tenant overrides exist', async () => {
+    const engine = new PolicyEngine(makeDb(), silentLogger)
+    const list = await engine.getPolicies('default')
+    // Every seeded row had org_id='*'; default tenant inherits them all.
+    expect(list.length).toBe(5)
+    expect(list.every(p => p.org_id === '*')).toBe(true)
+  })
+
+  test('tenant override shadows the wildcard with the same name', async () => {
+    const db = makeDb()
+    const engine = new PolicyEngine(db, silentLogger)
+    // Acme installs a custom SQL policy with the SAME `name` as the
+    // platform default. The wildcard should be eclipsed in their view.
+    await engine.addPolicy({
+      id: 'acme-sql-strict',
+      name: 'SQL Injection Prevention',
+      description: 'Acme: zero SQL allowed at all.',
+      policy_schema: { type: 'object', properties: { sql: { maxLength: 0 } }, additionalProperties: true },
+      risk_level: 'CRITICAL',
+    }, 'acme')
+
+    const acmeView = await engine.getPolicies('acme')
+    const beta    = await engine.getPolicies('beta')
+    expect(acmeView.find(p => p.name === 'SQL Injection Prevention')?.id).toBe('acme-sql-strict')
+    // Beta tenant unaffected — still sees the wildcard.
+    expect(beta.find(p => p.name === 'SQL Injection Prevention')?.id).toBe('sql-injection')
+  })
+
+  test('tenant policies do NOT leak across tenants', async () => {
+    const db = makeDb()
+    const engine = new PolicyEngine(db, silentLogger)
+    await engine.addPolicy({
+      id: 'acme-only-policy',
+      name: 'Acme custom rule',
+      description: 'Internal to acme.',
+      policy_schema: { type: 'object', not: { required: ['secret_key'] } },
+      risk_level: 'HIGH',
+    }, 'acme')
+
+    const acme = await engine.getPolicies('acme')
+    const beta = await engine.getPolicies('beta')
+    expect(acme.find(p => p.id === 'acme-only-policy')).toBeDefined()
+    expect(beta.find(p => p.id === 'acme-only-policy')).toBeUndefined()
+  })
+
+  test('validateToolCall enforces the right view per org', async () => {
+    const db = makeDb()
+    const engine = new PolicyEngine(db, silentLogger)
+    // Acme: HTTPS-only enforced via DSL-equivalent policy under their org_id.
+    await engine.addPolicy({
+      id: 'acme-https-only',
+      name: 'Acme HTTPS-only',
+      description: 'All URLs must be https://',
+      policy_schema: { type: 'object', properties: { url: { type: 'string', pattern: '^https://' } }, additionalProperties: true },
+      risk_level: 'HIGH',
+    }, 'acme')
+
+    // Use a benign tool name + argument shape that bypasses the
+    // classifier's content scanners — we want to test the tenant
+    // override in isolation. The classifier might flag `http://`
+    // independently; for this case we use a custom tool that classifies
+    // as 'other' and an argument key the URL-pattern signature ignores.
+    const acmeCall = await engine.validateToolCall(
+      { tool: 'custom_action', arguments: { url: 'ftp://acme.local/data' } },
+      'acme',
+    )
+    expect(acmeCall.passed).toBe(false)
+    expect(acmeCall.policy_name).toBe('Acme HTTPS-only')
+
+    // Beta tenant has no such override → URL passes the per-tenant view.
+    const betaCall = await engine.validateToolCall(
+      { tool: 'custom_action', arguments: { url: 'ftp://beta.local/data' } },
+      'beta',
+    )
+    expect(betaCall.passed).toBe(true)
+  })
+
+  test('disabling a tenant policy does not disable the wildcard', async () => {
+    const db = makeDb()
+    const engine = new PolicyEngine(db, silentLogger)
+    await engine.addPolicy({
+      id: 'acme-x', name: 'Acme X', description: 'd',
+      policy_schema: { type: 'object' },
+      risk_level: 'LOW',
+    }, 'acme')
+    await engine.disablePolicy('acme-x', 'acme')
+
+    // Acme no longer sees acme-x, but every wildcard policy is still
+    // present (one of them — file-access — was NOT disabled).
+    const acme = await engine.getPolicies('acme')
+    expect(acme.find(p => p.id === 'acme-x')).toBeUndefined()
+    expect(acme.find(p => p.id === 'file-access')).toBeDefined()
+  })
+
+  test('deleting tenant policy unshadows the platform wildcard', async () => {
+    const db = makeDb()
+    const engine = new PolicyEngine(db, silentLogger)
+    await engine.addPolicy({
+      id: 'acme-sql', name: 'SQL Injection Prevention',
+      description: 'Acme override.', policy_schema: { type: 'object' },
+      risk_level: 'CRITICAL',
+    }, 'acme')
+    expect((await engine.getPolicies('acme')).find(p => p.name === 'SQL Injection Prevention')?.id).toBe('acme-sql')
+    await engine.deletePolicy('acme-sql', 'acme')
+    // After delete, the wildcard re-emerges in their view.
+    expect((await engine.getPolicies('acme')).find(p => p.name === 'SQL Injection Prevention')?.id).toBe('sql-injection')
   })
 })

@@ -232,6 +232,70 @@ export class AgentsAPI {
       res.status(201).json(result);
     });
 
+    // Bulk register from a scanner report. Atomic per-row (one bad row
+    // doesn't poison the rest); returns per-row success + the audit
+    // log writes one summary row + N per-agent rows.
+    //
+    // Accepts:
+    //   { agents: [ { id?, name?, owner_email?, declared_tools?, environments?,
+    //                 max_cost_daily_usd?, capabilities?, provenance?,
+    //                 source_file? } ] }
+    //
+    // `source_file` is informational — recorded as audit detail so an
+    // auditor can trace "which entry-point produced this agent row?"
+    this.router.post('/bulk-register', (req: Request, res: Response) => {
+      const body = req.body ?? {};
+      if (!Array.isArray(body.agents)) {
+        return res.status(400).json({ error: 'body.agents must be an array' });
+      }
+      if (body.agents.length === 0) {
+        return res.status(400).json({ error: 'body.agents must be non-empty' });
+      }
+      if (body.agents.length > 500) {
+        return res.status(400).json({ error: 'cannot bulk-register more than 500 agents per call' });
+      }
+      const orgId = orgIdOf(req);
+      const results: Array<{ ok: boolean; id?: string; secret?: string; error?: string }> = [];
+      let succeeded = 0;
+      for (const raw of body.agents) {
+        const parsed = AgentRegistrationRequestSchema.safeParse(raw ?? {});
+        if (!parsed.success) {
+          results.push({ ok: false, error: parsed.error.issues.map(i => i.message).join('; ') });
+          continue;
+        }
+        try {
+          const r = this.registry.register({ orgId, req: parsed.data });
+          this.audit.log({
+            org_id: orgId,
+            action: 'user.create',
+            resource_type: 'agent',
+            resource_id: r.agent.id,
+            details: {
+              name: r.agent.name,
+              declared_tools_count: r.agent.declared_tools?.length ?? 0,
+              issued_secret: !!r.secret,
+              bulk: true,
+              source_file: raw.source_file,
+            },
+            ip_address: req.ip,
+          });
+          results.push({ ok: true, id: r.agent.id, secret: r.secret });
+          succeeded++;
+        } catch (err: any) {
+          results.push({ ok: false, error: err?.message ?? 'register failed' });
+        }
+      }
+      this.audit.log({
+        org_id: orgId,
+        action: 'admin.bulk_register',
+        resource_type: 'agent',
+        resource_id: null,
+        details: { requested: body.agents.length, succeeded, failed: body.agents.length - succeeded },
+        ip_address: req.ip,
+      });
+      res.status(207).json({ requested: body.agents.length, succeeded, results });
+    });
+
     // Read a single agent's registry record. Distinct from the analytics
     // endpoints above; this returns the registration metadata.
     this.router.get('/:agentId', (req: Request, res: Response) => {

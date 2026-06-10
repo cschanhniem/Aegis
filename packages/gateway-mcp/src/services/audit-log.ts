@@ -20,7 +20,11 @@ export type AuditAction =
   | 'webhook.create' | 'webhook.delete'
   | 'data.export' | 'data.seed'
   | 'tenant.config.update' | 'tenant.config.replace' | 'tenant.config.apply-template'
-  | 'proxy.llm_call';
+  | 'proxy.llm_call'
+  | 'admin.bulk_register'
+  | 'rollback.compensate' | 'rollback.chain'
+  | 'outbox.enqueue' | 'outbox.cancel' | 'outbox.fire'
+  | 'predeploy.scan';
 
 export type ResourceType =
   | 'policy' | 'approval' | 'apikey' | 'agent'

@@ -118,6 +118,20 @@ export interface AgentProfile {
   featureStats?: FeatureStats;
   /** Online anomaly score distribution tracker for adaptive thresholds */
   scoreTracker?: ScoreTracker;
+  /** ADWIN drift-detector state for the composite anomaly score. */
+  adwinState?: import('./adwin').AdwinSerialized;
+  /** Mahalanobis-distance second-opinion scorer state. */
+  mahalanobisState?: import('./mahalanobis').MahalanobisSerialized;
+  /** Conformal-calibration buffer (sliding) over IF scores. */
+  conformalState?: import('./conformal').ConformalSerialized;
+  /** Streaming Half-Space Trees state (primary detector). */
+  hstState?: import('./half-space-trees').HstSerialized;
+  /** AAD reweighting model fitted on operator FP/TP feedback. */
+  aadState?: import('./aad').AadSerialized;
+  /** Wall-clock timestamp (ISO) of the most recent confirmed drift event. */
+  lastDriftAt?: string;
+  /** Number of drift events observed in this agent's lifetime. */
+  driftCount?: number;
 }
 
 /** Tracks running score distribution for adaptive thresholds */

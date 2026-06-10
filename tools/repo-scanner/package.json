@@ -1,0 +1,31 @@
+{
+  "name": "@agentguard/repo-scanner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Walks a repo, finds files that already import an LLM/agent framework, and emits a JSON report for the AEGIS onboarding flow.",
+  "type": "module",
+  "bin": {
+    "agentguard-repo-scanner": "./index.mjs"
+  },
+  "main": "./index.mjs",
+  "files": [
+    "index.mjs",
+    "preprocess.mjs",
+    "signatures.mjs",
+    "ast-python.mjs",
+    "ast-js.mjs",
+    "custom-rules.mjs",
+    "secret-scanner.mjs",
+    "workflow-graph.mjs",
+    "tree-sitter-python.wasm",
+    "tree-sitter-javascript.wasm",
+    "tree-sitter-typescript.wasm",
+    "tree-sitter-tsx.wasm"
+  ],
+  "optionalDependencies": {
+    "web-tree-sitter": "^0.20.8"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

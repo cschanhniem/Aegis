@@ -13,6 +13,7 @@
 import { Logger } from 'pino';
 import { IdpAdapter, MockIdpAdapter } from './idp-adapter';
 import { OidcAdapter } from './oidc-adapter';
+import { SamlAdapter } from './saml-adapter';
 import { TenantConfigService } from './tenant-config';
 
 export class IdpFactory {
@@ -31,13 +32,16 @@ export class IdpFactory {
     if (sso.provider === 'workos') {
       // Stub today — see services/idp-adapter.ts. Surface the missing-
       // config as a clear error rather than letting the throw bubble.
-      throw new Error('WorkOS adapter is a stub — set provider to okta / azure-ad / google / oidc-generic');
+      throw new Error('WorkOS adapter is a stub — set provider to okta / azure-ad / google / oidc-generic / saml');
     }
     try {
+      if (sso.provider === 'saml') {
+        return new SamlAdapter(sso, this.logger);
+      }
       return new OidcAdapter(sso, this.logger);
     } catch (err) {
       this.logger.warn(
-        { orgId, err: (err as Error).message },
+        { orgId, err: (err as Error).message, provider: sso.provider },
         'SSO adapter construction failed — falling back to Mock for this login',
       );
       return new MockIdpAdapter();

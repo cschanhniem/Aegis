@@ -1,0 +1,95 @@
+name: AEGIS Pre-Deployment Scan
+description: >-
+  Run AEGIS's static-analysis pre-deployment scan against a repo.
+  Wraps HeadyZhang/agent-audit, uploads SARIF v2.1.0 to GitHub Code
+  Scanning, posts a finding summary back to the PR.
+author: 'AEGIS / Justin Yuan'
+branding:
+  icon: 'shield'
+  color: 'gray-dark'
+
+inputs:
+  path:
+    description: 'Repo path to scan (defaults to $GITHUB_WORKSPACE).'
+    required: false
+    default: '${{ github.workspace }}'
+  agent-audit-version:
+    description: 'Pinned agent-audit version. Update intentionally to control rule churn.'
+    required: false
+    default: '0.18.2'
+  fail-on:
+    description: 'Severity threshold that fails the job (critical / high / medium / low / never). Default: critical.'
+    required: false
+    default: 'critical'
+  upload-sarif:
+    description: 'Upload SARIF to GitHub Code Scanning. Requires the workflow to have `security-events: write`.'
+    required: false
+    default: 'true'
+  comment-pr:
+    description: 'Post / update a finding summary on the PR.'
+    required: false
+    default: 'true'
+  output-path:
+    description: 'Where to write the SARIF file.'
+    required: false
+    default: 'aegis-scan.sarif'
+
+outputs:
+  total:
+    description: 'Total findings'
+    value: ${{ steps.scan.outputs.total }}
+  critical:
+    description: 'Critical findings'
+    value: ${{ steps.scan.outputs.critical }}
+  high:
+    description: 'High findings'
+    value: ${{ steps.scan.outputs.high }}
+  block:
+    description: 'BLOCK-tier findings'
+    value: ${{ steps.scan.outputs.block }}
+  sarif-path:
+    description: 'Path to the SARIF file'
+    value: ${{ inputs.output-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python (for agent-audit)
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install agent-audit
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install "agent-audit==${{ inputs.agent-audit-version }}"
+
+    - name: Run scan
+      id: scan
+      shell: bash
+      env:
+        AEGIS_SCAN_PATH:   ${{ inputs.path }}
+        AEGIS_FAIL_ON:     ${{ inputs.fail-on }}
+        AEGIS_OUTPUT_PATH: ${{ inputs.output-path }}
+      run: |
+        set -euo pipefail
+        python "${{ github.action_path }}/scripts/run-scan.py"
+
+    - name: Upload SARIF to GitHub Code Scanning
+      if: ${{ inputs.upload-sarif == 'true' && hashFiles(inputs.output-path) != '' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.output-path }}
+        category: 'aegis-predeploy'
+
+    - name: Post / update PR comment
+      if: ${{ inputs.comment-pr == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        AEGIS_SUMMARY_FILE: aegis-scan-summary.md
+      run: |
+        if [ -f "$AEGIS_SUMMARY_FILE" ]; then
+          python "${{ github.action_path }}/scripts/comment-pr.py"
+        fi

@@ -15,7 +15,7 @@
 
 import Database from 'better-sqlite3';
 import { Logger } from 'pino';
-import { hashLeaf, merkleRoot, inclusionProof } from './merkle';
+import { hashLeaf, merkleRoot, inclusionProof, consistencyProof } from './merkle';
 import { SigningService, SignaturePayload } from './signing';
 
 export interface TransparencyEntry {
@@ -40,6 +40,17 @@ export interface InclusionProofResponse {
   leaf_hash: string;             // hex
   proof: string[];               // hex sibling hashes, leaf-up
   signed_root: SignedRoot;
+}
+
+export interface ConsistencyProofResponse {
+  /** Older tree size (m). */
+  first: number;
+  /** Newer tree size (n). */
+  second: number;
+  /** Hex sibling/intermediate hashes — RFC 6962 §2.1.2. */
+  proof: string[];
+  signed_root_first: SignedRoot;
+  signed_root_second: SignedRoot;
 }
 
 function canonicalJson(obj: unknown): string {
@@ -161,5 +172,58 @@ export class TransparencyLogService {
       proof: proof.map(b => b.toString('hex')),
       signed_root: signed,
     };
+  }
+
+  /**
+   * Inclusion proof by leaf hash — the consumer holds a leaf hash
+   * (from their archive, from another node, or from a cross-attestation)
+   * and wants to verify it's in the log without already knowing the
+   * index.
+   *
+   * Returns null when the leaf isn't found (or the requested tree
+   * size predates the leaf). The 1-indexed log id is included so the
+   * consumer can do `getEntry(index)` to read the payload.
+   */
+  getProofByHash(leafHashHex: string, treeSize?: number): InclusionProofResponse | null {
+    const row = this.db.prepare(`SELECT id FROM transparency_log WHERE leaf_hash = ? LIMIT 1`)
+      .get(leafHashHex) as { id: number } | undefined;
+    if (!row) return null;
+    return this.getProof(row.id, treeSize);
+  }
+
+  /**
+   * Consistency proof between tree size `first` (older) and `second`
+   * (newer) — RFC 6962 §2.1.2.
+   *
+   * Bundles BOTH signed roots so an auditor can verify the full chain
+   * in one API call. Without this primitive AEGIS can fork the log
+   * silently; with it, any archived signed-root pair can be challenged.
+   */
+  getConsistencyProof(first: number, second?: number): ConsistencyProofResponse | null {
+    const n = second ?? this.size();
+    if (first < 0 || first > n) return null;
+    const leaves = this.loadLeavesUpTo(n);
+    const proof = consistencyProof(leaves, first, n);
+    const signedFirst = first === 0 ? this.emptyRoot() : this.signedRoot(first);
+    const signedSecond = n === 0 ? this.emptyRoot() : this.signedRoot(n);
+    if (!signedFirst || !signedSecond) return null;
+    return {
+      first,
+      second: n,
+      proof: proof.map(b => b.toString('hex')),
+      signed_root_first: signedFirst,
+      signed_root_second: signedSecond,
+    };
+  }
+
+  /** Signed STH for a size-0 tree — RFC 6962 specifies SHA-256 of empty
+   *  string as the empty root. */
+  private emptyRoot(): SignedRoot {
+    const timestamp = new Date().toISOString();
+    const rootHex = require('crypto').createHash('sha256').digest('hex');
+    const signature = this.signer.sign(
+      canonicalJson({ tree_size: 0, root_hash: rootHex, timestamp }),
+    );
+    return { tree_size: 0, root_hash: rootHex, timestamp, signature };
   }
 }

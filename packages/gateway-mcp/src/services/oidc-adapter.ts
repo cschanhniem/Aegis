@@ -33,7 +33,7 @@ interface ProviderPreset {
   readonly providerTag: IdpUser['provider'];
 }
 
-const PRESETS: Record<Exclude<SsoProvider, 'mock' | 'workos'>, ProviderPreset> = {
+const PRESETS: Record<Exclude<SsoProvider, 'mock' | 'workos' | 'saml'>, ProviderPreset> = {
   okta: {
     defaultScopes: ['openid', 'profile', 'email', 'groups'],
     groupsClaim: 'groups',

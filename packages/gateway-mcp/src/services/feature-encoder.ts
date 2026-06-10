@@ -24,6 +24,53 @@ import { PPMModel } from './ppm';
 
 export const FEATURE_DIM = 16;
 
+/**
+ * Human-readable names aligned with the 16-dim raw feature vector.
+ * MUST stay in lockstep with the `features[i] = ...` lines in
+ * `extractRaw()` below. The explainer surfaces these in the cockpit
+ * so operators see "why anomalous" instead of an opaque score.
+ */
+export const FEATURE_NAMES: readonly string[] = [
+  'tool_novelty',             // 0
+  'tool_frequency_ratio',     // 1
+  'tool_recency_rank',        // 2
+  'arg_jaccard_distance',     // 3
+  'arg_length_zscore',        // 4
+  'arg_key_count_ratio',      // 5
+  'hour_deviation',           // 6
+  'interval_zscore',          // 7
+  'burst_ratio',              // 8
+  'ppm_surprise',             // 9
+  'bigram_unlikeliness',      // 10
+  'cost_zscore',              // 11
+  'risk_ordinal',             // 12
+  'high_risk_rate_ratio',     // 13
+  'call_rate_ratio',          // 14
+  'tool_rate_ratio',          // 15
+];
+
+/** Human-friendly explanation snippet keyed by feature name. Used by
+ *  the cockpit when rendering top-K contributors so the operator
+ *  doesn't have to grok the raw column name. */
+export const FEATURE_DESCRIPTIONS: Readonly<Record<string, string>> = {
+  tool_novelty:           'tool was never used before',
+  tool_frequency_ratio:   'tool is being called much more (or less) often than usual',
+  tool_recency_rank:      'tool hasn\'t been used recently',
+  arg_jaccard_distance:   'arguments have unusual keys for this tool',
+  arg_length_zscore:      'arguments are much longer or shorter than typical',
+  arg_key_count_ratio:    'unusual number of argument keys',
+  hour_deviation:         'call time of day deviates from the agent\'s usual schedule',
+  interval_zscore:        'inter-call gap is unusual',
+  burst_ratio:            'call rate just spiked',
+  ppm_surprise:           'tool-call sequence is unexpected (n-gram surprise)',
+  bigram_unlikeliness:    'this tool rarely follows the previous one',
+  cost_zscore:            'token cost is unusual',
+  risk_ordinal:           'tool itself is high-risk',
+  high_risk_rate_ratio:   'high-risk calls just spiked',
+  call_rate_ratio:        'overall call rate is anomalous',
+  tool_rate_ratio:        'this tool\'s individual rate is anomalous',
+};
+
 export interface RawObservation {
   toolName: string;
   args: Record<string, unknown>;

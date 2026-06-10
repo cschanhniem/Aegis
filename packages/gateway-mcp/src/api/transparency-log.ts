@@ -59,5 +59,43 @@ export class TransparencyLogAPI {
       if (!proof) return res.status(404).json({ error: { code: 'UNKNOWN_INDEX', index: idx } });
       res.json(proof);
     });
+
+    /**
+     * GET /transparency-log/proof-by-hash?hash=<hex>&tree_size=N
+     *
+     * Inclusion proof for a leaf identified by its hash. Useful when the
+     * consumer has the hash (from their archive) but not the log index.
+     */
+    this.router.get('/proof-by-hash', (req: Request, res: Response) => {
+      const hash = typeof req.query.hash === 'string' ? req.query.hash : '';
+      const treeSize = req.query.tree_size ? Number(req.query.tree_size) : undefined;
+      if (!/^[0-9a-f]{64}$/i.test(hash)) {
+        return res.status(400).json({ error: { code: 'BAD_HASH', detail: 'hash must be 64-char hex (SHA-256)' } });
+      }
+      const proof = this.tlog.getProofByHash(hash, treeSize);
+      if (!proof) return res.status(404).json({ error: { code: 'NOT_FOUND', hash } });
+      res.json(proof);
+    });
+
+    /**
+     * GET /transparency-log/consistency?first=M&second=N
+     *
+     * RFC 6962 §2.1.2 consistency proof — the keystone for detecting
+     * silent log forks. The consumer archives signed roots over time
+     * and can audit any pair by calling this endpoint.
+     */
+    this.router.get('/consistency', (req: Request, res: Response) => {
+      const first  = Number(req.query.first);
+      const second = req.query.second ? Number(req.query.second) : undefined;
+      if (!Number.isFinite(first) || first < 0) {
+        return res.status(400).json({ error: { code: 'BAD_FIRST', detail: 'first must be >= 0' } });
+      }
+      if (second !== undefined && (!Number.isFinite(second) || second < first)) {
+        return res.status(400).json({ error: { code: 'BAD_SECOND', detail: 'second must be >= first' } });
+      }
+      const proof = this.tlog.getConsistencyProof(first, second);
+      if (!proof) return res.status(404).json({ error: { code: 'OUT_OF_RANGE' } });
+      res.json(proof);
+    });
   }
 }

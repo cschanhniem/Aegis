@@ -20,6 +20,13 @@ import { SlidingWindowStats } from './sliding-window';
 import { IsolationForest, IsolationForestConfig } from './isolation-forest';
 import { PPMModel } from './ppm';
 import { FeatureEncoder, FeatureStats, RawObservation, FEATURE_DIM } from './feature-encoder';
+import { Adwin } from './adwin';
+import { MahalanobisScorer } from './mahalanobis';
+import { ConformalCalibrator } from './conformal';
+import { HalfSpaceTrees } from './half-space-trees';
+import { ActiveAnomalyDiscovery, Feedback } from './aad';
+import { AnomalyExplainer, AnomalyExplanation } from './anomaly-explainer';
+import { TenantBaselineService } from './tenant-baseline';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -54,6 +61,30 @@ export interface AnomalyResult {
   scoring_method: 'isolation_forest' | 'weighted_fallback';
   /** Raw 16-dim feature vector (for debugging/logging) */
   feature_vector?: number[];
+  /** Mahalanobis squared distance from the agent's mean (correlated-feature anomalies). */
+  mahalanobis_score?: number;
+  /** Tail probability under chi-square(d); small = anomalous. */
+  mahalanobis_p_value?: number;
+  /** Conformal p-value of the IF composite, calibrated against the
+   *  sliding window of recent IF scores. Small = anomalous. The
+   *  interpretation is fixed across model versions ("at most α% of
+   *  normal calls fall below α"). */
+  conformal_p_value?: number;
+  /** True iff ADWIN flagged a behavioural drift on this call. Cleared
+   *  on next call — this is an *event*, not a state. */
+  drift_detected?: boolean;
+  /** Magnitude of the most-recent drift cut (when drift_detected). */
+  drift_magnitude?: number;
+  /** Half-Space Trees streaming detector score (primary). */
+  hst_score?: number;
+  /** True iff AAD has incorporated enough operator feedback to
+   *  influence the ensemble (>= minFeedbacks). When false the
+   *  ensemble falls back to the raw IF/HST/Mahalanobis composite. */
+  aad_active?: boolean;
+  /** SHAP-style per-feature attribution + top-K contributors + a
+   *  one-sentence English summary. Surfaced on the cockpit trace
+   *  detail page so operators can see WHY a score was high. */
+  explanation?: AnomalyExplanation;
 }
 
 export interface AnomalyThresholds {
@@ -119,9 +150,15 @@ const DEFAULT_PPM_CONFIG: PPMConfig = {
 export class AnomalyDetector {
   private forests: Map<string, IsolationForest> = new Map();
   private ppmModels: Map<string, PPMModel> = new Map();
+  private mahalanobis: Map<string, MahalanobisScorer> = new Map();
+  private conformals: Map<string, ConformalCalibrator> = new Map();
+  private adwins: Map<string, Adwin> = new Map();
+  private hsts: Map<string, HalfSpaceTrees> = new Map();
+  private aads: Map<string, ActiveAnomalyDiscovery> = new Map();
   private featureEncoder: FeatureEncoder;
   private forestConfig: ForestConfig;
   private ppmConfig: PPMConfig;
+  private explainer = new AnomalyExplainer(3);
 
   constructor(
     private slidingWindow: SlidingWindowStats,
@@ -129,6 +166,10 @@ export class AnomalyDetector {
     private thresholds: AnomalyThresholds = DEFAULT_THRESHOLDS,
     forestConfig?: Partial<ForestConfig>,
     ppmConfig?: Partial<PPMConfig>,
+    /** Optional tenant-baseline service — when present, new agents
+     *  seed their feature_stats from the tenant aggregate so the
+     *  detector produces meaningful scores from call #1. */
+    private tenantBaseline?: TenantBaselineService,
   ) {
     this.forestConfig = { ...DEFAULT_FOREST_CONFIG, ...forestConfig };
     this.ppmConfig = { ...DEFAULT_PPM_CONFIG, ...ppmConfig };
@@ -148,7 +189,40 @@ export class AnomalyDetector {
     profile: AgentProfile,
     riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW',
     costUsd: number = 0,
+    /** Optional tenant id — when supplied + TenantBaselineService was
+     *  wired into the constructor, new agents seed their feature_stats
+     *  + Mahalanobis from the tenant baseline. Backward-compatible:
+     *  omitting it preserves current cold-start behaviour. */
+    orgId?: string,
   ): AnomalyResult {
+    // Cold-start seed: if the profile has no featureStats yet AND the
+    // tenant has an aggregated baseline AND the caller supplied orgId,
+    // seed the agent's stats from the tenant aggregate. The Mahalanobis
+    // mean inherits from the tenant baseline so d² ≠ 0 from call #1.
+    if (orgId && this.tenantBaseline && (!profile.featureStats || profile.featureStats.n < 5)) {
+      const baseline = this.tenantBaseline.getBaseline(orgId);
+      if (baseline) {
+        if (!profile.featureStats || profile.featureStats.n === 0) {
+          profile.featureStats = {
+            mean: baseline.mean.slice(),
+            variance: baseline.variance.slice(),
+            // Use a fractional n so the new agent's own samples quickly
+            // dominate as they arrive (don't pretend we have full tenant
+            // weight in the agent's own EWMA).
+            n: 5,
+          };
+        }
+        // Also seed Mahalanobis with the baseline mean — it normally
+        // requires 20 samples before producing a score, so this skips
+        // the silent period for the FIRST 20 calls of a new agent.
+        const maha = this.getOrCreateMahalanobis(agentId, profile);
+        if (maha.samples === 0) {
+          // Inject the baseline as one "synthetic average" sample so
+          // mean ≈ baseline.mean before the first real update.
+          maha.update(baseline.mean);
+        }
+      }
+    }
     // Always compute legacy signals for explainability
     const signals: AnomalySignal[] = [];
     signals.push(this.checkToolNovelty(toolName, profile));
@@ -211,23 +285,121 @@ export class AnomalyDetector {
     // Update PPM model for next sequence prediction
     ppm.update(toolName);
 
+    // ── Second-opinion + calibration + drift ─────────────────────────────
+    // Mahalanobis catches anomalies that live in correlated feature
+    // combinations (IF's random axis-aligned splits can miss those).
+    const mahalanobis = this.getOrCreateMahalanobis(agentId, profile);
+    let mahalanobisScore: number | undefined;
+    let mahalanobisP: number | undefined;
+    if (normalizedFeatures.length === FEATURE_DIM) {
+      mahalanobisScore = mahalanobis.score(normalizedFeatures);
+      if (mahalanobis.samples >= 20) {
+        mahalanobisP = mahalanobis.pValue(mahalanobisScore);
+      }
+      mahalanobis.update(normalizedFeatures);
+    }
+
+    // Half-Space Trees — purpose-built streaming detector (Tan 2011).
+    // Better than IF on drifting streams because it doesn't rely on
+    // a reservoir-then-rebuild rhythm; mass counters refresh per
+    // window. We use it as a co-primary signal alongside IF.
+    const hst = this.getOrCreateHst(agentId, profile);
+    const hstScore = hst.score(normalizedFeatures);
+    hst.update(normalizedFeatures);
+
+    // AAD reweighting — when the operator has marked enough FP/TP
+    // examples, the [IF, HST, Mahalanobis] triple gets multiplied
+    // through a learned weight vector. Before that the call is a
+    // safe pass-through (unweighted mean).
+    const aad = this.getOrCreateAad(agentId, profile);
+    const aadOut = aad.reweight([
+      Math.max(0, Math.min(1, composite)),
+      Math.max(0, Math.min(1, hstScore)),
+      Math.max(0, Math.min(1, mahalanobisP !== undefined ? 1 - mahalanobisP : 0)),
+    ]);
+
+    // Ensemble: AAD-reweighted when active, else robust max over the
+    // three signals. AAD's contribution is monotone in the per-
+    // detector scores (weights are non-negative), so the worst case
+    // is "noisier but safe" — never less anomalous than raw IF.
+    let ensembleScore: number;
+    if (aadOut.usedFeedback) {
+      ensembleScore = aadOut.score;
+    } else {
+      const mScore = mahalanobisP !== undefined ? 1 - mahalanobisP : 0;
+      ensembleScore = Math.max(composite, hstScore, mScore);
+    }
+
+    // Conformal calibration: turn raw IF score into a streaming p-value
+    // against the agent's own score history. Used by the policy layer
+    // for "p < 0.01"-style thresholds — operationally meaningful.
+    const conformal = this.getOrCreateConformal(agentId, profile);
+    const conformalP = conformal.pValue(composite);
+    conformal.addScore(composite);
+
+    // ADWIN drift detection on the composite. When drift fires, we
+    // reset the feature-normalization stats (so the EWMA learns the
+    // new normal fast) but KEEP the forest reservoir — the forest
+    // already self-adapts via reservoir sampling. Resetting feature
+    // stats prevents the post-shift "everything looks anomalous" storm.
+    const adwin = this.getOrCreateAdwin(agentId, profile);
+    const adwinResult = adwin.update(composite);
+    if (adwinResult.drift) {
+      profile.featureStats = undefined;
+      profile.driftCount = (profile.driftCount ?? 0) + 1;
+      profile.lastDriftAt = new Date().toISOString();
+    }
+
     // Update per-agent score tracker for adaptive thresholds
-    profile.scoreTracker = AnomalyDetector.updateScoreTracker(profile.scoreTracker, composite);
+    profile.scoreTracker = AnomalyDetector.updateScoreTracker(profile.scoreTracker, ensembleScore);
 
     // Store updated state back to profile for persistence
-    profile.forestState = forest.serialize();
-    profile.ppmState = ppm.serialize();
+    profile.forestState        = forest.serialize();
+    profile.ppmState           = ppm.serialize();
+    profile.mahalanobisState   = mahalanobis.serialize();
+    profile.conformalState     = conformal.serialize();
+    profile.adwinState         = adwin.serialize();
+    profile.hstState           = hst.serialize();
+    profile.aadState           = aad.serialize();
 
     // Use adaptive thresholds if we have enough score history
     const effectiveThresholds = this.adaptiveThresholds(profile.scoreTracker);
-    const decision = this.decide(composite, effectiveThresholds);
+    const decision = this.decide(ensembleScore, effectiveThresholds);
+
+    // SHAP-style per-feature attribution (sub-ms; OK on hot path)
+    let explanation: AnomalyExplanation | undefined;
+    if (normalizedFeatures.length === FEATURE_DIM) {
+      try {
+        explanation = this.explainer.explain({
+          normalized: normalizedFeatures,
+          rawFeatures,
+          forest,
+          hst,
+          maha: mahalanobis,
+          ensembleScore,
+          // Pass AAD weights when available — explainer rescales contributions
+          // to match how the ensemble actually weighted detectors.
+          detectorWeights: aadOut.usedFeedback ? [1, 1, 1] : undefined,
+        });
+      } catch {
+        // Explanation is a best-effort surface; never block evaluation.
+      }
+    }
 
     return {
-      composite_score: Math.round(composite * 1000) / 1000,
+      composite_score: Math.round(ensembleScore * 1000) / 1000,
       signals: signals.filter(s => s.score > 0),
       decision,
       scoring_method: scoringMethod,
       feature_vector: rawFeatures,
+      mahalanobis_score:   mahalanobisScore,
+      mahalanobis_p_value: mahalanobisP,
+      conformal_p_value:   conformalP,
+      drift_detected:      adwinResult.drift,
+      drift_magnitude:     adwinResult.cutMagnitude,
+      hst_score:           hstScore,
+      aad_active:          aadOut.usedFeedback,
+      explanation,
     };
   }
 
@@ -251,12 +423,23 @@ export class AnomalyDetector {
     approved: boolean,
   ): void {
     const forest = this.getOrCreateForest(agentId, profile);
+    const hst    = this.getOrCreateHst(agentId, profile);
+    const maha   = this.getOrCreateMahalanobis(agentId, profile);
+    const aad    = this.getOrCreateAad(agentId, profile);
+
+    // Recompute the per-detector contribution for this point so AAD
+    // can learn which detectors are aligned with the operator's label.
+    const ifScore = forest.isTrained ? forest.score(featureVector) : 0;
+    const hstScore = hst.isWarmed ? hst.score(featureVector) : 0;
+    const mScore = maha.samples >= 20 ? 1 - maha.pValue(maha.score(featureVector)) : 0;
+    aad.feedback([ifScore, hstScore, mScore], approved ? 'fp' : 'tp');
 
     if (approved) {
       // False positive: reinforce as normal by adding multiple copies
       // This biases the reservoir toward this pattern, lowering its anomaly score
       for (let i = 0; i < 3; i++) {
         forest.addSample(featureVector);
+        hst.update(featureVector);   // HST also benefits from re-weighting toward "this was normal"
       }
       // Nudge score tracker down (this was over-flagged)
       if (profile.scoreTracker && profile.scoreTracker.n > 0) {
@@ -273,8 +456,10 @@ export class AnomalyDetector {
       }
     }
 
-    // Persist updated forest state
+    // Persist updated state
     profile.forestState = forest.serialize();
+    profile.hstState    = hst.serialize();
+    profile.aadState    = aad.serialize();
   }
 
   // ── Adaptive Thresholds ───────────────────────────────────────────────────
@@ -355,6 +540,70 @@ export class AnomalyDetector {
 
     this.forests.set(agentId, forest);
     return forest;
+  }
+
+  // ── Mahalanobis / Conformal / ADWIN Management ───────────────────────────
+  // Each per-agent state lives in the same restore-from-profile pattern as
+  // the IF and PPM models. Hot-path lookups are O(1) via the Maps.
+
+  private getOrCreateMahalanobis(agentId: string, profile: AgentProfile): MahalanobisScorer {
+    let s = this.mahalanobis.get(agentId);
+    if (s) return s;
+    if (profile.mahalanobisState) {
+      try { s = MahalanobisScorer.deserialize(profile.mahalanobisState); }
+      catch { /* corrupted snapshot — fall through */ }
+    }
+    if (!s) s = new MahalanobisScorer({ shrinkage: 0.10, minSamples: 20 });
+    this.mahalanobis.set(agentId, s);
+    return s;
+  }
+
+  private getOrCreateConformal(agentId: string, profile: AgentProfile): ConformalCalibrator {
+    let c = this.conformals.get(agentId);
+    if (c) return c;
+    if (profile.conformalState) {
+      try { c = ConformalCalibrator.deserialize(profile.conformalState); }
+      catch { /* corrupted snapshot — fall through */ }
+    }
+    if (!c) c = new ConformalCalibrator({ windowSize: 512, minSamples: 30 });
+    this.conformals.set(agentId, c);
+    return c;
+  }
+
+  private getOrCreateAdwin(agentId: string, profile: AgentProfile): Adwin {
+    let a = this.adwins.get(agentId);
+    if (a) return a;
+    if (profile.adwinState) {
+      try { a = Adwin.deserialize(profile.adwinState); }
+      catch { /* corrupted snapshot — fall through */ }
+    }
+    if (!a) a = new Adwin({ delta: 0.002, minWindow: 50 });
+    this.adwins.set(agentId, a);
+    return a;
+  }
+
+  private getOrCreateHst(agentId: string, profile: AgentProfile): HalfSpaceTrees {
+    let h = this.hsts.get(agentId);
+    if (h) return h;
+    if (profile.hstState) {
+      try { h = HalfSpaceTrees.deserialize(profile.hstState); }
+      catch { /* corrupted snapshot */ }
+    }
+    if (!h) h = new HalfSpaceTrees({ numTrees: 25, depth: 8, windowSize: 256, minSamples: 30 });
+    this.hsts.set(agentId, h);
+    return h;
+  }
+
+  private getOrCreateAad(agentId: string, profile: AgentProfile): ActiveAnomalyDiscovery {
+    let a = this.aads.get(agentId);
+    if (a) return a;
+    if (profile.aadState) {
+      try { a = ActiveAnomalyDiscovery.deserialize(profile.aadState); }
+      catch { /* corrupted snapshot */ }
+    }
+    if (!a) a = new ActiveAnomalyDiscovery({ numTrees: 25, minFeedbacks: 8 });
+    this.aads.set(agentId, a);
+    return a;
   }
 
   // ── PPM Model Management ─────────────────────────────────────────────────

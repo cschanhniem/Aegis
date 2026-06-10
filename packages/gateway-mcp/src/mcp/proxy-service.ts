@@ -138,8 +138,12 @@ export class MCPProxyService {
         version: '1.0.0',
       };
 
-      // Validate against policies
-      const validation = await this.policyEngine.validateToolCall(toolRequest);
+      // Validate against policies. The MCP WebSocket layer has no
+      // request-scoped tenant header today; we hand off the agentId's
+      // resolved org when the registry is wired, otherwise stay on
+      // 'default' (= solo-deploy semantics, identical to v0 behaviour).
+      const orgIdForPolicy = (this as any).agentRegistry?.orgOf?.(agentId) ?? 'default';
+      const validation = await this.policyEngine.validateToolCall(toolRequest, orgIdForPolicy);
 
       // Store validation result
       trace['safety_validation'] = validation;

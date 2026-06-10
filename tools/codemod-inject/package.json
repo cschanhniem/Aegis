@@ -1,0 +1,15 @@
+{
+  "name": "@agentguard/codemod-inject",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Inserts the AEGIS bootstrap snippet at the top of entry files. Reads scanner reports, supports dry-run + write + revert.",
+  "type": "module",
+  "bin": {
+    "agentguard-inject": "./index.mjs"
+  },
+  "main": "./index.mjs",
+  "files": ["index.mjs"],
+  "engines": {
+    "node": ">=18"
+  }
+}
