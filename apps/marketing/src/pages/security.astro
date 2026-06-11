@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
+import PhotoBand from '@/components/PhotoBand.astro';
 
 // Status table — keep this honest. Update when something ships. The
 // reason customers visit this page is to confirm what's REAL versus
@@ -40,6 +41,14 @@ const cryptoCapabilities = [
   <Header current="security" />
 
   <main>
+    <PhotoBand
+      src="/images/wavy-architecture.jpg"
+      alt="Warm-toned architectural surface — sculptural curves"
+      credit="Ricardo Gomez Angel / Unsplash"
+      position="center 35%"
+      height="clamp(180px, 24vw, 280px)"
+    />
+
     <section class="head">
       <div class="container container-narrow">
         <p class="eyebrow">Security & Compliance</p>

@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
+import PhotoBand from '@/components/PhotoBand.astro';
 ---
 <Layout
   title="One-click workflow scanner — AEGIS"
@@ -9,6 +10,14 @@ import Footer from '@/components/Footer.astro';
 >
   <Header />
   <main>
+    <PhotoBand
+      src="/images/beams-light.jpg"
+      alt="Wooden beams with diagonal light and shadow"
+      credit="Declan Sun / Unsplash"
+      position="center 40%"
+      height="clamp(180px, 22vw, 260px)"
+    />
+
     <section class="hero">
       <div class="container">
         <p class="eyebrow">Feature · One-click scanner</p>
