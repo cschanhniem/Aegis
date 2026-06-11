@@ -1,0 +1,197 @@
+---
+// Live decision log — stylized to look like the actual cockpit event stream.
+// This is the hero visual: instead of explaining architecture with a diagram,
+// SHOW the product working. Each row = one real-shaped tool-call decision.
+// Pure HTML/CSS, no JS, no animation (taste rule: motion only between states).
+
+interface Row {
+  time: string;
+  agent: string;
+  tool: string;
+  arg: string;        // truncated arg preview
+  decision: 'allow' | 'pending' | 'block';
+  reason: string;
+}
+const rows: Row[] = [
+  { time: '12:47:09', agent: 'support-bot',    tool: 'send_email',  arg: 'to: alice@acme.dev',         decision: 'allow',   reason: 'email-allowlist' },
+  { time: '12:47:02', agent: 'orchestrator',   tool: 'db_query',    arg: "DROP TABLE users",           decision: 'block',   reason: 'sql-injection' },
+  { time: '12:46:58', agent: 'crew-research',  tool: 'http_post',   arg: 'https://3rwk.unknown-host', decision: 'pending', reason: 'anomaly · 0.83' },
+  { time: '12:46:41', agent: 'support-bot',    tool: 'search_kb',   arg: '"refund policy 30d"',       decision: 'allow',   reason: '—' },
+  { time: '12:46:30', agent: 'coding-asst',    tool: 'file_write',  arg: '/etc/passwd',                decision: 'block',   reason: 'file-access' },
+  { time: '12:46:11', agent: 'finance-bot',    tool: 'transfer',    arg: 'amount: $47,200',            decision: 'pending', reason: 'high-value-tx' },
+];
+---
+<figure class="dlog" aria-label="AEGIS decision stream — live">
+  <header>
+    <span class="live">
+      <span class="pulse"></span> live
+    </span>
+    <span class="path">cockpit.aegis.dev / acme · decisions</span>
+    <span class="meta">last 24h · 14,829 calls</span>
+  </header>
+
+  <ul class="stream">
+    {rows.map((r, i) => (
+      <li class={`row decision-${r.decision}`} style={`--fade:${1 - i * 0.08}`}>
+        <span class="time">{r.time}</span>
+        <span class="body">
+          <span class="line1">
+            <span class="agent">{r.agent}</span>
+            <span class="sep">›</span>
+            <span class="tool">{r.tool}</span>
+          </span>
+          <span class="arg">{r.arg}</span>
+        </span>
+        <span class="decision">
+          <span class={`pill pill-${r.decision}`}>{r.decision}</span>
+          <span class="reason">{r.reason}</span>
+        </span>
+      </li>
+    ))}
+  </ul>
+</figure>
+
+<style>
+  .dlog {
+    margin: 0;
+    background: hsl(38 35% 97%);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 28px hsla(36, 30%, 25%, 0.10);
+    font-family: var(--font-mono);
+  }
+
+  /* ── header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.7rem 1rem;
+    background: hsl(38 32% 94%);
+    border-bottom: 1px solid var(--hairline);
+    font-size: 0.78rem;
+    color: hsl(36 18% 36%);
+  }
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: hsl(140 40% 32%);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+  }
+  .pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: hsl(140 60% 42%);
+    box-shadow: 0 0 0 0 hsla(140, 60%, 42%, 0.5);
+    animation: pulse 2s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 hsla(140, 60%, 42%, 0.45); }
+    70%  { box-shadow: 0 0 0 8px hsla(140, 60%, 42%, 0); }
+    100% { box-shadow: 0 0 0 0 hsla(140, 60%, 42%, 0); }
+  }
+  .path {
+    flex: 1;
+    color: hsl(36 22% 30%);
+  }
+  .meta {
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+
+  /* ── rows ── */
+  .stream {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 76px 1fr auto;
+    gap: 1rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid hsla(36, 25%, 60%, 0.18);
+    align-items: flex-start;
+    opacity: var(--fade, 1);
+    font-size: 0.82rem;
+  }
+  .row:last-child { border-bottom: 0; }
+
+  .time {
+    color: var(--muted);
+    font-size: 0.74rem;
+    padding-top: 0.15rem;
+  }
+
+  .body { min-width: 0; }
+  .line1 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: hsl(36 22% 22%);
+  }
+  .agent {
+    color: hsl(220 30% 35%);
+    font-weight: 600;
+  }
+  .sep { color: hsl(36 15% 60%); }
+  .tool {
+    color: hsl(36 22% 22%);
+    font-weight: 500;
+  }
+  .arg {
+    display: block;
+    margin-top: 0.18rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 38ch;
+  }
+
+  .decision {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-top: 0.05rem;
+  }
+  .pill {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    padding: 0.12rem 0.55rem;
+    border-radius: 99px;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+    font-weight: 500;
+  }
+  .pill-allow   { background: hsl(140 32% 90%); color: hsl(140 45% 22%); }
+  .pill-pending { background: hsl(36 55% 90%);  color: hsl(36 55% 28%); }
+  .pill-block   { background: hsl(0 32% 92%);   color: hsl(0 45% 32%); }
+
+  .reason {
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+
+  /* ── responsive ── */
+  @media (max-width: 720px) {
+    .row { grid-template-columns: 60px 1fr; }
+    .decision {
+      grid-column: 2;
+      padding-top: 0.3rem;
+      padding-left: 0;
+    }
+    .arg { max-width: 28ch; }
+    header .meta { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pulse { animation: none; }
+  }
+</style>
