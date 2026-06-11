@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Download, Shield, AlertCircle, ThumbsUp, ThumbsDown, EyeOff, ChevronRight, Code2, Eye, Brain } from 'lucide-react'
 import { formatDate, getStatusColor, getRiskLevelColor } from '@/lib/utils'
 import { useState, ReactNode } from 'react'
+import { AnomalyExplanationPanel } from './anomaly-explanation-panel'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -354,6 +355,13 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
                   {trace.anomaly_score.toFixed(3)}
                 </span>
               </div>
+              {trace.anomaly_explanation && (
+                <AnomalyExplanationPanel explanation={
+                  typeof trace.anomaly_explanation === 'string'
+                    ? JSON.parse(trace.anomaly_explanation)
+                    : trace.anomaly_explanation
+                } />
+              )}
               {(Array.isArray(trace.anomaly_signals) ? trace.anomaly_signals : JSON.parse(trace.anomaly_signals || '[]')).map((signal: any, i: number) => (
                 <div
                   key={i}

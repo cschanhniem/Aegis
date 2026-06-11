@@ -362,7 +362,7 @@ export function AgentsView() {
                   setTimeout(() => setSecretCopied(false), 1500)
                 }}
                 className="text-xs px-3 py-1.5 rounded-md inline-flex items-center gap-1.5"
-                style={{ background: 'hsl(var(--accent))', color: TEXT }}
+                style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
               >
                 {secretCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                 {secretCopied ? 'Copied' : 'Copy'}

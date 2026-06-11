@@ -8,7 +8,7 @@ import {
   LayoutDashboard, FileText, Shield, ScrollText, Sparkles,
   CheckCircle, AlertTriangle, Settings, FlaskConical,
   ShieldHalf, Compass, ClipboardList, UserRound, Layers, FileCheck2,
-  Menu, X,
+  ScanLine, Menu, X,
 } from 'lucide-react'
 import { useTraceStream } from '@/hooks/useTraceStream'
 import { BlockAlertToast } from '@/components/ui/block-alert-toast'
@@ -25,6 +25,7 @@ const navigation = [
   { name: 'DSL',         href: '/dsl',         icon: ScrollText      },
   { name: 'Coverage',    href: '/coverage',    icon: Layers          },
   { name: 'Code Shield', href: '/code-shield', icon: ShieldHalf      },
+  { name: 'Pre-Deploy',  href: '/scan',        icon: ScanLine        },
   { name: 'Alignment',   href: '/alignment',   icon: Compass         },
   { name: 'Audit Log',   href: '/audit-log',   icon: ClipboardList   },
   { name: 'Compliance',  href: '/compliance',  icon: FileCheck2      },
@@ -129,7 +130,7 @@ function SidebarContent({ pathname, connected, lastUpdate, notifPermission, requ
             className="w-full text-left text-[11px] px-2 py-1 rounded transition-opacity hover:opacity-70"
             style={{
               background:  notifPermission === 'denied' ? 'hsl(0 30% 94%)' : 'hsl(var(--accent))',
-              color:       notifPermission === 'denied' ? 'hsl(0 50% 45%)' : TEXT,
+              color:       notifPermission === 'denied' ? 'hsl(0 50% 45%)' : 'hsl(var(--accent-foreground))',
             }}
             title={notifPermission === 'denied' ? 'Blocked in browser \u2014 enable in System Settings' : 'Get notified even when this tab is in background'}
           >

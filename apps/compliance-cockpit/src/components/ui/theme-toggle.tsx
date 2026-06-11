@@ -82,7 +82,7 @@ export function ThemeToggle() {
             className="flex-1 flex items-center justify-center py-1 rounded transition-colors"
             style={{
               background: active ? ACTIVE : 'transparent',
-              color: active ? TEXT : MUTED,
+              color: active ? 'hsl(var(--accent-foreground))' : MUTED,
             }}
           >
             <Icon className="h-3 w-3" />
