@@ -124,10 +124,10 @@ client = openai.OpenAI(
           </div>
           <div class="snippet">
             <div class="snippet-label">After (env only)</div>
-            <pre><code><span class="hl">{`OPENAI_BASE_URL=https://gateway.aegis.dev/openai/v1
-AEGIS_API_KEY=aeg_xxx`}</span>
+            <pre><code><span class="env-key">OPENAI_BASE_URL</span>=<span class="env-val">https://gateway.aegis.dev/openai/v1</span>
+<span class="env-key">AEGIS_API_KEY</span>=<span class="env-val">aeg_xxx</span>
 
-# code unchanged</code></pre>
+<span class="comment"># code unchanged</span></code></pre>
           </div>
         </div>
       </div>
@@ -277,7 +277,10 @@ AEGIS_API_KEY=aeg_xxx`}</span>
       color: var(--muted);
       margin-bottom: 0.6rem;
     }
-    .hl { background: var(--accent); color: var(--bg); padding: 0 2px; }
+    .snippet code { font-size: 0.86rem; line-height: 1.7; }
+    .snippet .env-key { color: hsl(36 55% 30%); font-weight: 600; }
+    .snippet .env-val { color: hsl(220 30% 30%); }
+    .snippet .comment { color: hsl(36 18% 50%); font-style: italic; }
     @media (max-width: 720px) {
       .snippet-grid { grid-template-columns: 1fr; }
     }
