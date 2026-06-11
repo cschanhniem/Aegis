@@ -1,0 +1,102 @@
+---
+// Lucide icons (MIT) — inlined so the page ships zero icon-font / external request.
+// Source: https://lucide.dev — all icons 24x24, stroke="currentColor".
+// To add a new icon, paste its <path>/<line>/<circle> children verbatim from lucide.dev.
+
+interface Props {
+  name: 'scan-search' | 'wand-sparkles' | 'shield-check' | 'sliders' | 'arrow-right' | 'check' | 'lock' | 'bar-chart' | 'workflow' | 'eye';
+  size?: number;
+  class?: string;
+}
+const { name, size = 24, class: cls = '' } = Astro.props;
+---
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.6"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class={cls}
+  aria-hidden="true"
+>
+  {name === 'scan-search' && (
+    <>
+      <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+      <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+      <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+      <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+      <circle cx="12" cy="12" r="3"/>
+      <path d="m16 16-1.9-1.9"/>
+    </>
+  )}
+  {name === 'wand-sparkles' && (
+    <>
+      <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/>
+      <path d="m14 7 3 3"/>
+      <path d="M5 6v4"/>
+      <path d="M19 14v4"/>
+      <path d="M10 2v2"/>
+      <path d="M7 8H3"/>
+      <path d="M21 16h-4"/>
+      <path d="M11 3H9"/>
+    </>
+  )}
+  {name === 'shield-check' && (
+    <>
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+      <path d="m9 12 2 2 4-4"/>
+    </>
+  )}
+  {name === 'sliders' && (
+    <>
+      <line x1="21" x2="14" y1="4" y2="4"/>
+      <line x1="10" x2="3" y1="4" y2="4"/>
+      <line x1="21" x2="12" y1="12" y2="12"/>
+      <line x1="8" x2="3" y1="12" y2="12"/>
+      <line x1="21" x2="16" y1="20" y2="20"/>
+      <line x1="12" x2="3" y1="20" y2="20"/>
+      <line x1="14" x2="14" y1="2" y2="6"/>
+      <line x1="8" x2="8" y1="10" y2="14"/>
+      <line x1="16" x2="16" y1="18" y2="22"/>
+    </>
+  )}
+  {name === 'arrow-right' && (
+    <>
+      <path d="M5 12h14"/>
+      <path d="m12 5 7 7-7 7"/>
+    </>
+  )}
+  {name === 'check' && (
+    <path d="M20 6 9 17l-5-5"/>
+  )}
+  {name === 'lock' && (
+    <>
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </>
+  )}
+  {name === 'bar-chart' && (
+    <>
+      <line x1="12" x2="12" y1="20" y2="10"/>
+      <line x1="18" x2="18" y1="20" y2="4"/>
+      <line x1="6" x2="6" y1="20" y2="16"/>
+    </>
+  )}
+  {name === 'workflow' && (
+    <>
+      <rect width="8" height="8" x="3" y="3" rx="2"/>
+      <path d="M7 11v4a2 2 0 0 0 2 2h4"/>
+      <rect width="8" height="8" x="13" y="13" rx="2"/>
+    </>
+  )}
+  {name === 'eye' && (
+    <>
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </>
+  )}
+</svg>

@@ -4,6 +4,12 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import ArchFlow from '@/components/ArchFlow.astro';
 import CockpitMockup from '@/components/CockpitMockup.astro';
+import LogoWall from '@/components/LogoWall.astro';
+import Screenshot from '@/components/Screenshot.astro';
+import Icon from '@/components/Icon.astro';
+
+// Flip to false once real screenshots are dropped in /public/screenshots/.
+const USE_PLACEHOLDERS = true;
 ---
 <Layout
   title="AEGIS — runtime safety for AI agents"
@@ -37,12 +43,30 @@ import CockpitMockup from '@/components/CockpitMockup.astro';
       </div>
     </section>
 
+    <!-- ── LOGO WALL ─────────────────────────────────────────────── -->
+    <LogoWall />
+
     <!-- ── COCKPIT PREVIEW ───────────────────────────────────────── -->
     <section class="cockpit-preview">
       <div class="container">
         <p class="section-eyebrow">What you see</p>
         <h2>Every tool call, in one view.</h2>
-        <CockpitMockup />
+        {USE_PLACEHOLDERS ? (
+          <Screenshot
+            src="/screenshots/traces-overview.png"
+            alt="Cockpit — traces overview with allow / pending / block decisions"
+            url="cockpit.aegis.dev / acme · traces"
+            placeholder
+            caption="Drop a real PNG to replace this placeholder — see /public/screenshots/README.md"
+          />
+        ) : (
+          <Screenshot
+            src="/screenshots/traces-overview.png"
+            alt="Cockpit — traces overview with allow / pending / block decisions"
+            url="cockpit.aegis.dev / acme · traces"
+          />
+        )}
+        <noscript><CockpitMockup /></noscript>
       </div>
     </section>
 
@@ -54,44 +78,28 @@ import CockpitMockup from '@/components/CockpitMockup.astro';
 
         <div class="hl-grid">
           <a class="hl" href="/features/scanner">
-            <svg viewBox="0 0 40 40" class="hl-icon" aria-hidden="true">
-              <rect x="4" y="6" width="32" height="28" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M10 14h10M10 20h16M10 26h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              <circle cx="30" cy="30" r="6" fill="var(--bg)" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M34 34l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+            <Icon name="scan-search" size={28} class="hl-icon" />
             <h3>Scan</h3>
             <p>Tree-sitter AST across Python / JS / TS. Workflow graph extracted from LangGraph, CrewAI, AutoGen, Mastra.</p>
             <span class="hl-cta">Scanner →</span>
           </a>
 
           <a class="hl" href="/features/policy-generator">
-            <svg viewBox="0 0 40 40" class="hl-icon" aria-hidden="true">
-              <rect x="6" y="5" width="20" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M11 12h10M11 17h10M11 22h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M28 14l6 6-8 8-6-6 8-8z" fill="var(--bg)" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M30 16l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+            <Icon name="wand-sparkles" size={28} class="hl-icon" />
             <h3>Generate</h3>
             <p>One paragraph + your tool inventory. Grammar-constrained policy bundle out, AJV-self-tested.</p>
             <span class="hl-cta">Generator →</span>
           </a>
 
           <a class="hl" href="/features/predeploy">
-            <svg viewBox="0 0 40 40" class="hl-icon" aria-hidden="true">
-              <path d="M20 4l14 8v16l-14 8L6 28V12l14-8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M14 20l5 5 9-10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <Icon name="shield-check" size={28} class="hl-icon" />
             <h3>Gate</h3>
             <p>CI fails on secret leaks, unsafe tool config, policy gaps, PI corpus regression. SARIF output.</p>
             <span class="hl-cta">Pre-deploy →</span>
           </a>
 
           <a class="hl" href="/features/customize">
-            <svg viewBox="0 0 40 40" class="hl-icon" aria-hidden="true">
-              <circle cx="20" cy="20" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M20 4v6M20 30v6M4 20h6M30 20h6M8.5 8.5l4.3 4.3M27.2 27.2l4.3 4.3M8.5 31.5l4.3-4.3M27.2 12.8l4.3-4.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+            <Icon name="sliders" size={28} class="hl-icon" />
             <h3>Customize</h3>
             <p>YAML rules, TypeScript detectors, JSON DSL policies, tuned risk weights — extend without forking.</p>
             <span class="hl-cta">Customize →</span>
