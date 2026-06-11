@@ -73,6 +73,70 @@ AEGIS_API_KEY=aeg_xxx</span>
       </div>
     </section>
 
+    <!-- ── PRODUCT HIGHLIGHTS ─────────────────────────────────────── -->
+    <section class="highlights">
+      <div class="container">
+        <p class="section-eyebrow">Four things AEGIS does end-to-end</p>
+        <h2>From repo scan to runtime block — one platform.</h2>
+        <p class="lede-2">
+          Most guardrail products start at the gateway. AEGIS starts at
+          the moment you point it at your code: scan, generate policies,
+          gate at deploy time, enforce at runtime, audit forever. Each
+          step is its own product page; here's the 10-second tour.
+        </p>
+
+        <div class="hl-grid">
+          <a class="hl" href="/features/scanner">
+            <div class="hl-num">01</div>
+            <h3>One-click workflow scanner</h3>
+            <p>
+              Point at any folder. Tree-sitter AST detection across
+              Python / JS / TS / TSX. LangGraph / CrewAI / AutoGen /
+              Mastra / Vercel-AI topology extraction. Tool inventory +
+              entry-point ranking. No config, no annotation.
+            </p>
+            <span class="hl-cta">Read more →</span>
+          </a>
+
+          <a class="hl" href="/features/policy-generator">
+            <div class="hl-num">02</div>
+            <h3>Natural language → SOTA policy</h3>
+            <p>
+              One paragraph + the scanner's output in. A grammar-
+              constrained policy bundle out, AJV-self-tested, repaired
+              via PerFine if any test fails. Per-node policies keyed
+              on real tool names — no inventing.
+            </p>
+            <span class="hl-cta">Read more →</span>
+          </a>
+
+          <a class="hl" href="/features/predeploy">
+            <div class="hl-num">03</div>
+            <h3>Pre-deployment scan + CI gate</h3>
+            <p>
+              GitHub Action emits SARIF. Build fails on secret leak,
+              unsafe tool config, policy coverage gap, PI corpus
+              regression, AAT-T* technique not covered. Catch it
+              before it merges, not in production.
+            </p>
+            <span class="hl-cta">Read more →</span>
+          </a>
+
+          <a class="hl" href="/features/customize">
+            <div class="hl-num">04</div>
+            <h3>Customize every layer</h3>
+            <p>
+              YAML scan rules, TypeScript detector plugins, JSON
+              policy DSL, tunable capability-risk weights, custom
+              compliance bundles. Extend without forking — your
+              customisations slot in alongside built-ins.
+            </p>
+            <span class="hl-cta">Read more →</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
     <!-- ── CAPABILITIES ──────────────────────────────────────────── -->
     <section class="caps">
       <div class="container">
@@ -289,6 +353,55 @@ AEGIS_API_KEY=aeg_xxx</span>
     }
 
     /* Capability grid */
+    /* Product highlights — 4-card spotlight after zero-code, before vs-table */
+    .highlights {
+      padding: 4rem 0;
+      border-top: 1px solid var(--hairline);
+      background: var(--surface);
+    }
+    .highlights h2 { font-family: var(--font-serif); margin: 0.3rem 0 0.8rem; }
+    .hl-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.2rem;
+      margin-top: 2rem;
+    }
+    .hl {
+      display: block;
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+      padding: 1.6rem 1.4rem 1.3rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.15s, transform 0.05s;
+      position: relative;
+    }
+    .hl:hover { border-color: var(--accent); }
+    .hl:active { transform: translateY(1px); }
+    .hl-num {
+      font-family: var(--font-serif);
+      font-size: 0.86rem;
+      color: var(--accent-warn);
+      letter-spacing: 0.06em;
+      margin-bottom: 0.4rem;
+    }
+    .hl h3 {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      margin: 0 0 0.6rem;
+    }
+    .hl p {
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin: 0 0 0.9rem;
+    }
+    .hl-cta {
+      font-weight: 500;
+      font-size: 0.92rem;
+      color: var(--accent);
+    }
+
     .caps { padding: 4rem 0; border-top: 1px solid var(--hairline); }
     .cap-grid {
       display: grid;

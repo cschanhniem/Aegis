@@ -1,0 +1,253 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="Pre-deployment scanning — AEGIS"
+  description="Block insecure agent code before it merges. AEGIS pre-deploy scan runs in CI, fails the build on policy violations + secret leaks + unsafe tool configurations."
+>
+  <Header />
+  <main>
+    <section class="hero">
+      <div class="container">
+        <p class="eyebrow">Feature · Pre-deployment scanning</p>
+        <h1>Block insecure agent code <em>before</em> it merges.</h1>
+        <p class="lede">
+          Runtime guardrails catch what reaches production. The
+          pre-deploy scanner catches what shouldn't reach production
+          in the first place — secrets in source, unsafe tool config,
+          missing policy coverage, prompt-injection corpus regression.
+          Runs as a CI gate, emits SARIF, fails the build.
+        </p>
+        <div class="hero-cta">
+          <a href="/download" class="btn">Try it locally</a>
+          <a href="/docs/api" class="btn-secondary">CI integration guide</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="ci">
+      <div class="container container-narrow">
+        <h2>One job in your existing CI</h2>
+        <pre><code>{`# .github/workflows/aegis-predeploy.yml
+name: AEGIS pre-deploy scan
+on: [pull_request]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aegis-dev/predeploy-scan-action@v1
+        with:
+          fail-on:           HIGH        # HIGH / MEDIUM / LOW / never
+          require-coverage:  AAT-T1,AAT-T4,AAT-T5,AAT-T10
+          policy-bundle:     .aegis/policies.json
+          output:            sarif`}</code></pre>
+        <p class="muted">
+          Or via CLI in any CI: <code>agentguard predeploy --fail-on HIGH --sarif results.sarif</code>.
+          GitHub Code Scanning auto-renders SARIF as inline PR
+          annotations.
+        </p>
+      </div>
+    </section>
+
+    <section class="categories">
+      <div class="container">
+        <h2>Five categories the scanner blocks on</h2>
+        <div class="grid">
+          <article class="card">
+            <span class="cat-num">1</span>
+            <h3>AI-credential leaks</h3>
+            <p>
+              Production-grade signature library: <code>sk-</code>,
+              <code>sk-ant-</code>, <code>hf_</code>, <code>AIza</code>,
+              <code>r8_</code>, <code>gsk_</code>, <code>co-</code>,
+              <code>together_</code>, plus cloud + DB + PEM + JWT.
+              Entropy gate + <code>is_test</code> heuristic
+              eliminates the noise that gitleaks-style tools give you.
+            </p>
+            <p class="hint">Severity: CRITICAL · Auto-fails any non-test secret.</p>
+          </article>
+
+          <article class="card">
+            <span class="cat-num">2</span>
+            <h3>Unsafe tool configurations</h3>
+            <p>
+              Shell tools that pass <code>shell=True</code> without
+              argument sanitisation. Database tools whose connection
+              string includes write access where read-only would do.
+              HTTP tools without URL allowlist. Function-call specs
+              missing required arg validation.
+            </p>
+            <p class="hint">Severity: HIGH or MEDIUM depending on tool category.</p>
+          </article>
+
+          <article class="card">
+            <span class="cat-num">3</span>
+            <h3>Policy coverage gaps</h3>
+            <p>
+              Cross-references the scanner's tool inventory against the
+              repo's policy bundle. If a tool is registered but no
+              policy gates it, that's a coverage gap. If a workflow
+              edge is a sensitive-relay path with no DSL rule, that's
+              a coverage gap.
+            </p>
+            <p class="hint">Severity: configurable (default MEDIUM).</p>
+          </article>
+
+          <article class="card">
+            <span class="cat-num">4</span>
+            <h3>PI corpus regression</h3>
+            <p>
+              Every PR runs the 26-pattern prompt-injection corpus
+              against the deployed policy bundle. If a previously-caught
+              variant goes uncaught (regression), the build fails.
+              Same idea as unit-test regression but for adversarial
+              inputs.
+            </p>
+            <p class="hint">Severity: HIGH on regression. <a href="/docs/policy-templates">PI corpus details</a>.</p>
+          </article>
+
+          <article class="card">
+            <span class="cat-num">5</span>
+            <h3>Custom org-specific rules</h3>
+            <p>
+              Drop a YAML file in <code>.aegis/rules/</code> with your
+              org's named patterns — internal endpoint shapes,
+              compliance-mandated allowlists, framework-specific
+              anti-patterns. Treated identically to built-in checks
+              in SARIF output.
+            </p>
+            <p class="hint">See <a href="/features/customize">/features/customize</a>.</p>
+          </article>
+
+          <article class="card">
+            <span class="cat-num">6</span>
+            <h3>AAT-T* threat ontology coverage</h3>
+            <p>
+              Declare which AEGIS Agent Threat tactics + techniques
+              your agent's policy + detector posture must cover. Build
+              fails if any required technique has no enforcement path.
+              Maps directly to procurement / compliance checklists.
+            </p>
+            <p class="hint">10 tactics × 4 techniques each. <a href="/docs/ontology">Full ontology</a>.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="report">
+      <div class="container container-narrow">
+        <h2>What lands in the PR</h2>
+        <pre><code>{`📋 AEGIS pre-deploy scan — 7 findings, 2 BLOCKING
+
+  ✗ CRITICAL  src/copilot.py:42      Anthropic API key in source
+              Match: 'sk-ant-API03-...'    Rule: ai-credential.anthropic
+
+  ✗ HIGH      src/tools/billing.py:8  Shell call without arg validation
+              Match: 'subprocess.run(cmd, shell=True)'  Rule: unsafe-tool.shell
+
+  ⚠  MEDIUM   src/agents/crew.py:55   No policy for tool 'send_invoice'
+              Workflow edge 'orchestrator → send_invoice' is sensitive-relay path
+              Rule: policy-coverage-gap
+
+  ⚠  MEDIUM   PI corpus regression — variant pi-tool-2 not blocked anymore
+              Was blocked in commit abc1234, no longer covered after policy diff
+              Rule: pi-corpus-regression
+
+  ℹ LOW       AAT-T7003 (workflow topology probe) has no detector coverage
+              Optional — only required if you ship to PCI / regulated industries
+              Rule: ontology-coverage
+
+[fail] Job exited with 1 because of 2 BLOCKING findings.`}</code></pre>
+      </div>
+    </section>
+
+    <section class="output">
+      <div class="container">
+        <h2>SARIF + JSON, both standard</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>SARIF 2.1.0</h3>
+            <p>
+              GitHub Code Scanning, Bitbucket, GitLab, Azure DevOps —
+              every modern code-host reads SARIF and surfaces findings
+              as inline PR annotations. Same flow as CodeQL / Semgrep
+              / Snyk.
+            </p>
+          </article>
+          <article class="card">
+            <h3>JSON report</h3>
+            <p>
+              For custom CI, dashboards, security review pipelines.
+              Schema documented in <a href="/docs/api">/docs/api</a>.
+              Includes per-finding remediation hints + a verified
+              counterfactual where applicable.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Persistent history</h3>
+            <p>
+              <code>scan_history</code> table stores every scan with
+              its findings + SARIF blob. Cockpit lists scans by repo,
+              shows diffs between scans, lets operators triage. Audit
+              evidence for SOC 2 / ISO 27001 lands in
+              <code>/api/v1/compliance/bundle/soc2</code>.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-strip">
+      <div class="container container-narrow">
+        <h2>Run it on your repo right now.</h2>
+        <p class="muted">
+          Same scanner the desktop bundle ships with. Self-host, or
+          drop the GitHub Action into <code>.github/workflows/</code>.
+        </p>
+        <div class="cta-buttons">
+          <a class="btn" href="/download">Download</a>
+          <a class="btn-secondary" href="/features/customize">→ Next: customise rules + detectors</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .hero { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { max-width: 60ch; color: var(--muted); font-size: 1.12rem; margin: 1.2rem 0 1.8rem; }
+    .hero-cta { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+
+    .ci { padding: 3rem 0; background: var(--surface); border-top: 1px solid var(--hairline); }
+    .ci h2 { font-family: var(--font-serif); margin: 0 0 1rem; }
+    .ci pre { background: var(--bg); }
+    .ci .muted { font-size: 0.92rem; margin-top: 1rem; }
+
+    .categories { padding: 3.5rem 0; }
+    .categories h2 { font-family: var(--font-serif); margin: 0 0 1.4rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
+    .card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px; padding: 1.2rem 1.2rem; position: relative; }
+    .cat-num { position: absolute; top: 0.6rem; right: 0.8rem; font-family: var(--font-serif); font-size: 1.6rem; color: var(--muted); opacity: 0.4; }
+    .card h3 { font-family: var(--font-serif); font-size: 1.1rem; margin: 0 0 0.4rem; padding-right: 1.5rem; }
+    .card p { color: var(--text); font-size: 0.93rem; margin: 0.4rem 0; }
+    .card .hint { color: var(--muted); font-size: 0.84rem; margin-top: 0.5rem; }
+
+    .report { padding: 3rem 0; background: var(--surface); border-top: 1px solid var(--hairline); }
+    .report h2 { font-family: var(--font-serif); margin: 0 0 1rem; }
+    .report pre { background: var(--bg); font-size: 0.88rem; }
+
+    .output { padding: 3rem 0; }
+    .output h2 { font-family: var(--font-serif); margin: 0 0 1.4rem; }
+
+    .cta-strip { padding: 3rem 0 5rem; border-top: 1px solid var(--hairline); }
+    .cta-strip h2 { font-family: var(--font-serif); margin: 0 0 0.6rem; }
+    .cta-buttons { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 1rem; }
+    .muted { color: var(--muted); }
+  </style>
+</Layout>

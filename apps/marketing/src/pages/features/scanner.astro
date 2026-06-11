@@ -1,0 +1,207 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="One-click workflow scanner — AEGIS"
+  description="Point AEGIS at any folder and it auto-discovers every agent, every tool, every framework. Tree-sitter AST for Python + JS + TS + TSX; LangGraph / CrewAI / AutoGen / Mastra / Vercel-AI workflow graph extraction."
+>
+  <Header />
+  <main>
+    <section class="hero">
+      <div class="container">
+        <p class="eyebrow">Feature · One-click scanner</p>
+        <h1>Point AEGIS at any folder.<br/>It <em>discovers everything</em>.</h1>
+        <p class="lede">
+          No config file. No annotation. No SDK install. Run one
+          command, AEGIS walks your repo and emits a structured
+          inventory of every agent, every tool, every LLM SDK, every
+          workflow node — ready to drop into a policy bundle.
+        </p>
+        <div class="hero-cta">
+          <a href="/download" class="btn">Download desktop bundle</a>
+          <a href="https://github.com/Justin0504/Aegis" class="btn-secondary" target="_blank" rel="noopener">View source</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="demo">
+      <div class="container container-narrow">
+        <h2>30 seconds, the whole story</h2>
+        <pre><code>{`$ agentguard scan ~/my-agent-repo
+
+Scanned 5,247 source files under ~/my-agent-repo
+Repo: acme-bot@2.3.1
+
+CANDIDATES:
+  KIND   CONF    FRAMEWORK         ENTRY  PROT  PATH
+  import high    anthropic         yes          src/copilot.py
+  import high    langchain         WF           src/orchestrator.py
+  import high    crewai            WF           agents/crew.py
+  http   medium  openai-http              yes   svc/legacy_proxy.py
+  mcp    high    claude-desktop                ~/.config/claude-desktop/config.json
+
+SUMMARY: 5 candidates  (import:3 http:1 mcp:1)
+         3 entry-points (2 workflow)
+         confidence=high:4 medium:1 low:0
+
+WORKFLOW GRAPH (langgraph):
+  nodes:        12 (1 entry / 9 agent / 1 router / 1 terminal)
+  edges:        17 (15 control / 2 handoff)
+  tools:        18 — search_kb, db_query, send_email, http_post, shell, file_write, ...
+  risk_signals: 2 sensitive-relays  (search_kb → send_email, db_query → http_post)`}</code></pre>
+        <p class="muted">
+          The same JSON output drops into <code>agentguard inject</code>
+          (auto-instruments the gateway) and the AI policy generator
+          (<a href="/features/policy-generator">below</a>).
+        </p>
+      </div>
+    </section>
+
+    <section class="how">
+      <div class="container">
+        <h2>How it works</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Tree-sitter AST detection</h3>
+            <p>
+              Python, JavaScript, TypeScript, TSX — all parsed at AST
+              level, not regex. The scanner catches dynamic imports,
+              <code>importlib.import_module("anthropic")</code>,
+              <code>require("openai")</code>, and SDK constructor calls
+              that confirm <em>actual usage</em> (not just "we imported it").
+            </p>
+            <p class="hint">Detects: 9 LLM SDKs + 5 agent frameworks.</p>
+          </article>
+
+          <article class="card">
+            <h3>Workflow-graph extraction</h3>
+            <p>
+              For LangGraph, CrewAI, AutoGen, Mastra, and Vercel AI SDK
+              the scanner walks the code's <em>structural definition</em>
+              — node registrations, edge connections, handoff targets —
+              and emits a typed graph: nodes, edges, agents, tools,
+              risk signals.
+            </p>
+            <p class="hint">Output schema: <code>{`{ framework, nodes[], edges[], entry_points[], terminals[], risk_signals[] }`}</code>.</p>
+          </article>
+
+          <article class="card">
+            <h3>Tool inventory + arg shapes</h3>
+            <p>
+              Every <code>@tool</code> decorator, every
+              <code>function_call</code> spec, every Vercel AI SDK
+              <code>tools</code> object — extracted with the argument
+              shape, JSON schema (if present), and description string
+              the LLM sees.
+            </p>
+            <p class="hint">Feeds the policy generator + capability risk scorer.</p>
+          </article>
+
+          <article class="card">
+            <h3>Custom rules layer</h3>
+            <p>
+              Drop a YAML file in <code>rules/</code> with
+              <code>id / pattern / severity</code> and the scanner runs
+              your matchers alongside the built-ins. Regex, AST
+              predicate, or tool-call shape — your choice.
+            </p>
+            <p class="hint">See <a href="/features/customize">/features/customize</a>.</p>
+          </article>
+
+          <article class="card">
+            <h3>Already-protected detection</h3>
+            <p>
+              If a file already imports the AEGIS SDK or routes through
+              the gateway, it's flagged <code>protected</code> so you
+              don't double-instrument or generate redundant policies.
+            </p>
+            <p class="hint">Idempotent across re-scans + injects.</p>
+          </article>
+
+          <article class="card">
+            <h3>Entry-point ranking</h3>
+            <p>
+              Confidence buckets — <strong>high</strong> (workflow
+              entry-point or main.py + LLM import),
+              <strong>medium</strong> (helper file with imports),
+              <strong>low</strong> (HTTP-only, no convention).
+              Wizard auto-injects high-confidence candidates; medium
+              gates behind operator review.
+            </p>
+            <p class="hint">No more "AEGIS instrumented test fixture by accident".</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="signatures">
+      <div class="container container-narrow">
+        <h2>What it actually catches</h2>
+        <table>
+          <thead><tr><th>Form</th><th>Example</th><th>Detected by</th></tr></thead>
+          <tbody>
+            <tr><td>Static import</td><td><code>import anthropic</code></td><td>AST + regex</td></tr>
+            <tr><td>Dynamic import</td><td><code>importlib.import_module("openai")</code></td><td>AST only — regex misses this</td></tr>
+            <tr><td>__import__</td><td><code>__import__("crewai")</code></td><td>AST only</td></tr>
+            <tr><td>CJS require</td><td><code>const o = require("openai")</code></td><td>AST + regex</td></tr>
+            <tr><td>Dynamic ESM</td><td><code>await import("@anthropic-ai/sdk")</code></td><td>AST only</td></tr>
+            <tr><td>Constructor call</td><td><code>new OpenAI(&#123;api_key&#125;)</code></td><td>AST — confirms usage</td></tr>
+            <tr><td>Scoped subpath</td><td><code>@langchain/openai</code></td><td>AST normalisation</td></tr>
+            <tr><td>HTTP-only</td><td><code>fetch("https://api.openai.com/v1/...")</code></td><td>URL classifier</td></tr>
+            <tr><td>MCP config</td><td><code>~/.config/claude-desktop/config.json</code></td><td>JSON walk</td></tr>
+            <tr><td>Already-protected</td><td><code>agentguard.init(...)</code></td><td>Sentinel scan</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cta-strip">
+      <div class="container container-narrow">
+        <h2>Try it on your repo. Free.</h2>
+        <p class="muted">
+          Desktop bundle includes the scanner sidecar. Or run it from
+          the CLI: <code>npm i -g agentguard-cli &amp;&amp; agentguard scan ~/repo</code>.
+        </p>
+        <div class="cta-buttons">
+          <a class="btn" href="/download">Download desktop</a>
+          <a class="btn-secondary" href="/features/policy-generator">→ Next: auto-generate policies</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .hero { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { max-width: 56ch; color: var(--muted); font-size: 1.12rem; margin: 1.2rem 0 1.8rem; }
+    .hero-cta { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+
+    .demo { padding: 3rem 0; background: var(--surface); border-top: 1px solid var(--hairline); }
+    .demo h2 { font-family: var(--font-serif); margin: 0 0 1rem; }
+    .demo pre { background: var(--bg); }
+    .demo .muted { font-size: 0.92rem; margin-top: 1rem; }
+
+    .how { padding: 3.5rem 0; }
+    .how h2 { font-family: var(--font-serif); margin: 0 0 1.4rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
+    .card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px; padding: 1.2rem 1.2rem; }
+    .card h3 { font-family: var(--font-serif); font-size: 1.1rem; margin: 0 0 0.4rem; }
+    .card p { color: var(--text); font-size: 0.94rem; margin: 0.4rem 0; }
+    .card .hint { color: var(--muted); font-size: 0.86rem; margin-top: 0.6rem; }
+
+    .signatures { padding: 3rem 0; background: var(--surface); border-top: 1px solid var(--hairline); }
+    .signatures h2 { font-family: var(--font-serif); margin: 0 0 1.2rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+    th { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--hairline-strong); }
+    td { padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+
+    .cta-strip { padding: 3rem 0 5rem; border-top: 1px solid var(--hairline); }
+    .cta-strip h2 { font-family: var(--font-serif); margin: 0 0 0.6rem; }
+    .cta-buttons { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 1rem; }
+    .muted { color: var(--muted); }
+  </style>
+</Layout>

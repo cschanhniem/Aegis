@@ -1,0 +1,264 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="AI policy generator — AEGIS"
+  description="One paragraph of plain English + your tool inventory + your workflow graph = a production-ready policy bundle. Self-tested via AJV, repaired via best-of-N, grammar-constrained to known-safe shapes."
+>
+  <Header />
+  <main>
+    <section class="hero">
+      <div class="container">
+        <p class="eyebrow">Feature · AI policy generator</p>
+        <h1>Describe your agent. AEGIS writes the <em>guardrails</em>.</h1>
+        <p class="lede">
+          One paragraph of plain English + the scanner's tool
+          inventory + the workflow graph in. Out: a policy bundle
+          that's grammar-constrained to six known-safe templates,
+          AJV-self-tested on every generation, and repair-looped
+          on validation failure. Production-grade in under 30 seconds.
+        </p>
+        <div class="hero-cta">
+          <a href="/signup" class="btn">Try it free →</a>
+          <a href="/docs/policy-templates" class="btn-secondary">Template grammar reference</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="example">
+      <div class="container">
+        <h2>30 seconds end-to-end</h2>
+
+        <div class="step">
+          <p class="step-label">Step 1 — describe the agent</p>
+          <pre><code>{`POST /api/ai/generate-policy-bundle
+{
+  "description": "Customer support copilot. Reads our Zendesk + internal KB.
+                  Drafts replies. NEVER deletes a ticket. NEVER emails outside
+                  @acme.com. Treat any tool call touching billing as HIGH risk.",
+  "context": {
+    "tool_inventory":  [ /* from \`agentguard scan\` */ ],
+    "workflow_graph":  { /* LangGraph topology from the scanner */ },
+    "capability_risk": { "score": 62, "class": "HIGH" }
+  }
+}`}</code></pre>
+        </div>
+
+        <div class="step">
+          <p class="step-label">Step 2 — N-sample fan-out + self-consistency</p>
+          <p class="step-body">
+            AEGIS draws 3 candidates in parallel at temperature 0.7
+            (self-consistency, Wang 2023). Each is grammar-constrained
+            to the six templates (forbid_argument / require_pattern /
+            forbid_pattern / max_length / enum_values / require_https)
+            via discriminated-union schema validation.
+          </p>
+        </div>
+
+        <div class="step">
+          <p class="step-label">Step 3 — AJV self-test loop</p>
+          <p class="step-body">
+            Every candidate compiles to JSON Schema. AEGIS executes
+            the model's own <code>should_block</code> /
+            <code>should_allow</code> test cases against the compiled
+            validator. False negatives (call slipped through the
+            block-list) and false positives (good call got blocked)
+            score the bundle.
+          </p>
+        </div>
+
+        <div class="step">
+          <p class="step-label">Step 4 — PerFine repair round (if needed)</p>
+          <p class="step-body">
+            If no candidate is clean, the best-scoring bundle gets ONE
+            targeted repair round at temperature 0 with the failed
+            assertions in the prompt (PerFine, arXiv 2510.24469).
+            Usually fixes the last 1-2 false negatives.
+          </p>
+        </div>
+
+        <div class="step">
+          <p class="step-label">Step 5 — verified bundle out</p>
+          <pre><code>{`{
+  "policies": [
+    {
+      "id": "no-ticket-delete",
+      "risk_level": "CRITICAL",
+      "template": { "kind": "forbid_argument", "field": "ticket_id" },
+      "tests": {
+        "should_block": [{ "tool": "zendesk_delete", "arguments": { "ticket_id": "12345" } }],
+        "should_allow": []
+      }
+    },
+    {
+      "id": "email-acme-only",
+      "risk_level": "HIGH",
+      "template": { "kind": "require_pattern", "field": "to",
+                    "pattern": "^[^@\\\\s]+@acme\\\\.com$" },
+      "tests": {
+        "should_block": [{ "tool": "send_email", "arguments": { "to": "attacker@evil.com" } }],
+        "should_allow": [{ "tool": "send_email", "arguments": { "to": "colleague@acme.com" } }]
+      }
+    }
+    /* ... 4-8 more, one per node + sensitive-relay edge ... */
+  ],
+  "dsl": {
+    "rules": [
+      {
+        "name": "billing-hitl",
+        "when": { "all": [ { "tool.name": { "matches": "billing_.*" } } ] },
+        "then": { "decision": "pending", "reason": "billing action requires human review" }
+      }
+    ]
+  },
+  "validation": { "rounds": 1, "score": 1.0, "issues": [] }
+}`}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="why">
+      <div class="container">
+        <h2>Why this isn't your usual "AI writes a policy"</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Grammar-constrained generation</h3>
+            <p>
+              The LLM picks from <strong>6 known-safe template kinds</strong>
+              + a composite combinator. No free-form JSON Schema where the
+              model forgets <code>additionalProperties</code> or mismatches
+              <code>not</code> semantics. Same family of approach as
+              ICLR'26 JSONSchemaBench / llguidance / OpenAI Structured
+              Outputs strict mode.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>StructuredRAG few-shot</h3>
+            <p>
+              The generator's system prompt embeds 3 hand-curated
+              examples picked by Jaccard similarity over your
+              description. arXiv 2408.11061 showed retrieval-augmented
+              few-shot lifts structured-output success ~15-20 points
+              over zero-shot.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Workflow-aware grounding</h3>
+            <p>
+              If your scanner emitted a <code>workflow_graph</code>,
+              every generated policy is keyed on <em>real node ids</em>.
+              No invented tool names. Sensitive-relay edges (PII flow
+              A→B→external) auto-generate an inter-node DSL rule.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>NIST AI RMF risk posture</h3>
+            <p>
+              If your capability risk scorer returns ≥ 70, AEGIS
+              defaults every policy to <code>block</code> (not
+              pending). Under 30 = light-touch. The generator's posture
+              follows the agent's actual risk profile.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Self-tested before save</h3>
+            <p>
+              No bad-shape policy lands in production. AEGIS compiles
+              every candidate to AJV, runs the model's own block-list
+              / allow-list tests, refuses to accept a bundle with
+              false negatives unless the operator explicitly overrides.
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Counterfactual on every block</h3>
+            <p>
+              When a generated policy blocks at runtime, AEGIS computes
+              the minimum edit that would have passed and surfaces it
+              in the audit row. Developers fix faster; auditors get
+              EU AI Act Art. 14 explainability without docs.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="versus">
+      <div class="container container-narrow">
+        <h2>Versus "ask GPT for a policy"</h2>
+        <table>
+          <thead><tr><th></th><th>Hand-prompted LLM</th><th>AEGIS generator</th></tr></thead>
+          <tbody>
+            <tr><td>Output shape</td><td class="x">free-form JSON Schema</td><td class="y">6-template discriminated union</td></tr>
+            <tr><td>Schema validity</td><td class="x">~70%</td><td class="y">100% by construction</td></tr>
+            <tr><td>Self-test</td><td class="x">none</td><td class="y">AJV compile + run on every generation</td></tr>
+            <tr><td>Tool name grounding</td><td class="x">invents names</td><td class="y">scanner inventory as anchor</td></tr>
+            <tr><td>Workflow awareness</td><td class="x">none</td><td class="y">per-node policy synthesis</td></tr>
+            <tr><td>Risk posture</td><td class="x">uniform</td><td class="y">NIST AI RMF capability-risk-tuned</td></tr>
+            <tr><td>Repair on failure</td><td class="x">manual</td><td class="y">PerFine 1-round automated</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cta-strip">
+      <div class="container container-narrow">
+        <h2>Generate your first bundle in 30 seconds.</h2>
+        <p class="muted">
+          Self-host: <code>POST /api/ai/generate-policy-bundle</code> on
+          a local gateway. Hosted: sign up and the cockpit's
+          "Generate from description" button takes a paragraph.
+        </p>
+        <div class="cta-buttons">
+          <a class="btn" href="/signup">Sign up free</a>
+          <a class="btn-secondary" href="/docs/policy-templates">→ Read the template grammar</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .hero { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { max-width: 60ch; color: var(--muted); font-size: 1.12rem; margin: 1.2rem 0 1.8rem; }
+    .hero-cta { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+
+    .example { padding: 3rem 0; background: var(--surface); border-top: 1px solid var(--hairline); }
+    .example h2 { font-family: var(--font-serif); margin: 0 0 1.4rem; }
+    .step { padding: 1.2rem 0; border-top: 1px solid var(--hairline); }
+    .step:first-of-type { border-top: none; }
+    .step-label { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 0.5rem; font-weight: 500; }
+    .step-body { color: var(--text); margin: 0; max-width: 70ch; }
+    .step pre { background: var(--bg); margin-top: 0.5rem; font-size: 0.86rem; }
+
+    .why { padding: 3.5rem 0; }
+    .why h2 { font-family: var(--font-serif); margin: 0 0 1.4rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
+    .card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px; padding: 1.2rem 1.2rem; }
+    .card h3 { font-family: var(--font-serif); font-size: 1.1rem; margin: 0 0 0.4rem; }
+    .card p { color: var(--text); font-size: 0.94rem; margin: 0; }
+
+    .versus { padding: 3rem 0; background: var(--surface); border-top: 1px solid var(--hairline); }
+    .versus h2 { font-family: var(--font-serif); margin: 0 0 1.2rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+    th { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--hairline-strong); }
+    td { padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--hairline); }
+    td.x { color: var(--muted); }
+    td.x::before { content: "✗ "; color: var(--accent-error); font-weight: 700; }
+    td.y::before { content: "✓ "; color: var(--accent-positive); font-weight: 700; }
+    td.y { font-weight: 500; }
+
+    .cta-strip { padding: 3rem 0 5rem; border-top: 1px solid var(--hairline); }
+    .cta-strip h2 { font-family: var(--font-serif); margin: 0 0 0.6rem; }
+    .cta-buttons { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 1rem; }
+    .muted { color: var(--muted); }
+  </style>
+</Layout>

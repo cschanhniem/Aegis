@@ -1,0 +1,270 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<Layout
+  title="Customize — AEGIS"
+  description="Custom scan rules (YAML), custom detectors (TypeScript plugin), custom policy DSL, custom risk weights. Every layer of AEGIS is extensible without forking."
+>
+  <Header />
+  <main>
+    <section class="hero">
+      <div class="container">
+        <p class="eyebrow">Feature · Customize everything</p>
+        <h1>Your <em>rules</em>. Your <em>detectors</em>. Your <em>policies</em>.</h1>
+        <p class="lede">
+          Every layer of AEGIS is built as a plugin contract — drop a
+          YAML file, register a TypeScript detector, ship a DSL bundle,
+          tune the capability-risk weights. No forking, no patching
+          our source, no waiting on us to merge your PR. Built-ins
+          ship with the gateway; your customisations slot in alongside.
+        </p>
+        <div class="hero-cta">
+          <a href="/download" class="btn">Try it locally</a>
+          <a href="/docs/api" class="btn-secondary">Plugin contract reference</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="layer">
+      <div class="container">
+        <p class="layer-label">Layer 1 · Custom scan rules</p>
+        <h2>YAML in, scanner findings out.</h2>
+        <p class="lede small">
+          Drop a file under <code>.aegis/rules/</code>. Each rule
+          declares a pattern (regex / AST node type / tool-call shape),
+          a severity, and a fix hint. The pre-deploy scanner runs your
+          rules alongside the built-ins, same SARIF output.
+        </p>
+        <pre><code>{`# .aegis/rules/internal.yaml — acme inc.
+- id: acme-internal-endpoint
+  description: Only acme.internal hosts allowed for outbound HTTP
+  severity: HIGH
+  match:
+    tool_call:
+      name: http_post
+      argument: url
+      not_pattern: "^https?://[a-z0-9.-]+\\\\.acme\\\\.internal/"
+  fix: "Route through the acme.internal proxy or remove the call"
+
+- id: acme-pii-fields-in-prompt
+  description: Customer SSN / DOB must never reach an LLM prompt
+  severity: CRITICAL
+  match:
+    regex: "(\\"ssn\\"|\\"date_of_birth\\")\\\\s*:"
+    in: ["prompt_template", "system_message"]
+  fix: "Use the pseudonymisation helper at lib/redact.py"
+
+- id: acme-only-our-anthropic
+  description: Anthropic must be hit via our enterprise base_url
+  severity: MEDIUM
+  match:
+    regex: "ANTHROPIC_BASE_URL\\\\s*=\\\\s*['\\"]https://api\\\\.anthropic\\\\.com"
+  fix: "Set ANTHROPIC_BASE_URL=https://aegis.acme.internal/anthropic/v1"`}</code></pre>
+        <p class="muted small">
+          Rules are evaluated in order; first match wins per file. Built-ins
+          and custom rules share the same JSON output schema so the
+          cockpit table doesn't care where a finding came from.
+        </p>
+      </div>
+    </section>
+
+    <section class="layer alt">
+      <div class="container">
+        <p class="layer-label">Layer 2 · Custom detector plugin</p>
+        <h2>TypeScript class, registered at boot.</h2>
+        <p class="lede small">
+          For runtime detectors that need to look at the full
+          tool-call context — agent identity, message history,
+          conversation graph — the Detector plugin contract is one
+          interface. Implement it, mount it, AEGIS runs it on every
+          check call alongside the built-ins.
+        </p>
+        <pre><code>{`// detectors/acme-pii-policy.ts
+import type { Detector, DetectorResult, CheckCtx } from '@agentguard/gateway-mcp';
+
+export class AcmePIIDetector implements Detector {
+  id   = 'acme-pii';
+  kind = 'content';
+
+  async evaluate(ctx: CheckCtx): Promise<DetectorResult> {
+    // Walk every string in the tool-call arguments.
+    const hits = this.findPII(ctx.toolCall.arguments);
+    if (hits.length === 0) return { passed: true };
+    return {
+      passed:   false,
+      severity: 'CRITICAL',
+      decision: 'block',
+      reason:   \`PII fields present: \${hits.join(', ')}\`,
+      ontology_techniques: ['AAT-T5001'],
+    };
+  }
+
+  private findPII(obj: unknown, out: string[] = []): string[] { /* ... */ return out; }
+}`}</code></pre>
+        <pre><code>{`# Mount via tenant-config.yaml (no recompile needed)
+detectors:
+  - module: detectors/acme-pii-policy.ts
+    class:  AcmePIIDetector
+    enabled: true`}</code></pre>
+        <p class="muted small">
+          Same interface every built-in detector implements (PI corpus,
+          collusion, sequence anomaly, etc.). Your plugin sees the
+          same context, contributes to the same decision, lands on
+          the same audit row.
+        </p>
+      </div>
+    </section>
+
+    <section class="layer">
+      <div class="container">
+        <p class="layer-label">Layer 3 · Custom policy DSL</p>
+        <h2>JSON in, gateway behaviour out.</h2>
+        <p class="lede small">
+          The Policy DSL composes the six built-in templates + a
+          small expression layer (<code>all</code> / <code>any</code> /
+          <code>not</code> with comparators) over the gateway's
+          classifier + anomaly + agent identity signals. Bundles are
+          tenant-scoped — your DSL never affects other tenants.
+        </p>
+        <pre><code>{`{
+  "id":   "acme-prod-rules",
+  "name": "Acme — production-bot only",
+  "rules": [
+    {
+      "name": "billing-after-hours",
+      "when": {
+        "all": [
+          { "tool.name":     { "matches": "billing_.*" } },
+          { "time.utc_hour": { ">": 18 } },
+          { "agent.id":      "agent-prod-bot" }
+        ]
+      },
+      "then": { "decision": "pending", "reason": "after-hours billing requires human review" }
+    },
+    {
+      "name": "shell-anomalous-block",
+      "when": {
+        "all": [
+          { "classifier.category": "shell" },
+          { "anomaly.score": { ">": 0.7 } }
+        ]
+      },
+      "then": { "decision": "block", "reason": "anomalous shell call" }
+    }
+  ]
+}`}</code></pre>
+        <p class="muted small">
+          Hot-reloadable — write the JSON, the gateway picks up the
+          change on next config bus tick without dropping in-flight
+          connections.
+        </p>
+      </div>
+    </section>
+
+    <section class="layer alt">
+      <div class="container">
+        <p class="layer-label">Layer 4 · Custom risk weights</p>
+        <h2>Tune the capability scorer to your domain.</h2>
+        <p class="lede small">
+          The NIST AI RMF capability risk scorer ships with default
+          weights tuned for general-purpose agents. Healthcare,
+          finance, defense each have different category sensitivities
+          — override the weights in tenant config.
+        </p>
+        <pre><code>{`# tenant-config.yaml — healthcare deployment
+capability_risk:
+  weights:
+    action:  0.20   # default 0.25
+    egress:  0.20   # default 0.25
+    secrets: 0.20   # default 0.15
+    pii:     0.30   # default 0.15  ← HIPAA = PII weight ↑
+    scale:   0.10   # default 0.20
+
+  # Tighten the "blocked combo" rule: HIPAA cares about exfil even
+  # without scale, so we count multi-category agents as risky earlier.
+  distinct_high_action_bonus_threshold: 2   # default 3`}</code></pre>
+        <p class="muted small">
+          Same scoring algorithm, different priors. The cockpit's
+          "Agent Risk" tile recomputes per tenant.
+        </p>
+      </div>
+    </section>
+
+    <section class="layer">
+      <div class="container">
+        <p class="layer-label">Layer 5 · Custom compliance bundle</p>
+        <h2>Add your industry's controls to the evidence endpoint.</h2>
+        <p class="lede small">
+          AEGIS ships SOC 2 / ISO 27001 / NIST AI RMF / EU AI Act
+          mapped to runtime evidence. For HIPAA / PCI / FedRAMP / sector
+          rules, define your own mapping YAML — auditor hits one
+          endpoint, gets the same signed JSON shape.
+        </p>
+        <pre><code>{`# compliance/hipaa.yaml
+framework: hipaa
+controls:
+  - id: 164.308(a)(4)
+    title: Information access management
+    evidence:
+      - source: audit_log
+        filter: { action: ["policy.create", "policy.delete"] }
+        explanation: "Policy lifecycle is audit-logged with actor + IP"
+      - source: scim_users
+        explanation: "RBAC + SCIM 2.0 IdP integration manages access"
+
+  - id: 164.312(b)
+    title: Audit controls
+    evidence:
+      - source: transparency_log_size
+        explanation: "Append-only RFC 6962 Merkle log with daily root signatures"
+      - source: witness_cosignatures
+        explanation: "Sigstore-style witness cosignature when configured"`}</code></pre>
+        <p class="muted small">
+          Hit <code>POST /api/v1/compliance/bundle/hipaa</code> and the
+          gateway emits the same Ed25519-signed JSON artefact the
+          built-in frameworks use.
+        </p>
+      </div>
+    </section>
+
+    <section class="cta-strip">
+      <div class="container container-narrow">
+        <h2>You don't fork AEGIS. You extend it.</h2>
+        <p class="muted">
+          Every customisation lives in your own repo, version-controlled
+          alongside your app code. AEGIS upgrades drop in cleanly —
+          built-in updates never overwrite your extensions.
+        </p>
+        <div class="cta-buttons">
+          <a class="btn" href="/download">Download</a>
+          <a class="btn-secondary" href="/features/scanner">← Back to scanner</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+
+  <style>
+    .hero { padding: 5rem 0 2rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.5rem; }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede { max-width: 62ch; color: var(--muted); font-size: 1.12rem; margin: 1.2rem 0 1.8rem; }
+    .lede.small { font-size: 1rem; max-width: 64ch; }
+    .hero-cta { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+
+    .layer { padding: 3rem 0; border-top: 1px solid var(--hairline); }
+    .layer.alt { background: var(--surface); }
+    .layer-label { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin: 0 0 0.4rem; }
+    .layer h2 { font-family: var(--font-serif); margin: 0 0 0.8rem; }
+    .layer pre { background: var(--bg); margin-top: 1rem; font-size: 0.86rem; }
+    .layer.alt pre { background: var(--bg); }
+    .muted { color: var(--muted); }
+    .small { font-size: 0.88rem; }
+
+    .cta-strip { padding: 3rem 0 5rem; border-top: 1px solid var(--hairline); background: var(--surface); }
+    .cta-strip h2 { font-family: var(--font-serif); margin: 0 0 0.6rem; }
+    .cta-buttons { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 1rem; }
+  </style>
+</Layout>

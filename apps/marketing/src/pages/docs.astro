@@ -87,14 +87,18 @@ const concepts = [
 // changelog + roadmap stay on GitHub because that's where they live;
 // everything substantive is rendered into the site itself.
 const quickRefs = [
-  { name: 'Threat ontology',   href: '/docs/ontology',         desc: 'AAT-T* threat catalogue, per-deployment coverage' },
-  { name: 'API reference',     href: '/docs/api',              desc: 'REST endpoints, request / response shapes' },
-  { name: 'Policy templates',  href: '/docs/policy-templates', desc: 'Built-in template library + AI generator' },
-  { name: 'Self-host runbook', href: '/docs/self-host',        desc: 'Docker / K8s / systemd deployment' },
-  { name: 'Compliance + audit',href: '/docs/compliance',       desc: 'SOC 2 / ISO 27001 / NIST AI RMF / EU AI Act mappings' },
-  { name: 'SDK reference',     href: '/docs/sdk',              desc: 'Python + JS / TS auto-instrumentation' },
-  { name: 'Security posture',  href: '/security',              desc: 'Cryptographic audit, pen-test, vuln disclosure' },
-  { name: 'GitHub repo',       href: 'https://github.com/Justin0504/Aegis', desc: 'Source, issues, discussions (external)', external: true },
+  { name: 'Workflow scanner',     href: '/features/scanner',          desc: 'Tree-sitter AST + workflow graph extraction' },
+  { name: 'AI policy generator',  href: '/features/policy-generator', desc: 'Natural language + workflow → SOTA policy bundle' },
+  { name: 'Pre-deployment scan',  href: '/features/predeploy',        desc: 'CI gate — secrets, unsafe tools, coverage gaps' },
+  { name: 'Customize',            href: '/features/customize',        desc: 'YAML rules, TypeScript detectors, DSL policies' },
+  { name: 'Threat ontology',      href: '/docs/ontology',             desc: 'AAT-T* threat catalogue, per-deployment coverage' },
+  { name: 'API reference',        href: '/docs/api',                  desc: 'REST endpoints, request / response shapes' },
+  { name: 'Policy templates',     href: '/docs/policy-templates',     desc: 'Built-in template library + AI generator' },
+  { name: 'Self-host runbook',    href: '/docs/self-host',            desc: 'Docker / K8s / systemd deployment' },
+  { name: 'Compliance + audit',   href: '/docs/compliance',           desc: 'SOC 2 / ISO 27001 / NIST AI RMF / EU AI Act mappings' },
+  { name: 'SDK reference',        href: '/docs/sdk',                  desc: 'Python + JS / TS auto-instrumentation' },
+  { name: 'Security posture',     href: '/security',                  desc: 'Cryptographic audit, pen-test, vuln disclosure' },
+  { name: 'GitHub repo',          href: 'https://github.com/Justin0504/Aegis', desc: 'Source, issues, discussions (external)', external: true },
 ];
 ---
 
