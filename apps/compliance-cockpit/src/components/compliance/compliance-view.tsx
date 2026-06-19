@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import {
-  FileCheck2, Download, Copy, Check, Loader2,
-  ChevronRight, ChevronDown, Terminal, Hash, Stamp,
+  FileCheck2, Download, Copy, Check, Loader2, RefreshCw,
+  ChevronRight, ChevronDown, Hash, Stamp,
+  CheckCircle2, CircleDashed, XCircle,
 } from 'lucide-react'
 
 // ── design tokens (dev-friendly: density + monospace bias) ──────────────
@@ -55,15 +56,25 @@ const FRAMEWORK_LABEL: Record<Framework, string> = {
   'eu-ai-act':   'EU AI Act',
 }
 
-const STATUS_GLYPH: Record<Status, string> = {
-  covered:   '✓',
-  partial:   '◐',
-  uncovered: '✗',
-}
 const STATUS_FG: Record<Status, string> = {
   covered:   'hsl(150 24% 32%)',
   partial:   'hsl(36 28% 38%)',
   uncovered: 'hsl(0 18% 44%)',
+}
+const STATUS_BG: Record<Status, string> = {
+  covered:   'hsl(150 30% 92%)',
+  partial:   'hsl(36 45% 90%)',
+  uncovered: 'hsl(0 28% 92%)',
+}
+const STATUS_LABEL: Record<Status, string> = {
+  covered:   'Covered',
+  partial:   'Partial',
+  uncovered: 'Not covered',
+}
+const STATUS_ICON: Record<Status, typeof CheckCircle2> = {
+  covered:   CheckCircle2,
+  partial:   CircleDashed,
+  uncovered: XCircle,
 }
 
 // ── component ────────────────────────────────────────────────────────────
@@ -71,7 +82,7 @@ const STATUS_FG: Record<Status, string> = {
 export function ComplianceView() {
   const [framework, setFramework] = useState<Framework>('soc2')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [expanded, setExpanded] = useState<'evidence' | 'signature' | 'curl' | null>('evidence')
+  const [expanded, setExpanded] = useState<'evidence' | 'signature' | 'curl' | null>(null)
 
   const controlsQ = useQuery({
     queryKey: ['compliance', 'controls', framework],
@@ -107,51 +118,41 @@ export function ComplianceView() {
   )
 
   return (
-    <div style={{ color: TEXT, fontFamily: 'inherit' }} className="space-y-4">
-      {/* Header — dev-style, no marketing card */}
-      <header className="flex items-baseline justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-xl font-semibold inline-flex items-center gap-2">
-            <FileCheck2 className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} />
-            Compliance
-          </h1>
-          <p className="text-xs mt-1" style={{ color: MUTED }}>
-            Signed evidence bundles per framework — auditor-ready artifact emitted by{' '}
-            <Code>POST /api/v1/compliance/bundle/&lt;framework&gt;</Code>. Bundle hash signed
-            with the gateway&apos;s Ed25519 key, inclusion logged to the transparency tree.
-          </p>
-        </div>
-        <div className="flex gap-1.5">
+    <div style={{ color: TEXT }} className="space-y-6">
+      {/* Header */}
+      <header className="flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">Compliance</h1>
+        <div className="flex gap-2">
           <button
             onClick={() => bundleM.mutate(framework)}
             disabled={bundleM.isPending}
-            className="text-xs px-2.5 py-1 rounded border inline-flex items-center gap-1.5 disabled:opacity-40"
-            style={{ borderColor: BORDER, color: TEXT, background: 'transparent', fontFamily: MONO }}
+            className="text-xs px-3 py-1.5 rounded-md border inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors"
+            style={{ borderColor: BORDER, color: TEXT, background: 'transparent' }}
           >
-            {bundleM.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Terminal className="h-3 w-3" />}
-            regenerate
+            {bundleM.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Regenerate
           </button>
           {bundle && (
             <button
               onClick={() => downloadJson(bundle, `aegis-bundle-${bundle.framework}-${new Date(bundle.generated_at).toISOString().slice(0, 10)}.json`)}
-              className="text-xs px-2.5 py-1 rounded inline-flex items-center gap-1.5"
-              style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))', fontFamily: MONO }}
+              className="text-xs px-3 py-1.5 rounded-md inline-flex items-center gap-1.5 transition-opacity hover:opacity-90"
+              style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
             >
-              <Download className="h-3 w-3" /> bundle.json
+              <Download className="h-3.5 w-3.5" /> Download bundle
             </button>
           )}
         </div>
       </header>
 
-      {/* Framework tabs — terminal style */}
-      <nav className="flex gap-0 border-b" style={{ borderColor: BORDER, fontFamily: MONO }}>
+      {/* Framework tabs — clean, no $ prefix */}
+      <nav className="flex gap-1 border-b" style={{ borderColor: BORDER }}>
         {(Object.keys(FRAMEWORK_LABEL) as Framework[]).map(fw => {
           const active = framework === fw
           return (
             <button
               key={fw}
               onClick={() => setFramework(fw)}
-              className="text-xs px-3 py-1.5 transition-colors"
+              className="text-sm px-3 py-2 transition-colors"
               style={{
                 color: active ? TEXT : MUTED,
                 borderBottom: active ? `2px solid hsl(var(--primary))` : '2px solid transparent',
@@ -159,67 +160,54 @@ export function ComplianceView() {
                 marginBottom: '-1px',
               }}
             >
-              <span style={{ opacity: 0.5 }}>$ </span>{fw}
+              {FRAMEWORK_LABEL[fw]}
             </button>
           )
         })}
       </nav>
 
-      {/* Summary line — terminal output style */}
+      {/* Stat cards — replaces terminal summary bar */}
       {bundle && (
-        <div
-          className="text-xs px-3 py-2 rounded border"
-          style={{ background: CODE_BG, borderColor: CODE_BORDER, fontFamily: MONO, color: TEXT }}
-        >
-          <span style={{ color: MUTED }}>frame</span>={bundle.framework}
-          {' '}<span style={{ color: MUTED }}>ontology</span>=v{bundle.ontology_version}
-          {' '}<span style={{ color: STATUS_FG.covered }}>✓{bundle.summary.covered}</span>
-          {' '}<span style={{ color: STATUS_FG.partial }}>◐{bundle.summary.partial}</span>
-          {' '}<span style={{ color: STATUS_FG.uncovered }}>✗{bundle.summary.uncovered}</span>
-          {' /'}{bundle.summary.total_controls}
-          {' '}<span style={{ color: MUTED }}>hash</span>={bundle.bundle_hash.slice(0, 14)}…
-          {bundle.transparency_log_entry && (
-            <>
-              {' '}<span style={{ color: MUTED }}>tlog</span>=#{bundle.transparency_log_entry.index}
-              /size={bundle.transparency_log_entry.tree_size}
-            </>
-          )}
-          {' '}<span style={{ color: MUTED }}>at</span>={new Date(bundle.generated_at).toISOString()}
+        <div className="grid grid-cols-4 gap-3">
+          <StatCard label="Controls"  value={bundle.summary.total_controls} />
+          <StatCard label="Covered"   value={bundle.summary.covered}   tone="covered" />
+          <StatCard label="Partial"   value={bundle.summary.partial}   tone="partial" />
+          <StatCard label="Not covered" value={bundle.summary.uncovered} tone="uncovered" />
         </div>
       )}
 
-      {/* Two-pane: control table + selected evidence */}
+      {/* Two-pane: control list + selected evidence */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* LEFT: control list (dense table, no padding excess) */}
-        <div className="lg:col-span-2 rounded border" style={{ borderColor: BORDER, background: BG }}>
-          <div className="text-[11px] uppercase tracking-wider px-3 py-2 border-b" style={{ borderColor: BORDER, color: MUTED, fontFamily: MONO }}>
-            controls/
+        {/* LEFT: control list */}
+        <div className="lg:col-span-2 rounded-lg border overflow-hidden" style={{ borderColor: BORDER, background: BG }}>
+          <div className="text-[10px] uppercase tracking-wider px-3 py-2 border-b font-medium" style={{ borderColor: BORDER, color: MUTED }}>
+            Controls
           </div>
           {controlsQ.isLoading && (
             <div className="px-3 py-4 text-xs inline-flex items-center gap-1.5" style={{ color: MUTED }}>
-              <Loader2 className="h-3 w-3 animate-spin" /> loading…
+              <Loader2 className="h-3 w-3 animate-spin" /> Loading…
             </div>
           )}
           {bundle?.controls.map(c => {
             const active = selected?.id === c.id
+            const Icon = STATUS_ICON[c.status]
             return (
               <button
                 key={c.id}
                 onClick={() => setSelectedId(c.id)}
-                className="w-full text-left px-3 py-1.5 border-b text-xs flex items-baseline gap-2"
+                className="w-full text-left px-3 py-2.5 border-b text-sm flex items-center gap-2.5 transition-colors"
                 style={{
                   borderColor: BORDER,
-                  background: active ? 'hsl(var(--accent))' : 'transparent',
-                  fontFamily: MONO,
+                  background: active ? 'hsl(var(--sidebar-active))' : 'transparent',
                 }}
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'hsl(36 14% 96%)' }}
+                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
               >
-                <span style={{ color: STATUS_FG[c.status], width: '1em', flexShrink: 0 }}>
-                  {STATUS_GLYPH[c.status]}
-                </span>
-                <span style={{ color: TEXT, fontWeight: 500, width: '5.5em', flexShrink: 0 }}>
+                <Icon className="h-4 w-4 flex-shrink-0" style={{ color: STATUS_FG[c.status] }} />
+                <span style={{ color: TEXT, fontWeight: 500, minWidth: '4.5em', flexShrink: 0 }} className="text-xs">
                   {c.id}
                 </span>
-                <span style={{ color: MUTED, fontFamily: 'inherit', fontSize: '11px' }} className="truncate">
+                <span style={{ color: MUTED }} className="truncate text-xs">
                   {c.title}
                 </span>
               </button>
@@ -227,23 +215,30 @@ export function ComplianceView() {
           })}
         </div>
 
-        {/* RIGHT: evidence + signature + curl */}
+        {/* RIGHT: control detail */}
         <div className="lg:col-span-3 space-y-3">
           {selected && (
-            <div className="rounded border" style={{ borderColor: BORDER, background: BG }}>
-              <div className="px-4 py-3 border-b" style={{ borderColor: BORDER }}>
-                <div className="flex items-baseline gap-2">
-                  <span style={{ color: STATUS_FG[selected.status], fontFamily: MONO }}>{STATUS_GLYPH[selected.status]}</span>
-                  <span className="font-mono text-sm font-medium">{selected.id}</span>
-                  <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: CODE_BG, color: MUTED, fontFamily: MONO }}>
-                    {selected.framework}
-                  </span>
-                  <span className="text-xs uppercase tracking-wider" style={{ color: STATUS_FG[selected.status], fontFamily: MONO }}>
-                    {selected.status}
-                  </span>
+            <div className="rounded-lg border overflow-hidden" style={{ borderColor: BORDER, background: BG }}>
+              <div className="px-5 py-4 border-b" style={{ borderColor: BORDER }}>
+                <div className="flex items-center gap-3">
+                  {(() => {
+                    const Icon = STATUS_ICON[selected.status]
+                    return <Icon className="h-7 w-7 flex-shrink-0" style={{ color: STATUS_FG[selected.status] }} />
+                  })()}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold">{selected.id}</span>
+                      <span
+                        className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-medium"
+                        style={{ background: STATUS_BG[selected.status], color: STATUS_FG[selected.status] }}
+                      >
+                        {STATUS_LABEL[selected.status]}
+                      </span>
+                    </div>
+                    <p className="text-sm mt-0.5" style={{ color: TEXT }}>{selected.title}</p>
+                  </div>
                 </div>
-                <div className="text-sm mt-1.5">{selected.title}</div>
-                <p className="text-xs mt-1" style={{ color: MUTED }}>{selected.summary}</p>
+                <p className="text-sm mt-3" style={{ color: MUTED }}>{selected.summary}</p>
               </div>
 
               {/* Collapsible: evidence JSON */}
@@ -298,7 +293,7 @@ export function ComplianceView() {
               {/* Verify recipe — copyable */}
               <Section
                 title="verify offline"
-                icon={<Terminal className="h-3 w-3" />}
+                icon={<Hash className="h-3 w-3" />}
                 open={expanded === 'curl'}
                 onToggle={() => setExpanded(expanded === 'curl' ? null : 'curl')}
                 copyValue={verifyRecipe(bundle)}
@@ -366,6 +361,23 @@ function Section({
         </button>
       </div>
       {open && children}
+    </div>
+  )
+}
+
+function StatCard({ label, value, tone }: { label: string; value: number; tone?: Status }) {
+  const fg = tone ? STATUS_FG[tone] : TEXT
+  return (
+    <div
+      className="rounded-lg border p-4"
+      style={{ borderColor: BORDER, background: BG }}
+    >
+      <p className="text-[10px] uppercase tracking-wider font-medium" style={{ color: MUTED }}>
+        {label}
+      </p>
+      <p className="text-3xl font-bold tabular-nums mt-1" style={{ color: fg }}>
+        {value.toLocaleString()}
+      </p>
     </div>
   )
 }
