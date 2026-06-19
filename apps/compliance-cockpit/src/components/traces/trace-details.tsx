@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Download, Shield, AlertCircle, ThumbsUp, ThumbsDown, EyeOff, ChevronRight, Code2, Eye, Brain } from 'lucide-react'
 import { formatDate, getStatusColor, getRiskLevelColor } from '@/lib/utils'
+import { friendlyAgent } from '@/lib/friendly-names'
 import { useState, ReactNode } from 'react'
 import { AnomalyExplanationPanel } from './anomaly-explanation-panel'
 
@@ -22,7 +23,7 @@ const NULL_COLOR = 'hsl(30 8% 62%)'
 function CollapsibleSection({
   title, icon, summary, defaultOpen = false, children,
 }: {
-  title: string; icon?: ReactNode; summary?: string
+  title: string; icon?: ReactNode; summary?: ReactNode
   defaultOpen?: boolean; children: ReactNode
 }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -233,8 +234,10 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
     <Card className="h-[calc(100vh-200px)] overflow-hidden flex flex-col">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CardTitle>Trace Details</CardTitle>
+          <div className="flex items-center gap-2 min-w-0">
+            <CardTitle className="truncate">
+              {friendlyAgent(trace.agent_id)}
+            </CardTitle>
             {trace.pii_detected > 0 && (
               <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
                 style={{ background: 'hsl(38 22% 48% / 0.12)', color: 'hsl(38 22% 40%)' }}>
@@ -265,20 +268,11 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto space-y-6">
-        {/* Metadata */}
+        {/* Summary — when + status only, no IDs */}
         <div>
-          <h3 className="text-sm font-semibold mb-2">Metadata</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Trace ID</span>
-              <code className="text-xs">{trace.trace_id}</code>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Agent ID</span>
-              <code className="text-xs">{trace.agent_id}</code>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Timestamp</span>
+              <span className="text-muted-foreground">When</span>
               <span>{formatDate(trace.timestamp)}</span>
             </div>
             <div className="flex justify-between">
@@ -293,11 +287,11 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
           </div>
         </div>
 
-        {/* Tool Call */}
+        {/* What it tried — auto-summary, JSON behind a toggle */}
         <CollapsibleSection
-          title={trace.tool_call.tool_name || 'Tool Call'}
-          summary={summarizeData(trace.tool_call.arguments)}
-          defaultOpen={true}
+          title="What it tried"
+          summary={summarizeData(trace.tool_call.arguments) || trace.tool_call.tool_name}
+          defaultOpen={false}
         >
           <SmartDataView data={trace.tool_call.arguments} />
         </CollapsibleSection>
@@ -307,7 +301,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
           <div>
             <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              Safety Validation
+              AEGIS check
             </h3>
             <div className="rounded-lg border p-4">
               <div className="flex items-center justify-between mb-2">
@@ -388,13 +382,13 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
           </CollapsibleSection>
         )}
 
-        {/* Observation */}
+        {/* Result */}
         <CollapsibleSection
-          title="Observation"
+          title="Result"
           summary={
             trace.observation.error
-              ? `Error — ${trace.observation.duration_ms}ms`
-              : `${trace.observation.duration_ms}ms` + (summarizeData(trace.observation.raw_output) ? ` — ${summarizeData(trace.observation.raw_output)}` : '')
+              ? `Failed — ${trace.observation.duration_ms}ms`
+              : `${trace.observation.duration_ms}ms`
           }
           defaultOpen={false}
         >
@@ -416,7 +410,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
 
         {/* Evaluation / Scoring */}
         <div style={{ border: `1px solid ${BORDER}`, borderRadius: '10px', padding: '14px 16px' }}>
-          <h3 className="text-sm font-semibold mb-3" style={{ color: TEXT }}>Quality Score</h3>
+          <h3 className="text-sm font-semibold mb-3" style={{ color: TEXT }}>Quality</h3>
           {trace.score !== null && trace.score !== undefined ? (
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -444,7 +438,6 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
             </div>
           ) : (
             <div className="space-y-2">
-              <p className="text-xs" style={{ color: MUTED }}>Was this trace behavior correct?</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => { setPendingScore(1); scoreMutation.mutate(1) }}
@@ -483,28 +476,38 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
           )}
         </div>
 
-        {/* Hash Chain */}
-        <div>
-          <h3 className="text-sm font-semibold mb-2">Integrity</h3>
-          <div className="space-y-2 text-xs font-mono">
-            <div>
-              <span className="text-muted-foreground">Hash: </span>
-              <span className="break-all">{trace.integrity_hash}</span>
+        {/* Integrity — collapsed; just a "Verified" chip with short fingerprint */}
+        {trace.integrity_hash && (
+          <CollapsibleSection
+            title="Integrity"
+            summary={(
+              <span className="inline-flex items-center gap-1.5 text-xs" style={{ color: 'hsl(150 18% 38%)' }}>
+                <Shield className="h-3 w-3" />
+                Verified · #{trace.integrity_hash.slice(-4)}
+              </span>
+            )}
+            defaultOpen={false}
+          >
+            <div className="space-y-2 text-[11px] font-mono pt-2" style={{ color: MUTED }}>
+              <div>
+                <span>Hash: </span>
+                <span className="break-all" style={{ color: TEXT }}>{trace.integrity_hash}</span>
+              </div>
+              {trace.previous_hash && (
+                <div>
+                  <span>Previous: </span>
+                  <span className="break-all" style={{ color: TEXT }}>{trace.previous_hash}</span>
+                </div>
+              )}
+              {trace.signature && (
+                <div>
+                  <span>Signature: </span>
+                  <span className="break-all" style={{ color: TEXT }}>{trace.signature.substring(0, 50)}…</span>
+                </div>
+              )}
             </div>
-            {trace.previous_hash && (
-              <div>
-                <span className="text-muted-foreground">Previous: </span>
-                <span className="break-all">{trace.previous_hash}</span>
-              </div>
-            )}
-            {trace.signature && (
-              <div>
-                <span className="text-muted-foreground">Signature: </span>
-                <span className="break-all">{trace.signature.substring(0, 50)}...</span>
-              </div>
-            )}
-          </div>
-        </div>
+          </CollapsibleSection>
+        )}
       </CardContent>
     </Card>
   )
