@@ -87,7 +87,7 @@ export function AccountWidget() {
       <Link
         href="/login"
         className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] transition-opacity hover:opacity-70"
-        style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+        style={{ background: 'transparent', border: '1px solid hsl(var(--border))', color: MUTED }}
       >
         <LogIn className="h-3 w-3" />
         <span>Sign in</span>
@@ -113,7 +113,7 @@ export function AccountWidget() {
         onClick={handleSignOut}
         disabled={busy}
         className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] transition-opacity hover:opacity-70 disabled:opacity-40"
-        style={{ background: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}
+        style={{ background: 'transparent', border: '1px solid hsl(var(--border))', color: MUTED }}
       >
         {busy ? (
           <Loader2 className="h-3 w-3 animate-spin" />

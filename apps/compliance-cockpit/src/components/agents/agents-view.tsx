@@ -197,15 +197,15 @@ export function AgentsView() {
       {/* Table */}
       <div className="rounded-xl border overflow-hidden" style={{ borderColor: BORDER, background: BG }}>
         <table className="w-full text-sm">
-          <thead style={{ background: 'hsl(var(--accent))', color: MUTED }}>
-            <tr className="text-[11px] uppercase tracking-wider">
-              <th className="text-left px-4 py-2.5">Status</th>
-              <th className="text-left px-4 py-2.5">Name / ID</th>
-              <th className="text-left px-4 py-2.5">Owner</th>
-              <th className="text-left px-4 py-2.5">Scope</th>
-              <th className="text-left px-4 py-2.5">Secret</th>
-              <th className="text-left px-4 py-2.5">Last seen</th>
-              <th className="text-right px-4 py-2.5">Actions</th>
+          <thead style={{ background: 'transparent', borderBottom: `1px solid ${BORDER}`, color: MUTED }}>
+            <tr className="text-[10px] uppercase tracking-wider font-medium">
+              <th className="text-left px-4 py-2">Status</th>
+              <th className="text-left px-4 py-2">Name / ID</th>
+              <th className="text-left px-4 py-2">Owner</th>
+              <th className="text-left px-4 py-2">Scope</th>
+              <th className="text-left px-4 py-2">Secret</th>
+              <th className="text-left px-4 py-2">Last seen</th>
+              <th className="text-right px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>

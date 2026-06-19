@@ -170,10 +170,11 @@ function SidebarContent({ pathname, connected, lastUpdate, notifPermission, requ
         {notifPermission !== 'granted' && (
           <button
             onClick={requestNotifPermission}
-            className="w-full text-left text-[11px] px-2 py-1 rounded transition-opacity hover:opacity-70"
+            className="w-full text-left text-[11px] px-2 py-1 rounded border transition-colors hover:opacity-80"
             style={{
-              background:  notifPermission === 'denied' ? 'hsl(0 30% 94%)' : 'hsl(var(--accent))',
-              color:       notifPermission === 'denied' ? 'hsl(0 50% 45%)' : 'hsl(var(--accent-foreground))',
+              background:  'transparent',
+              borderColor: notifPermission === 'denied' ? 'hsl(0 30% 80%)' : BORDER,
+              color:       notifPermission === 'denied' ? 'hsl(0 40% 50%)' : MUTED,
             }}
             title={notifPermission === 'denied' ? 'Blocked in browser \u2014 enable in System Settings' : 'Get notified even when this tab is in background'}
           >

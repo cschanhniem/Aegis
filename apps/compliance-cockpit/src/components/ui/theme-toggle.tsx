@@ -51,7 +51,7 @@ export function ThemeToggle() {
   }
 
   const BORDER = 'hsl(var(--border))'
-  const ACTIVE = 'hsl(var(--accent))'
+  const ACTIVE = 'hsl(var(--sidebar-active))'   // subtle warm surface — was --accent (near-black)
   const TEXT   = 'hsl(var(--foreground))'
   const MUTED  = 'hsl(var(--muted-foreground))'
 
@@ -82,7 +82,7 @@ export function ThemeToggle() {
             className="flex-1 flex items-center justify-center py-1 rounded transition-colors"
             style={{
               background: active ? ACTIVE : 'transparent',
-              color: active ? 'hsl(var(--accent-foreground))' : MUTED,
+              color: active ? TEXT : MUTED,
             }}
           >
             <Icon className="h-3 w-3" />

@@ -3,6 +3,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, Shield } from 'lucide-react'
 import { useState, useMemo } from 'react'
+import { friendlyAgent } from '@/lib/friendly-names'
+import { traceSummary } from '@/lib/trace-summary'
 
 const TEXT   = 'hsl(30 10% 15%)'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -64,7 +66,6 @@ export function ViolationsView() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Violations</h1>
-        <p className="text-muted-foreground">Agent actions that failed safety policy checks</p>
       </div>
 
       {/* Filter chips + group toggle */}
@@ -154,25 +155,27 @@ export function ViolationsView() {
                         </div>
                         <div className="min-w-0 space-y-1 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold" style={{ color: rc.text }}>
-                              {trace.tool_call?.tool_name || 'Unknown tool'}
+                            <span className="text-sm font-semibold" style={{ color: TEXT }}>
+                              {friendlyAgent(trace.agent_id)}
                             </span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium uppercase tracking-wide"
                               style={{ background: `${rc.text}15`, color: rc.text }}>
                               {risk}
                             </span>
                           </div>
-                          <div className="text-xs space-y-0.5" style={{ color: TEXT }}>
-                            {!groupByPolicy && (
-                              <p><span style={{ color: MUTED }}>Policy:</span> {trace.safety_validation?.policy_name || 'Unknown'}</p>
+                          <p className="text-xs" style={{ color: TEXT }}>
+                            {traceSummary(trace) || trace.tool_call?.tool_name}
+                          </p>
+                          <div className="text-[11px] space-y-0.5" style={{ color: MUTED }}>
+                            {!groupByPolicy && trace.safety_validation?.policy_name && (
+                              <p>Policy: <span style={{ color: TEXT }}>{trace.safety_validation.policy_name}</span></p>
                             )}
                             {trace.safety_validation?.violations?.length > 0 && (
-                              <p><span style={{ color: MUTED }}>Details:</span> {trace.safety_validation.violations.join(', ')}</p>
+                              <p>{trace.safety_validation.violations.join(', ')}</p>
                             )}
                           </div>
                           <p className="text-[10px]" style={{ color: MUTED }}>
-                            Agent {trace.agent_id?.substring(0, 8)}...
-                            {' · '}{new Date(trace.timestamp).toLocaleString()}
+                            {new Date(trace.timestamp).toLocaleString()}
                           </p>
                         </div>
                       </div>

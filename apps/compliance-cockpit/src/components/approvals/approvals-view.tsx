@@ -4,6 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { CheckCircle, XCircle, Clock, Globe, FileText, Database, Send, Zap } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { friendlyAgent } from '@/lib/friendly-names'
+import { traceSummary } from '@/lib/trace-summary'
 import { PendingChecks } from './pending-checks'
 
 const BORDER  = 'hsl(var(--border))'
@@ -71,7 +73,6 @@ export function ApprovalsView() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Approvals</h1>
-        <p className="text-muted-foreground">Review and approve agent actions</p>
       </div>
 
       {/* Blocking mode — real-time pending checks (PRIMARY) */}
@@ -194,18 +195,22 @@ export function ApprovalsView() {
                     </div>
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold" style={{ color }}>{toolName}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
+                        <span className="text-sm font-semibold" style={{ color: TEXT }}>
+                          {friendlyAgent(trace.agent_id)}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded font-medium uppercase tracking-wide" style={{
                           background: isPending ? 'hsl(36 14% 90%)' : isApproved ? 'hsl(150 10% 90%)' : 'hsl(0 10% 90%)',
                           color:      isPending ? 'hsl(36 18% 40%)' : isApproved ? 'hsl(150 18% 36%)' : 'hsl(0 14% 44%)',
                         }}>
-                          {isPending ? 'PENDING' : status}
+                          {isPending ? 'Pending' : status}
                         </span>
                       </div>
-                      {prompt && <p className="text-xs truncate" style={{ color: TEXT }}>{prompt}</p>}
+                      <p className="text-xs truncate" style={{ color: TEXT }}>
+                        {traceSummary(trace) || toolName}
+                      </p>
+                      {prompt && <p className="text-[11px] truncate" style={{ color: MUTED }}>{prompt}</p>}
                       <p className="text-[10px]" style={{ color: MUTED }}>
-                        Agent {trace.agent_id?.substring(0, 8)}…
-                        {' · '}{formatDate(trace.timestamp)}
+                        {formatDate(trace.timestamp)}
                         {trace.approved_by && ` · by ${trace.approved_by}`}
                       </p>
                     </div>
