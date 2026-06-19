@@ -166,9 +166,6 @@ export function AgentsView() {
             <UserRound className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} />
             Agents
           </h1>
-          <p className="text-xs mt-1" style={{ color: MUTED }}>
-            Registered agent identities. Unregistered IDs are auto-recorded on first sighting; promote to <em>active</em> to enforce scope + secret.
-          </p>
         </div>
         <button
           onClick={() => { setShowRegister(true); setForm(BLANK); setFormError('') }}

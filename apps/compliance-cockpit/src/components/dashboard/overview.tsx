@@ -340,9 +340,6 @@ export function DashboardOverview() {
             <Card className="col-span-4">
               <CardHeader>
                 <CardTitle>Agent Activity</CardTitle>
-                <CardDescription>
-                  Real-time agent tool calls and traces
-                </CardDescription>
               </CardHeader>
               <CardContent className="pl-2">
                 <AgentActivity />
@@ -351,9 +348,6 @@ export function DashboardOverview() {
             <Card className="col-span-3">
               <CardHeader>
                 <CardTitle>Recent Traces</CardTitle>
-                <CardDescription>
-                  Latest agent actions and their status
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <RecentTraces />

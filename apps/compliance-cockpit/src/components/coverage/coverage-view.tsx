@@ -137,11 +137,6 @@ export function CoverageView() {
           <Layers className="h-5 w-5" style={{ color: 'hsl(var(--primary))' }} />
           Threat coverage
         </h1>
-        <p className="text-xs mt-1" style={{ color: MUTED }}>
-          AEGIS Agent Threat Ontology v{summary.ontologyVersion}. Honest coverage map across the
-          10 tactics this deployment defends against — same data customers see at
-          <span className="font-mono"> GET /api/v1/ontology/coverage</span>.
-        </p>
       </div>
 
       {/* Overall stat */}

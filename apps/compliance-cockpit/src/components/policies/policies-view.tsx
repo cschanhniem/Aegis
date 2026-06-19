@@ -165,7 +165,6 @@ export function PoliciesView() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Policies</h1>
-          <p className="text-muted-foreground">Safety policies enforced on every agent tool call</p>
         </div>
         <div className="flex items-center gap-2">
           <button

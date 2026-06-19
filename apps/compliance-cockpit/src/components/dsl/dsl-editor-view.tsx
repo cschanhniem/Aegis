@@ -237,9 +237,7 @@ export function DslEditorView() {
             Policy DSL
           </h1>
           <p className="text-sm mt-1" style={{ color: MUTED }}>
-            Per-tenant rules that tighten the defaults. Fail-safe: rules can
-            escalate (allow → pending/block) but never relax an AJV or anomaly
-            block.
+            Custom rules. Can tighten — never loosen — the defaults.
           </p>
         </div>
         <div className="flex items-center gap-2">
