@@ -3,16 +3,24 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
 import { traceSummary } from '@/lib/trace-summary'
-import { Search, X, ChevronDown, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { friendlyAgent, friendlyDecision, friendlyRisk, friendlyPolicy } from '@/lib/friendly-names'
+import { Search, X, ChevronDown, Clock } from 'lucide-react'
 import { useState, useMemo, useRef, useEffect } from 'react'
 
 const TOOL_OPTIONS = ['all', 'web_search', 'read_file', 'execute_sql', 'send_request', 'other']
 const STATUS_OPTIONS = [
-  { value: 'all',     label: 'All'     },
-  { value: 'ok',      label: 'OK'      },
-  { value: 'error',   label: 'Error'   },
-  { value: 'pending', label: 'Pending' },
+  { value: 'all',     label: 'All decisions'  },
+  { value: 'ok',      label: 'Allowed'        },
+  { value: 'pending', label: 'Needs review'   },
+  { value: 'error',   label: 'Blocked / error' },
 ]
+
+const PILL: Record<'allow' | 'block' | 'review' | 'error', { bg: string; fg: string }> = {
+  allow:  { bg: 'hsl(150 35% 90%)', fg: 'hsl(150 35% 24%)' },
+  block:  { bg: 'hsl(0   35% 92%)', fg: 'hsl(0   45% 32%)' },
+  review: { bg: 'hsl(36  55% 89%)', fg: 'hsl(36  55% 28%)' },
+  error:  { bg: 'hsl(0   25% 92%)', fg: 'hsl(0   40% 35%)' },
+}
 const TIME_OPTIONS = [
   { value: 'all',  label: 'All time'   },
   { value: '5m',   label: 'Last 5 min' },
@@ -133,7 +141,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
             <input
               className="w-full rounded-md pl-8 pr-3 py-1.5 text-sm border outline-none"
               style={{ borderColor: BORDER, background: '#fff', color: TEXT }}
-              placeholder="Search traces, prompts, errors…"
+              placeholder="Search by agent, action, or policy…"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -209,24 +217,30 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
 
         {/* Result count */}
         <p className="text-[11px]" style={{ color: MUTED }}>
-          {filtered.length} of {traces.length} traces
+          Showing {filtered.length.toLocaleString()} of {traces.length.toLocaleString()} agent actions
         </p>
       </div>
 
       {/* List */}
       <div className="flex-1 overflow-y-auto py-2 px-3 space-y-1">
         {filtered.length === 0 && (
-          <div className="flex items-center justify-center h-32 text-sm" style={{ color: MUTED }}>
-            No traces match your filters
+          <div className="flex flex-col items-center justify-center h-32 text-sm text-center px-6" style={{ color: MUTED }}>
+            <p>No agent activity matches.</p>
+            <p className="text-xs mt-1">Try widening the time range or clearing filters.</p>
           </div>
         )}
         {filtered.map(trace => {
-          const toolName = trace.tool_call?.tool_name || 'unknown'
           const summary  = traceSummary(trace)
           const hasError = !!trace.observation?.error
           const dur      = trace.observation?.duration_ms
           const isActive = selectedTrace === trace.trace_id
           const isNew    = newIds.current.has(trace.trace_id)
+
+          const agentLabel = friendlyAgent(trace.agent_id)
+          const decision   = friendlyDecision(trace.decision, hasError)
+          const risk       = friendlyRisk(trace.risk_level)
+          const policyName = friendlyPolicy(trace.policy_matched)
+          const pill       = PILL[decision.tone]
 
           return (
             <div
@@ -239,31 +253,50 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
                 animation: isNew ? 'trace-slide-in 0.4s ease-out, trace-glow 1.2s ease-out' : undefined,
               }}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 space-y-0.5">
-                  <p className="text-sm font-medium truncate" style={{ color: TEXT }}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1 space-y-1">
+                  {/* L1 — agent (friendly) */}
+                  <button
+                    className="text-[11px] font-semibold hover:underline truncate block text-left"
+                    style={{ color: 'hsl(220 30% 30%)' }}
+                    onClick={e => { e.stopPropagation(); onSelectAgent(trace.agent_id) }}
+                  >
+                    <Highlight text={agentLabel} query={search} />
+                  </button>
+                  {/* L2 — what it did, plain English */}
+                  <p className="text-sm leading-snug truncate" style={{ color: TEXT }}>
                     <Highlight text={summary} query={search} />
                   </p>
-                  <p className="text-[11px] truncate" style={{ color: MUTED }}>
-                    <Highlight text={toolName} query={search} />
-                  </p>
-                  <p className="text-[10px]" style={{ color: 'hsl(30 8% 62%)' }}>
-                    <button
-                      className="hover:underline"
-                      onClick={e => { e.stopPropagation(); onSelectAgent(trace.agent_id) }}
+                  {/* L3 — decision pill + policy + meta */}
+                  <div className="flex items-center gap-2 text-[11px] flex-wrap">
+                    <span
+                      className="px-1.5 py-0.5 rounded-full font-medium"
+                      style={{ background: pill.bg, color: pill.fg }}
                     >
-                      {trace.agent_id.substring(0, 8)}…
-                    </button>
-                    {' · '}{formatDate(trace.timestamp)}
-                  </p>
+                      {decision.label}
+                    </span>
+                    {policyName && (
+                      <span style={{ color: MUTED }}>
+                        · matched <span style={{ color: TEXT }}>{policyName}</span>
+                      </span>
+                    )}
+                    {risk?.show && (
+                      <span
+                        className="px-1.5 py-0.5 rounded-full font-medium"
+                        style={{
+                          background: risk.tone === 'critical' ? 'hsl(0 35% 92%)' : 'hsl(36 55% 89%)',
+                          color: risk.tone === 'critical' ? 'hsl(0 45% 32%)' : 'hsl(36 55% 28%)',
+                        }}
+                      >
+                        {risk.label}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  {hasError
-                    ? <AlertCircle className="h-3.5 w-3.5" style={{ color: 'hsl(0 18% 50%)' }} />
-                    : <CheckCircle className="h-3.5 w-3.5" style={{ color: 'hsl(150 18% 44%)' }} />
-                  }
+                <div className="flex flex-col items-end gap-1 flex-shrink-0 text-[10px]" style={{ color: MUTED }}>
+                  <span>{formatDate(trace.timestamp)}</span>
                   {dur !== undefined && (
-                    <span className="text-[10px] flex items-center gap-0.5" style={{ color: MUTED }}>
+                    <span className="flex items-center gap-0.5">
                       <Clock className="h-2.5 w-2.5" />
                       {dur < 1 ? '<1ms' : `${Math.round(dur)}ms`}
                     </span>
@@ -271,7 +304,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
                 </div>
               </div>
               {hasError && (
-                <p className="text-[11px] mt-1.5 truncate" style={{ color: 'hsl(0 18% 50%)' }}>
+                <p className="text-[11px] mt-2 truncate" style={{ color: 'hsl(0 35% 40%)' }}>
                   {trace.observation.error}
                 </p>
               )}
