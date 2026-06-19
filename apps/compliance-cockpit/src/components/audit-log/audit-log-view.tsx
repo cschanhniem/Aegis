@@ -200,10 +200,6 @@ export function AuditLogView() {
         <h1 className="text-2xl font-semibold" style={{ color: TEXT }}>
           Audit Log
         </h1>
-        <p className="text-sm mt-1" style={{ color: MUTED }}>
-          Tamper-evident record of every config change, alignment / code-shield
-          verdict, approval decision, and admin action. The SOC 2 evidence path.
-        </p>
       </div>
 
       {/* Two-column row of compliance affordances: integrity verify

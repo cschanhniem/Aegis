@@ -151,10 +151,7 @@ export function CodeShieldView() {
             Code Shield
           </h1>
           <p className="text-sm mt-1" style={{ color: MUTED }}>
-            Paste a snippet of agent-generated code; AEGIS runs 19 curated regex
-            rules locally (sub-millisecond) and tells you what would fire. Same
-            engine the gateway uses on every <code className="font-mono">/code-shield/scan</code>{' '}
-            request from your SDKs.
+            Paste agent-generated code. AEGIS flags risky patterns in &lt; 1 ms.
           </p>
         </div>
         <div className="flex items-center gap-2">

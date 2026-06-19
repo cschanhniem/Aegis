@@ -222,9 +222,7 @@ export function ScanView() {
           Pre-deployment scan
         </h1>
         <p className="text-sm max-w-3xl" style={{ color: MUTED }}>
-          Static analysis over your repo: 53 OWASP-Agentic-Top-10-mapped rules covering prompt
-          injection, tool-input validation, MCP config audit, secret detection. Each finding
-          is signed into AEGIS&apos;s Merkle audit log on every scan.
+          Scan your repo before deploy. Findings signed into the audit log.
         </p>
       </header>
 

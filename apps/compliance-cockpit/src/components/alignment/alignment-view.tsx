@@ -132,10 +132,7 @@ export function AlignmentView() {
             Alignment
           </h1>
           <p className="text-sm mt-1" style={{ color: MUTED }}>
-            Audit a proposed tool call against the agent's declared goal. The
-            judge LLM returns a 0–1 alignment score, a drift flag, and short
-            signal tags. Same engine your SDK callbacks reach via{' '}
-            <code className="font-mono">/api/v1/alignment/check</code>.
+            Check a proposed tool call against the agent's goal. Get a score + drift flag.
           </p>
         </div>
         <div className="flex items-center gap-2">
