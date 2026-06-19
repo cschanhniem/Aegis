@@ -248,13 +248,8 @@ export function DashboardOverview() {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Real-time monitoring of AI agent activities and compliance
-          </p>
-        </div>
-        <div className="w-80 flex-shrink-0 pt-1">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <div className="w-80 flex-shrink-0">
           <GlobalSearch />
         </div>
       </div>
@@ -276,14 +271,9 @@ export function DashboardOverview() {
             style={{ background: 'hsl(38 28% 88%)' }}>
             <AlertTriangle className="h-4 w-4" style={{ color: 'hsl(30 30% 38%)' }} />
           </span>
-          <div className="flex-1">
-            <p className="text-sm font-semibold">
-              {stats.pendingChecks} pending {stats.pendingChecks === 1 ? 'check' : 'checks'} awaiting approval
-            </p>
-            <p className="text-xs" style={{ color: 'hsl(30 10% 45%)' }}>
-              Agent actions are blocked until you approve or reject them
-            </p>
-          </div>
+          <p className="flex-1 text-sm font-semibold">
+            {stats.pendingChecks} awaiting approval
+          </p>
           <ArrowRight className="h-4 w-4 flex-shrink-0" style={{ color: 'hsl(30 10% 55%)' }} />
         </Link>
       )}
@@ -291,51 +281,38 @@ export function DashboardOverview() {
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Traces</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalTraces || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {trendLabel(stats?.tracesTrend) ?? 'No data yet'}
-            </p>
+            <div className="text-3xl font-bold tabular-nums">{(stats?.totalTraces || 0).toLocaleString()}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Agents</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Agents</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.activeAgents || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.newAgents || 0} new today
-            </p>
+            <div className="text-3xl font-bold tabular-nums">{(stats?.activeAgents || 0).toLocaleString()}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Checks
-            </CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Pending</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold" style={{ color: (stats?.pendingChecks ?? 0) > 0 ? 'hsl(30 30% 38%)' : undefined }}>
-              {stats?.pendingChecks || 0}
+            <div className="text-3xl font-bold tabular-nums" style={{ color: (stats?.pendingChecks ?? 0) > 0 ? 'hsl(30 30% 38%)' : undefined }}>
+              {(stats?.pendingChecks || 0).toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.criticalAlerts || 0} high/critical risk
-            </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Violations (24h)
-            </CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Blocked 24h</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.violations24h || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold tabular-nums">{(stats?.violations24h || 0).toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground" hidden>
               {trendLabel(stats?.violationsTrend) ?? `${stats?.blockedAgents || 0} agents blocked`}
             </p>
           </CardContent>

@@ -9,10 +9,10 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 
 const TOOL_OPTIONS = ['all', 'web_search', 'read_file', 'execute_sql', 'send_request', 'other']
 const STATUS_OPTIONS = [
-  { value: 'all',     label: 'All decisions'  },
-  { value: 'ok',      label: 'Allowed'        },
-  { value: 'pending', label: 'Needs review'   },
-  { value: 'error',   label: 'Blocked / error' },
+  { value: 'all',     label: 'All'      },
+  { value: 'ok',      label: 'Allowed'  },
+  { value: 'pending', label: 'Review'   },
+  { value: 'error',   label: 'Blocked'  },
 ]
 
 const PILL: Record<'allow' | 'block' | 'review' | 'error', { bg: string; fg: string }> = {
@@ -141,7 +141,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
             <input
               className="w-full rounded-md pl-8 pr-3 py-1.5 text-sm border outline-none"
               style={{ borderColor: BORDER, background: '#fff', color: TEXT }}
-              placeholder="Search by agent, action, or policy…"
+              placeholder="Search…"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -216,17 +216,16 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
         )}
 
         {/* Result count */}
-        <p className="text-[11px]" style={{ color: MUTED }}>
-          Showing {filtered.length.toLocaleString()} of {traces.length.toLocaleString()} agent actions
+        <p className="text-[11px] tabular-nums" style={{ color: MUTED }}>
+          {filtered.length.toLocaleString()} / {traces.length.toLocaleString()}
         </p>
       </div>
 
       {/* List */}
       <div className="flex-1 overflow-y-auto py-2 px-3 space-y-1">
         {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-32 text-sm text-center px-6" style={{ color: MUTED }}>
-            <p>No agent activity matches.</p>
-            <p className="text-xs mt-1">Try widening the time range or clearing filters.</p>
+          <div className="flex items-center justify-center h-32 text-sm" style={{ color: MUTED }}>
+            No matches
           </div>
         )}
         {filtered.map(trace => {
@@ -239,8 +238,8 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
           const agentLabel = friendlyAgent(trace.agent_id)
           const decision   = friendlyDecision(trace.decision, hasError)
           const risk       = friendlyRisk(trace.risk_level)
-          const policyName = friendlyPolicy(trace.policy_matched)
           const pill       = PILL[decision.tone]
+          const showCriticalRisk = risk?.tone === 'critical'
 
           return (
             <div
@@ -267,28 +266,20 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
                   <p className="text-sm leading-snug truncate" style={{ color: TEXT }}>
                     <Highlight text={summary} query={search} />
                   </p>
-                  {/* L3 — decision pill + policy + meta */}
-                  <div className="flex items-center gap-2 text-[11px] flex-wrap">
+                  {/* L3 — decision pill (+ critical risk only) */}
+                  <div className="flex items-center gap-1.5">
                     <span
-                      className="px-1.5 py-0.5 rounded-full font-medium"
+                      className="px-1.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide"
                       style={{ background: pill.bg, color: pill.fg }}
                     >
                       {decision.label}
                     </span>
-                    {policyName && (
-                      <span style={{ color: MUTED }}>
-                        · matched <span style={{ color: TEXT }}>{policyName}</span>
-                      </span>
-                    )}
-                    {risk?.show && (
+                    {showCriticalRisk && (
                       <span
-                        className="px-1.5 py-0.5 rounded-full font-medium"
-                        style={{
-                          background: risk.tone === 'critical' ? 'hsl(0 35% 92%)' : 'hsl(36 55% 89%)',
-                          color: risk.tone === 'critical' ? 'hsl(0 45% 32%)' : 'hsl(36 55% 28%)',
-                        }}
+                        className="px-1.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide"
+                        style={{ background: 'hsl(0 35% 92%)', color: 'hsl(0 45% 32%)' }}
                       >
-                        {risk.label}
+                        Critical
                       </span>
                     )}
                   </div>
