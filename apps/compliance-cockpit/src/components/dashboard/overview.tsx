@@ -20,10 +20,70 @@ import { AgentActivity } from './agent-activity'
 import { AnomalyPanel } from './anomaly-panel'
 import { CostPanel } from './cost-panel'
 import { SessionsPanel } from './sessions-panel'
+import { ActivityChart, useSparklineSeries } from './activity-chart'
+import { Sparkline } from '@/components/ui/sparkline'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
+
+function StatCards({ stats }: { stats: any }) {
+  const { actions, blocked, isLoading } = useSparklineSeries()
+  // Last-6h slice for the per-card mini chart — keeps it scannable.
+  const slice = (arr: number[]) => arr.slice(-6)
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold tabular-nums">{(stats?.totalTraces || 0).toLocaleString()}</div>
+          <div className="mt-1.5">
+            <Sparkline data={isLoading ? [] : slice(actions)} color="hsl(22 22% 24%)" />
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Agents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold tabular-nums">{(stats?.activeAgents || 0).toLocaleString()}</div>
+          <p className="text-[10px] mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            active in 24h
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Pending</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold tabular-nums" style={{ color: (stats?.pendingChecks ?? 0) > 0 ? 'hsl(30 30% 38%)' : undefined }}>
+            {(stats?.pendingChecks || 0).toLocaleString()}
+          </div>
+          <p className="text-[10px] mt-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            awaiting review
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Blocked 24h</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold tabular-nums" style={{ color: (stats?.violations24h ?? 0) > 0 ? 'hsl(0 45% 38%)' : undefined }}>
+            {(stats?.violations24h || 0).toLocaleString()}
+          </div>
+          <div className="mt-1.5">
+            <Sparkline data={isLoading ? [] : slice(blocked)} color="hsl(0 45% 38%)" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 function GlobalSearch() {
   const [query, setQuery] = useState('')
@@ -270,46 +330,8 @@ export function DashboardOverview() {
         </Link>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold tabular-nums">{(stats?.totalTraces || 0).toLocaleString()}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Agents</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold tabular-nums">{(stats?.activeAgents || 0).toLocaleString()}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold tabular-nums" style={{ color: (stats?.pendingChecks ?? 0) > 0 ? 'hsl(30 30% 38%)' : undefined }}>
-              {(stats?.pendingChecks || 0).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Blocked 24h</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold tabular-nums">{(stats?.violations24h || 0).toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground" hidden>
-              {trendLabel(stats?.violationsTrend) ?? `${stats?.blockedAgents || 0} agents blocked`}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Stats Cards (with sparklines) */}
+      <StatCards stats={stats} />
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="activity" className="space-y-4">
@@ -320,6 +342,11 @@ export function DashboardOverview() {
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
         </TabsList>
         <TabsContent value="activity" className="space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <ActivityChart />
+            </CardContent>
+          </Card>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
               <CardHeader>
