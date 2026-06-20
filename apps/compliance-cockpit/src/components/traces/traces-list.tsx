@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
 import { traceSummary } from '@/lib/trace-summary'
 import { friendlyAgent, friendlyDecision, friendlyRisk, friendlyPolicy } from '@/lib/friendly-names'
+import { ToolIcon } from '@/lib/tool-icons'
 import { Search, X, ChevronDown, Clock } from 'lucide-react'
 import { useState, useMemo, useRef, useEffect } from 'react'
 
@@ -241,6 +242,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
           const pill       = PILL[decision.tone]
           const showCriticalRisk = risk?.tone === 'critical'
 
+          const dotColor = pill.fg
           return (
             <div
               key={trace.trace_id}
@@ -252,8 +254,17 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
                 animation: isNew ? 'trace-slide-in 0.4s ease-out, trace-glow 1.2s ease-out' : undefined,
               }}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-start gap-3">
+                {/* Leading: tool icon + status dot */}
+                <div className="flex flex-col items-center gap-1 pt-0.5 flex-shrink-0">
+                  <ToolIcon name={trace.tool_call?.tool_name} size={16} />
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: dotColor }}
+                    aria-label={decision.label}
+                  />
+                </div>
+                <div className="min-w-0 flex-1 space-y-0.5">
                   {/* L1 — agent (friendly) */}
                   <button
                     className="text-[11px] font-semibold hover:underline truncate block text-left"
@@ -266,23 +277,15 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
                   <p className="text-sm leading-snug truncate" style={{ color: TEXT }}>
                     <Highlight text={summary} query={search} />
                   </p>
-                  {/* L3 — decision pill (+ critical risk only) */}
-                  <div className="flex items-center gap-1.5">
+                  {/* L3 — only the rare critical risk gets a pill */}
+                  {showCriticalRisk && (
                     <span
-                      className="px-1.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide"
-                      style={{ background: pill.bg, color: pill.fg }}
+                      className="inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide mt-1"
+                      style={{ background: 'hsl(0 35% 92%)', color: 'hsl(0 45% 32%)' }}
                     >
-                      {decision.label}
+                      Critical
                     </span>
-                    {showCriticalRisk && (
-                      <span
-                        className="px-1.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide"
-                        style={{ background: 'hsl(0 35% 92%)', color: 'hsl(0 45% 32%)' }}
-                      >
-                        Critical
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0 text-[10px]" style={{ color: MUTED }}>
                   <span>{formatDate(trace.timestamp)}</span>

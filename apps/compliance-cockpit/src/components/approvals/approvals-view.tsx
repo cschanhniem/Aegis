@@ -2,30 +2,16 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { CheckCircle, XCircle, Clock, Globe, FileText, Database, Send, Zap } from 'lucide-react'
+import { CheckCircle, XCircle, Clock } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { friendlyAgent } from '@/lib/friendly-names'
 import { traceSummary } from '@/lib/trace-summary'
+import { toolIconFor } from '@/lib/tool-icons'
 import { PendingChecks } from './pending-checks'
 
 const BORDER  = 'hsl(var(--border))'
 const MUTED   = 'hsl(var(--muted-foreground))'
 const TEXT    = 'hsl(30 10% 15%)'
-
-const TOOL_ICONS: Record<string, React.ElementType> = {
-  web_search:   Globe,
-  read_file:    FileText,
-  execute_sql:  Database,
-  send_request: Send,
-  send_report:  Send,
-}
-const TOOL_COLORS: Record<string, string> = {
-  web_search:   'hsl(210 20% 48%)',
-  read_file:    'hsl(255 18% 52%)',
-  execute_sql:  'hsl(38 22% 48%)',
-  send_request: 'hsl(150 18% 44%)',
-  send_report:  'hsl(150 18% 44%)',
-}
 
 export function ApprovalsView() {
   const queryClient = useQueryClient()
@@ -170,13 +156,13 @@ export function ApprovalsView() {
         <div className="space-y-2">
           {traces.map((trace: any) => {
             const toolName  = trace.tool_call?.tool_name || 'unknown'
-            const Icon      = TOOL_ICONS[toolName] || Zap
-            const color     = TOOL_COLORS[toolName] || MUTED
+            const { Icon, color } = toolIconFor(toolName)
             const status    = trace.approval_status
             const isPending = !status
             const isApproved = status === 'APPROVED'
             const prompt    = String(trace.input_context?.prompt || '').slice(0, 80)
             const loading   = deciding[trace.trace_id]
+            const dotColor = isPending ? 'hsl(36 55% 40%)' : isApproved ? 'hsl(150 35% 32%)' : 'hsl(0 45% 38%)'
 
             return (
               <div
@@ -190,8 +176,13 @@ export function ApprovalsView() {
                 <div className="flex items-start justify-between gap-4">
                   {/* Left: tool + info */}
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="p-2 rounded-md flex-shrink-0 mt-0.5" style={{ background: `${color}15` }}>
+                    <div className="flex flex-col items-center gap-1 flex-shrink-0 mt-1">
                       <Icon className="h-4 w-4" style={{ color }} />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ background: dotColor }}
+                        aria-label={isPending ? 'pending' : status}
+                      />
                     </div>
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
