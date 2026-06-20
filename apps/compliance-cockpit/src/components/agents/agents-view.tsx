@@ -169,8 +169,8 @@ export function AgentsView() {
         </div>
         <button
           onClick={() => { setShowRegister(true); setForm(BLANK); setFormError('') }}
-          className="text-sm px-3 py-1.5 rounded-md inline-flex items-center gap-1.5"
-          style={{ background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+          className="text-sm px-3 py-1.5 rounded-md inline-flex items-center gap-1.5 border transition-colors hover:opacity-80"
+          style={{ background: 'transparent', borderColor: BORDER, color: TEXT }}
         >
           <Plus className="h-3.5 w-3.5" /> Register agent
         </button>

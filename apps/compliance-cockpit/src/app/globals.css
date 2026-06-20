@@ -11,19 +11,19 @@
     --card-foreground:      0 0% 4%;
     --popover:              44 38% 90%;
     --popover-foreground:   0 0% 4%;
-    --primary:              0 0% 4%;      /* black CTAs */
-    --primary-foreground:   42 31% 87%;   /* beige type on black */
+    --primary:              22 22% 24%;   /* warm espresso — was 0 0% 4% (pure black) */
+    --primary-foreground:   42 31% 92%;   /* light beige type on espresso */
     --secondary:            42 24% 82%;
-    --secondary-foreground: 0 0% 4%;
+    --secondary-foreground: 22 22% 24%;
     --muted:                42 24% 84%;
     --muted-foreground:     45 8% 34%;    /* smoke grey */
-    --accent:               0 0% 4%;
-    --accent-foreground:    42 31% 87%;
+    --accent:               22 22% 24%;   /* warm espresso — was 0 0% 4% */
+    --accent-foreground:    42 31% 92%;
     --destructive:          0 50% 38%;
     --destructive-foreground: 42 31% 87%;
     --border:               42 14% 74%;   /* hairline that reads on beige */
     --input:                42 14% 74%;
-    --ring:                 0 0% 4%;
+    --ring:                 22 22% 24%;
     --radius:               0.5rem;
     /* Sidebar-specific surfaces — slightly deeper beige */
     --sidebar:              42 26% 83%;
@@ -136,6 +136,27 @@
   code, pre, .font-mono {
     font-family: var(--font-geist-mono), 'JetBrains Mono', 'Fira Code', monospace;
   }
+  /* Kill native macOS / Windows <select> bevel/glossy chrome — render
+     as a flat input with a custom chevron. */
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image:
+      url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%235c5a50' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 12px 12px;
+    padding-right: 1.85rem;
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+    color: hsl(var(--foreground));
+    font: inherit;
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  select:focus { outline: 2px solid hsl(var(--ring) / 0.4); outline-offset: 1px; }
 }
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
