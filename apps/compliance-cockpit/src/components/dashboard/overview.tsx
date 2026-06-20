@@ -16,18 +16,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Search, X, ArrowRight, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { RecentTraces } from './recent-traces'
-import { ViolationChart } from './violation-chart'
-import { ApprovalStats } from './approval-stats'
 import { AgentActivity } from './agent-activity'
 import { AnomalyPanel } from './anomaly-panel'
-import { AlignmentPanel } from './alignment-panel'
-import { CodeShieldPanel } from './code-shield-panel'
 import { CostPanel } from './cost-panel'
-import { EvalPanel } from './eval-panel'
-import { JudgePanel } from './judge-panel'
 import { SessionsPanel } from './sessions-panel'
-import { LiveFeed } from './live-feed'
-import { AdminPanel } from './admin-panel'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -322,18 +314,10 @@ export function DashboardOverview() {
       {/* Main Content Tabs */}
       <Tabs defaultValue="activity" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="activity">Agent Activity</TabsTrigger>
-          <TabsTrigger value="live">Live Feed</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="anomalies">Anomalies</TabsTrigger>
-          <TabsTrigger value="alignment">Recent Audits</TabsTrigger>
-          <TabsTrigger value="code-shield">Code Scans</TabsTrigger>
-          <TabsTrigger value="violations">Violations</TabsTrigger>
-          <TabsTrigger value="approvals">Approval Stats</TabsTrigger>
           <TabsTrigger value="costs">Costs</TabsTrigger>
-          <TabsTrigger value="eval">Eval</TabsTrigger>
-          <TabsTrigger value="judge">LLM Judge</TabsTrigger>
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
-          <TabsTrigger value="admin">Admin</TabsTrigger>
         </TabsList>
         <TabsContent value="activity" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -355,125 +339,23 @@ export function DashboardOverview() {
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="live" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Live Feed</CardTitle>
-              <CardDescription>
-                Real-time event stream — terminal-style log of all agent activity
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <LiveFeed />
-            </CardContent>
-          </Card>
-        </TabsContent>
         <TabsContent value="anomalies" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Anomaly Detection</CardTitle>
-              <CardDescription>
-                Behavioral anomalies (baseline deviation) and real-time statistical outliers
-              </CardDescription>
+              <CardTitle>Anomalies</CardTitle>
             </CardHeader>
             <CardContent>
               <AnomalyPanel />
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="alignment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Alignment Audits</CardTitle>
-              <CardDescription>
-                Verdicts logged from <code className="font-mono">/api/v1/alignment/check</code> calls.
-                To audit a proposed action interactively, use the <a href="/alignment" className="underline">Alignment</a> page in the sidebar.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AlignmentPanel />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="code-shield" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Code Scans</CardTitle>
-              <CardDescription>
-                Findings logged from <code className="font-mono">/api/v1/code-shield/scan</code> calls.
-                To scan a snippet interactively, use the <a href="/code-shield" className="underline">Code Shield</a> page in the sidebar.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CodeShieldPanel />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="violations" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Policy Violations</CardTitle>
-              <CardDescription>
-                Violations by policy type over the last 7 days
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <ViolationChart />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="approvals" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Approval Statistics</CardTitle>
-              <CardDescription>
-                Approval rates and response times
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ApprovalStats />
-            </CardContent>
-          </Card>
-        </TabsContent>
         <TabsContent value="costs" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Token Cost Tracking</CardTitle>
-              <CardDescription>
-                Token usage and USD spend across models and agents
-              </CardDescription>
+              <CardTitle>Costs</CardTitle>
             </CardHeader>
             <CardContent>
               <CostPanel />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="eval" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Evaluation & Scoring</CardTitle>
-              <CardDescription>
-                Thumbs up/down quality scores on individual traces
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EvalPanel />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="judge" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>LLM-as-a-Judge</CardTitle>
-              <CardDescription>
-                Automated trace evaluation using LLM providers (safety, helpfulness, correctness, compliance)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <JudgePanel />
             </CardContent>
           </Card>
         </TabsContent>
@@ -481,25 +363,9 @@ export function DashboardOverview() {
           <Card>
             <CardHeader>
               <CardTitle>Sessions</CardTitle>
-              <CardDescription>
-                Grouped trace sessions across agents
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <SessionsPanel />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="admin" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Enterprise Administration</CardTitle>
-              <CardDescription>
-                Multi-tenancy, RBAC, audit log, usage quotas, SLA metrics, data retention
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AdminPanel />
             </CardContent>
           </Card>
         </TabsContent>
