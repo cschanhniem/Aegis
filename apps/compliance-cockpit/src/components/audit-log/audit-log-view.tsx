@@ -79,9 +79,20 @@ interface AuditEntry {
   action: string
   resource_type: string | null
   resource_id: string | null
-  details: string | null
+  details: string | Record<string, unknown> | null
   ip_address: string | null
   created_at: string
+}
+
+/**
+ * Audit-log rows store `details` as JSON in the gateway DB but the
+ * server returns it parsed (Record) for some action types and as a
+ * raw string for others. Either way the cell needs a printable string.
+ */
+function renderDetails(d: string | Record<string, unknown> | null | undefined): string {
+  if (d == null) return ''
+  if (typeof d === 'string') return d
+  try { return JSON.stringify(d) } catch { return String(d) }
 }
 
 function fmtTime(s: string): string {
@@ -157,12 +168,7 @@ export function AuditLogView() {
     ]
     const lines = [headers.join(',')]
     for (const e of entries) {
-      let detailsPretty = ''
-      try {
-        detailsPretty = e.details ? JSON.stringify(JSON.parse(e.details)) : ''
-      } catch {
-        detailsPretty = e.details ?? ''
-      }
+      const detailsPretty = renderDetails(e.details)
       lines.push([
         csvEscape(e.id),
         csvEscape(e.created_at),
@@ -402,9 +408,14 @@ export function AuditLogView() {
                     {e.org_id ?? '—'}{e.user_email ? ` · ${e.user_email}` : ''}
                   </td>
                   <td className="px-3 py-1.5 align-top font-mono text-[11px]" style={{ color: MUTED, maxWidth: '50ch' }}>
-                    <span className="block truncate" title={e.details ?? undefined}>
-                      {e.details ?? ''}
-                    </span>
+                    {(() => {
+                      const detailsStr = renderDetails(e.details)
+                      return (
+                        <span className="block truncate" title={detailsStr}>
+                          {detailsStr}
+                        </span>
+                      )
+                    })()}
                   </td>
                 </tr>
               ))}
