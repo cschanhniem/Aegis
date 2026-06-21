@@ -25,7 +25,7 @@ function sessionFlowLabel(toolNames: string | undefined): string {
 }
 
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 const BORDER = 'hsl(var(--border))'
 
 function fmt$(n: number) {
@@ -150,7 +150,7 @@ export function SessionsPanel() {
           return (
             <div
               key={`${s.session_id}-${s.agent_id}`}
-              style={{ border: `1px solid ${isOpen ? 'hsl(38 20% 46% / 0.3)' : BORDER}`, borderRadius: '10px', padding: '12px 14px', background: '#fff', cursor: 'pointer', transition: 'border-color 0.15s' }}
+              style={{ border: `1px solid ${isOpen ? 'hsl(0 0% 0% / 0.3)' : BORDER}`, borderRadius: '10px', padding: '12px 14px', background: '#fff', cursor: 'pointer', transition: 'border-color 0.15s' }}
               onClick={() => setExpanded(isOpen ? null : s.session_id)}
             >
               <div className="flex items-start justify-between gap-3">

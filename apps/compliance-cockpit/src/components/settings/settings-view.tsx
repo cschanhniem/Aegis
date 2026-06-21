@@ -8,7 +8,7 @@ import { CheckCircle, XCircle, Loader2, Copy, Check, Eye, EyeOff, RefreshCw, Dat
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 const BG     = '#fff'
 
 const QUICK_START = `pip install agentguard-aegis
@@ -271,7 +271,7 @@ export function SettingsView() {
               <button
                 onClick={saveGatewayUrl}
                 className="px-3 py-2 rounded-md text-sm font-medium"
-                style={{ background: urlSaved ? 'hsl(150 14% 45% / 0.68)' : 'hsl(38 18% 50% / 0.65)', color: '#fff' }}
+                style={{ background: urlSaved ? 'hsl(150 14% 45% / 0.68)' : 'hsl(0 0% 0% / 0.65)', color: '#fff' }}
               >
                 {urlSaved ? 'Saved ✓' : 'Save'}
               </button>
@@ -293,7 +293,7 @@ export function SettingsView() {
               { label: 'WebSocket', value: <span className="font-mono text-xs">{gatewayUrl.replace('http', 'ws')}/mcp</span> },
               { label: 'Traces API', value: <span className="font-mono text-xs">{gatewayUrl}/api/v1/traces</span> },
             ].map(({ label, value }) => (
-              <div key={label} className="rounded-lg p-3" style={{ background: 'hsl(36 14% 95%)' }}>
+              <div key={label} className="rounded-lg p-3" style={{ background: 'hsl(0 0% 95%)' }}>
                 <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: MUTED }}>{label}</p>
                 <div className="text-sm" style={{ color: TEXT }}>{value}</div>
               </div>
@@ -333,7 +333,7 @@ export function SettingsView() {
             </button>
             <button
               onClick={saveApiKey}
-              style={{ padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, background: keySaved ? 'hsl(150 14% 45% / 0.68)' : 'hsl(38 18% 50% / 0.65)', color: '#fff', border: 'none', cursor: 'pointer' }}
+              style={{ padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, background: keySaved ? 'hsl(150 14% 45% / 0.68)' : 'hsl(0 0% 0% / 0.65)', color: '#fff', border: 'none', cursor: 'pointer' }}
             >
               {keySaved ? 'Saved ✓' : 'Save'}
             </button>
@@ -389,7 +389,7 @@ export function SettingsView() {
               </div>
               <button
                 onClick={saveAiConfig}
-                style={{ padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, background: aiSaved ? 'hsl(150 14% 45% / 0.68)' : 'hsl(38 18% 50% / 0.65)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+                style={{ padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, background: aiSaved ? 'hsl(150 14% 45% / 0.68)' : 'hsl(0 0% 0% / 0.65)', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}
               >
                 {aiSaved ? 'Saved ✓' : 'Save'}
               </button>
@@ -506,7 +506,7 @@ export function SettingsView() {
               onClick={runShowcase}
               disabled={showcaseRunning}
               className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-opacity"
-              style={{ background: 'hsl(38 22% 46% / 0.85)', color: '#fff', opacity: showcaseRunning ? 0.7 : 1 }}
+              style={{ background: 'hsl(0 0% 0% / 0.85)', color: '#fff', opacity: showcaseRunning ? 0.7 : 1 }}
             >
               {showcaseRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
               {showcaseRunning ? showcaseStep : 'Run Feature Showcase'}

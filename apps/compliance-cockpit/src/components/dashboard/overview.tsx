@@ -25,7 +25,7 @@ import { Sparkline } from '@/components/ui/sparkline'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 
 function StatCards({ stats }: { stats: any }) {
   const { actions, blocked, isLoading } = useSparklineSeries()
@@ -119,7 +119,7 @@ function GlobalSearch() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: MUTED }} />
         <input
           className="w-full rounded-lg pl-10 pr-10 py-2.5 text-sm border outline-none transition-shadow"
-          style={{ borderColor: open && results.length > 0 ? 'hsl(38 20% 46% / 0.4)' : BORDER, background: '#fff', color: TEXT, boxShadow: open && results.length > 0 ? '0 4px 16px hsl(232 56% 60% / 0.08)' : 'none' }}
+          style={{ borderColor: open && results.length > 0 ? 'hsl(0 0% 0% / 0.4)' : BORDER, background: '#fff', color: TEXT, boxShadow: open && results.length > 0 ? '0 4px 16px hsl(0 0% 0% / 0.05)' : 'none' }}
           placeholder="Search agents, tools, trace IDs..."
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true) }}
@@ -140,7 +140,7 @@ function GlobalSearch() {
               className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
               style={{ color: TEXT }}
               onMouseDown={() => { router.push(`/traces?id=${t.trace_id}`); setOpen(false); setQuery('') }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'hsl(36 14% 95%)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'hsl(0 0% 95%)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               <div className="min-w-0 flex-1">
@@ -320,13 +320,13 @@ export function DashboardOverview() {
           onMouseLeave={e => (e.currentTarget.style.background = 'hsl(220 14% 96%)')}
         >
           <span className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0"
-            style={{ background: 'hsl(232 30% 90%)' }}>
+            style={{ background: 'hsl(0 0% 90%)' }}>
             <AlertTriangle className="h-4 w-4" style={{ color: 'hsl(30 30% 38%)' }} />
           </span>
           <p className="flex-1 text-sm font-semibold">
             {stats.pendingChecks} awaiting approval
           </p>
-          <ArrowRight className="h-4 w-4 flex-shrink-0" style={{ color: 'hsl(30 10% 55%)' }} />
+          <ArrowRight className="h-4 w-4 flex-shrink-0" style={{ color: 'hsl(0 0% 55%)' }} />
         </Link>
       )}
 

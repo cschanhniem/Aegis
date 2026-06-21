@@ -6,7 +6,7 @@ import { Play, CheckCircle, XCircle, AlertTriangle, Zap, Database, Globe, FileTe
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 
 const RISK_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   CRITICAL: { bg: 'hsl(0 10% 96%)',   text: 'hsl(0 14% 42%)',   border: 'hsl(0 10% 82%)'  },
@@ -226,14 +226,14 @@ export function PlaygroundView() {
 
                 {/* Category + Risk */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg p-3" style={{ background: 'hsl(36 14% 93%)' }}>
+                  <div className="rounded-lg p-3" style={{ background: 'hsl(0 0% 93%)' }}>
                     <p className="text-[10px] font-semibold mb-1" style={{ color: MUTED }}>CATEGORY</p>
                     <div className="flex items-center gap-1.5">
                       {Icon && <Icon className="h-3.5 w-3.5" style={{ color: rc?.text }} />}
                       <p className="text-sm font-semibold" style={{ color: TEXT }}>{result.category}</p>
                     </div>
                   </div>
-                  <div className="rounded-lg p-3" style={{ background: 'hsl(36 14% 93%)' }}>
+                  <div className="rounded-lg p-3" style={{ background: 'hsl(0 0% 93%)' }}>
                     <p className="text-[10px] font-semibold mb-1" style={{ color: MUTED }}>RISK LEVEL</p>
                     <p className="text-sm font-bold" style={{ color: rc?.text }}>{result.risk_level}</p>
                   </div>

@@ -31,7 +31,7 @@ const TIME_OPTIONS = [
 
 const BORDER  = 'hsl(var(--border))'
 const MUTED   = 'hsl(var(--muted-foreground))'
-const TEXT    = 'hsl(30 10% 15%)'
+const TEXT    = 'hsl(0 0% 15%)'
 
 function Highlight({ text, query }: { text: string; query: string }) {
   if (!query.trim()) return <>{text}</>
@@ -159,8 +159,8 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
             className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md border flex-shrink-0"
             style={{
               borderColor: activeFilters > 0 ? 'hsl(var(--primary))' : BORDER,
-              color: activeFilters > 0 ? 'hsl(232 56% 50%)' : MUTED,
-              background: activeFilters > 0 ? 'hsl(232 56% 60% / 0.08)' : '#fff',
+              color: activeFilters > 0 ? 'hsl(0 0% 0%)' : MUTED,
+              background: activeFilters > 0 ? 'hsl(0 0% 0% / 0.05)' : '#fff',
             }}
           >
             Filters {activeFilters > 0 && <span className="font-bold">{activeFilters}</span>}
@@ -249,8 +249,8 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
               onClick={() => onSelectTrace(trace.trace_id)}
               className="rounded-lg border p-3 cursor-pointer transition-colors"
               style={{
-                borderColor: isActive ? 'hsl(232 56% 60% / 0.5)' : BORDER,
-                background: isActive ? 'hsl(232 56% 60% / 0.06)' : '#fff',
+                borderColor: isActive ? 'hsl(0 0% 0% / 0.35)' : BORDER,
+                background: isActive ? 'hsl(0 0% 0% / 0.04)' : '#fff',
                 animation: isNew ? 'trace-slide-in 0.4s ease-out, trace-glow 1.2s ease-out' : undefined,
               }}
             >

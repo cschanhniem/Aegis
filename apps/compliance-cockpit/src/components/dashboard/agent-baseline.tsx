@@ -3,13 +3,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { gw } from '@/lib/gateway'
 
-const TEXT  = 'hsl(30 10% 15%)'
+const TEXT  = 'hsl(0 0% 15%)'
 const MUTED = 'hsl(var(--muted-foreground))'
 const BORDER = 'hsl(var(--border))'
 
 const RISK_COLORS: Record<string, string> = {
   LOW:      'hsl(150 14% 42%)',
-  MEDIUM:   'hsl(36 18% 44%)',
+  MEDIUM:   'hsl(0 0% 44%)',
   HIGH:     'hsl(25 18% 44%)',
   CRITICAL: 'hsl(0 14% 46%)',
 }
@@ -35,7 +35,7 @@ export function AgentBaseline({ agentId }: Props) {
 
   if (!data || data.total === 0) {
     return (
-      <div className="rounded-lg p-4 text-xs text-center" style={{ background: 'hsl(36 14% 97%)', color: MUTED, border: `1px solid ${BORDER}` }}>
+      <div className="rounded-lg p-4 text-xs text-center" style={{ background: 'hsl(0 0% 97%)', color: MUTED, border: `1px solid ${BORDER}` }}>
         No baseline data for <span className="font-mono">{agentId}</span> yet (needs 7 days of traces).
       </div>
     )
@@ -58,7 +58,7 @@ export function AgentBaseline({ agentId }: Props) {
           { label: 'PII rate',  value: `${data.pii_rate}%` },
           { label: 'Block rate',value: `${data.block_rate}%` },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-lg p-2.5 text-center" style={{ background: 'hsl(36 14% 95%)' }}>
+          <div key={label} className="rounded-lg p-2.5 text-center" style={{ background: 'hsl(0 0% 95%)' }}>
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: MUTED }}>{label}</p>
             <p className="text-sm font-bold" style={{ color: TEXT }}>{value}</p>
           </div>

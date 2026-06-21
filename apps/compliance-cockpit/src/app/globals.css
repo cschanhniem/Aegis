@@ -4,35 +4,37 @@
 
 @layer base {
   :root {
-    /* Beige + black — paper-and-ink. CTAs are black on beige. */
-    --background:           0 0% 98%;     /* ~#FAFAFA off-white (Linear) */
-    --foreground:           220 27% 6%;   /* ~#0B0E14 ink black */
-    --card:                 0 0% 100%;    /* pure white surface */
-    --card-foreground:      220 27% 6%;
+    /* Pure monochrome. Brand color = black. Status (allow/pending/block)
+       keeps minimal semantic color because operators need to distinguish
+       outcomes at a glance, but everything else is grayscale. */
+    --background:           0 0% 100%;   /* pure white */
+    --foreground:           0 0% 0%;     /* pure black */
+    --card:                 0 0% 100%;   /* pure white */
+    --card-foreground:      0 0% 0%;
     --popover:              0 0% 100%;
-    --popover-foreground:   220 27% 6%;
-    --primary:              232 56% 60%;   /* warm espresso — was 0 0% 4% (pure black) */
-    --primary-foreground:   0 0% 100%;
-    --secondary:            220 14% 96%;
-    --secondary-foreground: 220 27% 14%;
-    --muted:                220 14% 96%;
-    --muted-foreground:     220 10% 42%;  /* cool slate */
-    --accent:               232 56% 60%;   /* warm espresso — was 0 0% 4% */
+    --popover-foreground:   0 0% 0%;
+    --primary:              0 0% 0%;     /* pure black CTA */
+    --primary-foreground:   0 0% 100%;   /* white text on black */
+    --secondary:            0 0% 96%;    /* near-white surface */
+    --secondary-foreground: 0 0% 0%;
+    --muted:                0 0% 96%;
+    --muted-foreground:     0 0% 42%;    /* mid gray for secondary text */
+    --accent:               0 0% 0%;     /* black accent */
     --accent-foreground:    0 0% 100%;
-    --destructive:          0 72% 51%;
+    --destructive:          0 60% 45%;   /* desaturated red, kept for semantic meaning */
     --destructive-foreground: 0 0% 100%;
-    --border:               220 14% 91%;  /* cool gray hairline */
-    --input:                220 14% 91%;
-    --ring:                 232 56% 60%;
+    --border:               0 0% 91%;    /* light gray hairline */
+    --input:                0 0% 91%;
+    --ring:                 0 0% 0%;
     --radius:               0.5rem;
-    /* Sidebar-specific surfaces — slightly deeper beige */
-    --sidebar:              220 14% 96%;
-    --sidebar-active:       232 56% 95%;
-    /* Semantic status colours used by alignment / code-shield /
-       trace panels. Lightness tuned for the light scheme. */
-    --status-ok:            142 71% 36%;
-    --status-attn:           46 87% 47%;
-    --status-drift:           0 72% 51%;
+    /* Sidebar — barely-tinted off-white so it's distinguishable from main bg */
+    --sidebar:              0 0% 98%;
+    --sidebar-active:       0 0% 93%;
+    /* Status colours — minimum saturation required to stay semantic.
+       These are the ONLY non-grayscale tones in the brand. */
+    --status-ok:            142 50% 32%;   /* allow / green */
+    --status-attn:           36 80% 38%;   /* pending / amber */
+    --status-drift:           0 60% 42%;   /* block / red */
   }
 
   /*

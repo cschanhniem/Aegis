@@ -52,13 +52,21 @@ const MUTED     = 'hsl(var(--muted-foreground))'
 const ACTIVE_BG = 'hsl(var(--sidebar-active))'
 
 function AegisLogo() {
+  // Pure monochrome wordmark — no tinted shield, no decorative slash.
+  // Name only, set in display weight + tight tracking.
   return (
-    <svg width="100" height="32" viewBox="0 0 100 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 4 L20 4 L22 8 L22 20 Q22 26 16 28 Q10 26 10 20 L10 8 Z" fill="hsl(232 56% 50%)" opacity="0.12" />
-      <text x="2" y="23" fontFamily="var(--font-plus-jakarta), system-ui, sans-serif" fontWeight="900" fontStyle="italic" fontSize="26" letterSpacing="3" fill="hsl(var(--foreground))">AEGIS</text>
-      <line x1="46" y1="6" x2="56" y2="26" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
-      <line x1="2" y1="28" x2="88" y2="28" stroke="hsl(232 56% 50%)" strokeWidth="1" opacity="0.25" />
-      <line x1="2" y1="28" x2="32" y2="28" stroke="hsl(232 56% 50%)" strokeWidth="1.5" opacity="0.5" />
+    <svg width="92" height="22" viewBox="0 0 92 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="AEGIS">
+      <text
+        x="0"
+        y="17"
+        fontFamily="var(--font-plus-jakarta), system-ui, sans-serif"
+        fontWeight="800"
+        fontSize="18"
+        letterSpacing="2"
+        fill="hsl(var(--foreground))"
+      >
+        AEGIS
+      </text>
     </svg>
   )
 }
@@ -154,7 +162,7 @@ function SidebarContent({ pathname, connected, lastUpdate, notifPermission, requ
           <span
             className="w-1.5 h-1.5 rounded-full flex-shrink-0"
             style={{
-              background: connected ? 'hsl(150 18% 44%)' : 'hsl(30 8% 60%)',
+              background: connected ? 'hsl(150 18% 44%)' : 'hsl(0 0% 60%)',
               boxShadow: connected ? '0 0 0 2px hsl(150 18% 44% / 0.25)' : 'none',
             }}
           />
@@ -224,7 +232,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <span
             className="w-1.5 h-1.5 rounded-full"
             style={{
-              background: connected ? 'hsl(150 18% 44%)' : 'hsl(30 8% 60%)',
+              background: connected ? 'hsl(150 18% 44%)' : 'hsl(0 0% 60%)',
               boxShadow: connected ? '0 0 0 2px hsl(150 18% 44% / 0.25)' : 'none',
             }}
           />

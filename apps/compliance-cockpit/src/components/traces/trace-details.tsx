@@ -12,12 +12,12 @@ import { AnomalyExplanationPanel } from './anomaly-explanation-panel'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
-const KEY_COLOR = 'hsl(30 12% 42%)'
+const TEXT   = 'hsl(0 0% 15%)'
+const KEY_COLOR = 'hsl(0 0% 42%)'
 const STR_COLOR = 'hsl(150 14% 38%)'
 const NUM_COLOR = 'hsl(210 18% 44%)'
 const BOOL_COLOR = 'hsl(var(--primary))'
-const NULL_COLOR = 'hsl(30 8% 62%)'
+const NULL_COLOR = 'hsl(0 0% 62%)'
 
 /* ── Collapsible panel ─────────────────────────────────────── */
 function CollapsibleSection({
@@ -30,7 +30,7 @@ function CollapsibleSection({
   return (
     <div
       className="rounded-lg border overflow-hidden"
-      style={{ borderColor: BORDER, background: 'hsl(36 18% 97%)' }}
+      style={{ borderColor: BORDER, background: 'hsl(0 0% 97%)' }}
     >
       <button
         onClick={() => setOpen(!open)}
@@ -240,7 +240,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
             </CardTitle>
             {trace.pii_detected > 0 && (
               <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
-                style={{ background: 'hsl(38 22% 48% / 0.12)', color: 'hsl(232 56% 50%)' }}>
+                style={{ background: 'hsl(0 0% 0% / 0.12)', color: 'hsl(0 0% 0%)' }}>
                 <EyeOff className="h-2.5 w-2.5" />
                 {trace.pii_detected} PII redacted
               </span>

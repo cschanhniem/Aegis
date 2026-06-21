@@ -6,7 +6,7 @@ import { ShieldCheck, ShieldAlert, Layers, X, Loader2, ExternalLink } from 'luci
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 const BG     = '#fff'
 
 // Colour ramp for coverage fraction. Warm light theme — pick from the
@@ -14,7 +14,7 @@ const BG     = '#fff'
 function rampColour(frac: number): { bg: string; border: string; fg: string } {
   if (frac >= 1)    return { bg: 'hsl(150 30% 88%)', border: 'hsl(150 25% 70%)', fg: 'hsl(150 30% 28%)' }
   if (frac >= 0.66) return { bg: 'hsl(150 22% 92%)', border: 'hsl(150 18% 78%)', fg: 'hsl(150 24% 32%)' }
-  if (frac >= 0.33) return { bg: 'hsl(232 32% 94%)',  border: 'hsl(220 14% 86%)',  fg: 'hsl(36 28% 34%)' }
+  if (frac >= 0.33) return { bg: 'hsl(0 0% 94%)',  border: 'hsl(220 14% 86%)',  fg: 'hsl(36 28% 34%)' }
   if (frac > 0)     return { bg: 'hsl(25 22% 93%)',  border: 'hsl(25 18% 78%)',  fg: 'hsl(25 28% 38%)' }
   return                    { bg: 'hsl(0 14% 95%)',  border: 'hsl(0 10% 80%)',  fg: 'hsl(0 18% 44%)' }
 }

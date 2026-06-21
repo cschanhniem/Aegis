@@ -11,7 +11,7 @@ import {
 // ── design tokens (dev-friendly: density + monospace bias) ──────────────
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 const BG     = '#fff'
 const CODE_BG = 'hsl(220 14% 96%)'
 const CODE_BORDER = 'hsl(220 14% 88%)'

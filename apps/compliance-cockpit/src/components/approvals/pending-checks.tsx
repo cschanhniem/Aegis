@@ -6,7 +6,7 @@ import { CheckCircle, XCircle, Clock, Shield, AlertTriangle } from 'lucide-react
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 
 const RISK_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   CRITICAL: { bg: 'hsl(0 10% 96%)',  text: 'hsl(0 14% 42%)',  border: 'hsl(0 10% 82%)' },
@@ -50,8 +50,8 @@ function LiveTimer({ since }: { since: string }) {
     <span
       className="text-[11px] font-mono font-medium px-1.5 py-0.5 rounded"
       style={{
-        background: isLong ? 'hsl(0 12% 95%)' : 'hsl(38 20% 94%)',
-        color: isLong ? 'hsl(0 14% 46%)' : 'hsl(232 56% 50%)',
+        background: isLong ? 'hsl(0 12% 95%)' : 'hsl(0 0% 94%)',
+        color: isLong ? 'hsl(0 14% 46%)' : 'hsl(0 0% 0%)',
       }}
     >
       waiting {label}
@@ -158,7 +158,7 @@ export function PendingChecks() {
                 {check.arguments && Object.keys(check.arguments).length > 0 && (
                   <pre
                     className="text-[10px] rounded px-2 py-1 max-h-16 overflow-hidden"
-                    style={{ background: 'hsl(36 14% 93%)', color: MUTED }}
+                    style={{ background: 'hsl(0 0% 93%)', color: MUTED }}
                   >
                     {JSON.stringify(check.arguments, null, 2).slice(0, 200)}
                   </pre>

@@ -7,7 +7,7 @@ import type { BlockAlert } from '@/hooks/useTraceStream'
 const RISK_STYLE: Record<string, { bar: string; icon: string; badge: string }> = {
   CRITICAL: { bar: 'hsl(0 14% 46%)',   icon: 'hsl(0 14% 46%)',   badge: 'hsl(0 10% 94%)' },
   HIGH:     { bar: 'hsl(25 18% 44%)',  icon: 'hsl(25 18% 44%)',  badge: 'hsl(25 12% 94%)' },
-  MEDIUM:   { bar: 'hsl(36 18% 44%)',  icon: 'hsl(36 18% 44%)',  badge: 'hsl(36 12% 94%)' },
+  MEDIUM:   { bar: 'hsl(0 0% 44%)',  icon: 'hsl(0 0% 44%)',  badge: 'hsl(0 0% 94%)' },
   LOW:      { bar: 'hsl(150 14% 40%)', icon: 'hsl(150 14% 40%)', badge: 'hsl(150 10% 94%)' },
 }
 
@@ -58,10 +58,10 @@ export function BlockAlertToast({ alerts, dismissAlert }: Props) {
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate" style={{ color: 'hsl(30 10% 15%)' }}>
+                <p className="text-sm font-semibold truncate" style={{ color: 'hsl(0 0% 15%)' }}>
                   {isBlock ? '🚫 Blocked' : '⏳ Pending Approval'}
                 </p>
-                <p className="text-xs font-mono truncate mt-0.5" style={{ color: 'hsl(30 8% 35%)' }}>
+                <p className="text-xs font-mono truncate mt-0.5" style={{ color: 'hsl(0 0% 35%)' }}>
                   {alert.tool_name}
                 </p>
                 {alert.reason && (
@@ -76,7 +76,7 @@ export function BlockAlertToast({ alerts, dismissAlert }: Props) {
                   >
                     {alert.risk_level}
                   </span>
-                  <span className="text-[10px]" style={{ color: 'hsl(30 8% 60%)' }}>
+                  <span className="text-[10px]" style={{ color: 'hsl(0 0% 60%)' }}>
                     {alert.category} · {alert.agent_id}
                   </span>
                 </div>

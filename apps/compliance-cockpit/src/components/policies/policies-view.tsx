@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 
 const RISK_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   LOW:      { bg: 'hsl(150 10% 95%)', color: 'hsl(150 14% 36%)', border: 'hsl(150 10% 82%)' },
@@ -172,7 +172,7 @@ export function PoliciesView() {
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: 'hsl(38 18% 50% / 0.65)', color: '#fff', border: 'none', cursor: 'pointer',
+              background: 'hsl(0 0% 0% / 0.65)', color: '#fff', border: 'none', cursor: 'pointer',
             }}
           >
             Describe
@@ -199,7 +199,7 @@ export function PoliciesView() {
           <span style={{ color: 'hsl(150 18% 34%)' }}><b>{enabled.length}</b> active</span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm"
-          style={{ borderColor: BORDER, background: 'hsl(36 14% 95%)' }}>
+          style={{ borderColor: BORDER, background: 'hsl(0 0% 95%)' }}>
           <Shield className="h-3.5 w-3.5" style={{ color: MUTED }} />
           <span style={{ color: MUTED }}><b>{disabled.length}</b> disabled</span>
         </div>
@@ -257,7 +257,7 @@ export function PoliciesView() {
               disabled={generating}
               style={{
                 padding: '7px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 600,
-                background: generating ? 'hsl(38 16% 60% / 0.5)' : 'hsl(38 18% 50% / 0.65)',
+                background: generating ? 'hsl(38 16% 60% / 0.5)' : 'hsl(0 0% 0% / 0.65)',
                 color: '#fff', border: 'none', cursor: generating ? 'not-allowed' : 'pointer',
               }}
             >{generating ? 'Generating…' : 'Generate Policy'}</button>
@@ -268,7 +268,7 @@ export function PoliciesView() {
       {/* Create policy modal */}
       {creating && (
         <div style={{
-          border: `1px solid hsl(36 14% 82%)`,
+          border: `1px solid hsl(0 0% 82%)`,
           background: 'hsl(220 14% 98%)',
           borderRadius: '12px',
           padding: '20px',
@@ -397,7 +397,7 @@ export function PoliciesView() {
                 key={policy.id}
                 style={{
                   border: `1px solid ${policy.enabled ? BORDER : 'hsl(36 12% 90%)'}`,
-                  background: policy.enabled ? '#ffffff' : 'hsl(36 14% 97%)',
+                  background: policy.enabled ? '#ffffff' : 'hsl(0 0% 97%)',
                   borderRadius: '10px',
                   opacity: policy.enabled ? 1 : 0.7,
                 }}
@@ -427,7 +427,7 @@ export function PoliciesView() {
                   {/* Applies to */}
                   {appliesTo && (
                     <span className="text-[10px] px-2 py-0.5 rounded hidden lg:block" style={{
-                      background: 'hsl(36 14% 93%)', color: MUTED, flexShrink: 0,
+                      background: 'hsl(0 0% 93%)', color: MUTED, flexShrink: 0,
                     }}>
                       {appliesTo}
                     </span>
@@ -503,13 +503,13 @@ export function PoliciesView() {
                   <div style={{
                     borderTop: `1px solid ${BORDER}`,
                     padding: '12px 16px',
-                    background: 'hsl(36 14% 98%)',
+                    background: 'hsl(0 0% 98%)',
                     borderRadius: '0 0 10px 10px',
                   }}>
                     <p className="text-[10px] font-semibold mb-2" style={{ color: MUTED }}>JSON Schema</p>
                     <pre style={{
                       fontSize: '11px', fontFamily: 'monospace', color: TEXT,
-                      background: 'hsl(36 12% 94%)', padding: '10px 12px',
+                      background: 'hsl(0 0% 94%)', padding: '10px 12px',
                       borderRadius: '6px', overflow: 'auto', margin: 0,
                     }}>
                       {JSON.stringify(policy.policy_schema, null, 2)}

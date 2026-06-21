@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 const TOOL_META: Record<string, { icon: React.ElementType; color: string }> = {
   web_search:   { icon: Globe,    color: 'hsl(210 20% 48%)' },
   read_file:    { icon: FileText, color: 'hsl(255 18% 52%)' },
-  execute_sql:  { icon: Database, color: 'hsl(232 56% 60%)'  },
+  execute_sql:  { icon: Database, color: 'hsl(0 0% 0%)'  },
   send_request: { icon: Send,     color: 'hsl(150 18% 44%)' },
 }
 
@@ -83,7 +83,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
     return (
       <div
         className="flex items-center justify-center rounded-lg h-64 text-sm"
-        style={{ background: 'hsl(36 20% 97%)', color: 'hsl(var(--muted-foreground))' }}
+        style={{ background: 'hsl(0 0% 97%)', color: 'hsl(var(--muted-foreground))' }}
       >
         No traces to replay
       </div>
@@ -99,7 +99,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
   return (
     <div
       className="rounded-lg border overflow-hidden"
-      style={{ background: 'hsl(36 20% 97%)', borderColor: 'hsl(var(--border))', height: 'calc(100vh - 280px)' }}
+      style={{ background: 'hsl(0 0% 97%)', borderColor: 'hsl(var(--border))', height: 'calc(100vh - 280px)' }}
     >
       <div className="flex h-full">
         {/* ── Left: Step list ── */}
@@ -130,10 +130,10 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                 >
                   <StepIcon className="h-3 w-3 flex-shrink-0" style={{ color: m.color }} />
                   <div className="min-w-0">
-                    <p className="text-xs truncate font-medium" style={{ color: active ? m.color : 'hsl(30 8% 40%)' }}>
+                    <p className="text-xs truncate font-medium" style={{ color: active ? m.color : 'hsl(0 0% 40%)' }}>
                       {t.tool_call?.tool_name}
                     </p>
-                    <p className="text-[10px]" style={{ color: 'hsl(30 8% 60%)' }}>
+                    <p className="text-[10px]" style={{ color: 'hsl(0 0% 60%)' }}>
                       #{i + 1}
                     </p>
                   </div>
@@ -182,9 +182,9 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
               onClick={() => setPlaying(p => !p)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-colors"
               style={{
-                background: playing ? 'hsl(36 12% 92%)' : 'hsl(43 56% 42% / 0.12)',
+                background: playing ? 'hsl(0 0% 92%)' : 'hsl(43 56% 42% / 0.12)',
                 color: playing ? 'hsl(var(--foreground))' : 'hsl(43 56% 38%)',
-                border: `1px solid ${playing ? 'hsl(36 12% 84%)' : 'hsl(43 56% 42% / 0.35)'}`,
+                border: `1px solid ${playing ? 'hsl(0 0% 84%)' : 'hsl(43 56% 42% / 0.35)'}`,
               }}
             >
               {playing ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
@@ -252,7 +252,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                   onClick={() => { setReplayResult(null); handleReplay(current) }}
                   disabled={replaying}
                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border font-medium transition-colors disabled:opacity-40"
-                  style={{ borderColor: 'hsl(38 20% 46% / 0.4)', color: 'hsl(232 56% 50%)', background: 'hsl(232 56% 60% / 0.08)' }}
+                  style={{ borderColor: 'hsl(0 0% 0% / 0.4)', color: 'hsl(0 0% 0%)', background: 'hsl(0 0% 0% / 0.05)' }}
                 >
                   <RotateCcw className={`h-3 w-3 ${replaying ? 'animate-spin' : ''}`} />
                   {replaying ? 'Replaying…' : 'Replay this step'}
@@ -269,7 +269,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
                   Input Prompt
                 </p>
-                <div className="rounded-md px-3 py-2.5 text-sm break-all" style={{ background: 'hsl(36 20% 96%)', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' }}>
+                <div className="rounded-md px-3 py-2.5 text-sm break-all" style={{ background: 'hsl(0 0% 96%)', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' }}>
                   {current.input_context?.prompt || '—'}
                 </div>
               </div>
@@ -280,7 +280,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                   <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     Thought Chain
                   </p>
-                  <div className="rounded-md px-3 py-2.5 text-xs italic break-all" style={{ background: 'hsl(36 20% 96%)', color: 'hsl(30 8% 45%)', border: '1px solid hsl(var(--border))' }}>
+                  <div className="rounded-md px-3 py-2.5 text-xs italic break-all" style={{ background: 'hsl(0 0% 96%)', color: 'hsl(0 0% 45%)', border: '1px solid hsl(var(--border))' }}>
                     {current.thought_chain.raw_tokens}
                   </div>
                 </div>
@@ -294,8 +294,8 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                 <div
                   className="rounded-md px-3 py-2.5 text-xs font-mono break-all"
                   style={{
-                    background: hasErr ? 'hsl(0 10% 97%)' : 'hsl(36 20% 96%)',
-                    color: hasErr ? 'hsl(0 14% 46%)' : 'hsl(30 8% 30%)',
+                    background: hasErr ? 'hsl(0 10% 97%)' : 'hsl(0 0% 96%)',
+                    color: hasErr ? 'hsl(0 14% 46%)' : 'hsl(0 0% 30%)',
                     border: `1px solid ${hasErr ? 'hsl(0 10% 88%)' : 'hsl(var(--border))'}`,
                   }}
                 >
@@ -306,7 +306,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
               {/* Hash chain */}
               {current.integrity_hash && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(30 8% 62%)' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(0 0% 62%)' }}>
                     Integrity Hash
                   </p>
                   <p className="text-[10px] font-mono break-all" style={{ color: 'hsl(var(--muted-foreground))' }}>

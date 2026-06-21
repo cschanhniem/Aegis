@@ -9,7 +9,7 @@ import {
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 const BG     = '#fff'
 
 type Status = 'active' | 'suspended' | 'deprecated' | 'unregistered'
@@ -35,7 +35,7 @@ const STATUS_STYLE: Record<Status, { bg: string; color: string; border: string; 
   active:       { bg: 'hsl(150 12% 95%)', color: 'hsl(150 18% 36%)', border: 'hsl(150 10% 80%)', label: 'Active' },
   suspended:    { bg: 'hsl(25 12% 95%)',  color: 'hsl(25 22% 40%)',  border: 'hsl(25 12% 82%)',  label: 'Suspended' },
   deprecated:   { bg: 'hsl(0 10% 95%)',   color: 'hsl(0 14% 44%)',   border: 'hsl(0 10% 82%)',   label: 'Deprecated' },
-  unregistered: { bg: 'hsl(220 14% 95%)',  color: 'hsl(232 30% 38%)',  border: 'hsl(220 14% 88%)',  label: 'Unregistered' },
+  unregistered: { bg: 'hsl(220 14% 95%)',  color: 'hsl(0 0% 25%)',  border: 'hsl(220 14% 88%)',  label: 'Unregistered' },
 }
 
 function fmtTs(s?: string): string {
@@ -341,7 +341,7 @@ export function AgentsView() {
             style={{ background: BG, border: `1px solid hsl(220 14% 82%)` }}
           >
             <div className="flex items-center gap-2">
-              <KeyRound className="h-4 w-4" style={{ color: 'hsl(232 56% 60%)' }} />
+              <KeyRound className="h-4 w-4" style={{ color: 'hsl(0 0% 0%)' }} />
               <h2 className="font-semibold text-sm">Agent secret (shown once)</h2>
             </div>
             <p className="text-xs" style={{ color: MUTED }}>

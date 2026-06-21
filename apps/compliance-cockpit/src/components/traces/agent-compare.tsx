@@ -5,8 +5,8 @@ import { CheckCircle, AlertCircle, Clock, Zap, BarChart2 } from 'lucide-react'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
-const GOLD   = 'hsl(232 56% 50%)'
+const TEXT   = 'hsl(0 0% 15%)'
+const GOLD   = 'hsl(0 0% 0%)'
 
 interface AgentStats {
   agentId: string
@@ -132,7 +132,7 @@ export function AgentCompare({ traces }: AgentCompareProps) {
                 style={{
                   borderColor: selectedIds.includes(s.agentId) ? GOLD : BORDER,
                   color:       selectedIds.includes(s.agentId) ? GOLD : MUTED,
-                  background:  selectedIds.includes(s.agentId) ? 'hsl(232 56% 60% / 0.08)' : '#fff',
+                  background:  selectedIds.includes(s.agentId) ? 'hsl(0 0% 0% / 0.05)' : '#fff',
                 }}
               >
                 {s.agentId.substring(0, 8)}… <span style={{ color: MUTED }}>({s.traceCount})</span>
@@ -150,7 +150,7 @@ export function AgentCompare({ traces }: AgentCompareProps) {
           style={{
             gridTemplateColumns: `160px repeat(${comparing.length}, 1fr)`,
             borderColor: BORDER,
-            background: 'hsl(36 14% 97%)',
+            background: 'hsl(0 0% 97%)',
           }}
         >
           <div className="px-3 py-2.5" />
@@ -224,7 +224,7 @@ export function AgentCompare({ traces }: AgentCompareProps) {
             className="grid border-b last:border-b-0"
             style={{ gridTemplateColumns: `160px repeat(${comparing.length}, 1fr)`, borderColor: BORDER }}
           >
-            <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'hsl(36 14% 97%)' }}>
+            <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'hsl(0 0% 97%)' }}>
               <Icon className="h-3.5 w-3.5 flex-shrink-0" style={{ color: MUTED }} />
               <span className="text-xs font-medium" style={{ color: TEXT }}>{label}</span>
             </div>
@@ -241,7 +241,7 @@ export function AgentCompare({ traces }: AgentCompareProps) {
           className="grid"
           style={{ gridTemplateColumns: `160px repeat(${comparing.length}, 1fr)` }}
         >
-          <div className="flex items-center gap-2 px-3 py-3" style={{ background: 'hsl(36 14% 97%)' }}>
+          <div className="flex items-center gap-2 px-3 py-3" style={{ background: 'hsl(0 0% 97%)' }}>
             <Zap className="h-3.5 w-3.5 flex-shrink-0" style={{ color: MUTED }} />
             <span className="text-xs font-medium" style={{ color: TEXT }}>Tools Used</span>
           </div>

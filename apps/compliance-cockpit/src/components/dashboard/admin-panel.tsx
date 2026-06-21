@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 const BORDER = 'hsl(var(--border))'
 const ACCENT = 'hsl(36 60% 50%)'
 const GREEN  = 'hsl(142 50% 36%)'
@@ -26,7 +26,7 @@ function Section({ title, icon: Icon, children, defaultOpen = true }: {
         onClick={() => setOpen(!open)}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-          padding: '12px 16px', background: 'hsl(36 20% 98%)',
+          padding: '12px 16px', background: 'hsl(0 0% 98%)',
           border: 'none', cursor: 'pointer', color: TEXT,
           fontSize: 14, fontWeight: 600, textAlign: 'left',
         }}

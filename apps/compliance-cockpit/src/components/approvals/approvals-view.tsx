@@ -11,7 +11,7 @@ import { PendingChecks } from './pending-checks'
 
 const BORDER  = 'hsl(var(--border))'
 const MUTED   = 'hsl(var(--muted-foreground))'
-const TEXT    = 'hsl(30 10% 15%)'
+const TEXT    = 'hsl(0 0% 15%)'
 
 export function ApprovalsView() {
   const queryClient = useQueryClient()
@@ -64,11 +64,11 @@ export function ApprovalsView() {
       {/* Blocking mode — real-time pending checks (PRIMARY) */}
       <div style={{ border: `2px solid hsl(220 14% 86%)`, borderRadius: '12px', padding: '20px 24px', background: 'hsl(0 0% 100%)' }}>
         <div className="flex items-center gap-2 mb-4">
-          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'hsl(232 56% 60%)', boxShadow: '0 0 0 3px hsl(38 28% 50% / 0.2)' }} />
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'hsl(0 0% 0%)', boxShadow: '0 0 0 3px hsl(0 0% 0% / 0.2)' }} />
           <span className="text-sm font-bold" style={{ color: 'hsl(30 14% 22%)' }}>
             Awaiting Your Decision
           </span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: 'hsl(232 32% 92%)', color: 'hsl(232 30% 38%)' }}>
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: 'hsl(0 0% 92%)', color: 'hsl(0 0% 25%)' }}>
             Blocking mode
           </span>
           <span className="text-[11px] ml-auto" style={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -131,8 +131,8 @@ export function ApprovalsView() {
                 fontWeight: 600,
                 padding: '1px 5px',
                 borderRadius: '4px',
-                background: active ? 'hsl(232 56% 60% / 0.12)' : 'hsl(var(--border))',
-                color: active ? 'hsl(232 56% 50%)' : MUTED,
+                background: active ? 'hsl(0 0% 0% / 0.08)' : 'hsl(var(--border))',
+                color: active ? 'hsl(0 0% 0%)' : MUTED,
               }}>
                 {count}
               </span>

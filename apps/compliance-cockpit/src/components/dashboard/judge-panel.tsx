@@ -6,7 +6,7 @@ import { gw } from '@/lib/gateway'
 import { Bot, Play, BarChart3, AlertTriangle, TrendingUp, TrendingDown, Minus, Clock, Zap } from 'lucide-react'
 
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 const BORDER = 'hsl(var(--border))'
 const ACCENT = 'hsl(36 60% 50%)'
 const GREEN  = 'hsl(142 50% 36%)'
@@ -119,7 +119,7 @@ export function JudgePanel() {
       {/* Config bar */}
       <div style={{
         display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap',
-        padding: 16, borderRadius: 8, border: `1px solid ${BORDER}`, background: 'hsl(36 20% 98%)',
+        padding: 16, borderRadius: 8, border: `1px solid ${BORDER}`, background: 'hsl(0 0% 98%)',
       }}>
         <div>
           <label style={{ fontSize: 12, color: MUTED, display: 'block', marginBottom: 4 }}>Provider</label>

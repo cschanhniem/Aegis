@@ -19,7 +19,7 @@ function ToolIcon({ name }: { name: string }) {
 const TOOL_COLORS: Record<string, string> = {
   web_search:   'hsl(210 20% 48%)',
   read_file:    'hsl(255 18% 52%)',
-  execute_sql:  'hsl(232 56% 60%)',
+  execute_sql:  'hsl(0 0% 0%)',
   send_request: 'hsl(150 18% 44%)',
 }
 
@@ -67,7 +67,7 @@ export function AgentActivity() {
           <div
             key={trace.trace_id}
             className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
-            style={{ background: 'hsl(36 14% 93%)' }}
+            style={{ background: 'hsl(0 0% 93%)' }}
           >
             {/* Tool badge */}
             <div
@@ -85,7 +85,7 @@ export function AgentActivity() {
 
             {/* Duration */}
             {durationMs !== undefined && (
-              <span className="text-[11px] flex-shrink-0" style={{ color: 'hsl(30 8% 56%)' }}>
+              <span className="text-[11px] flex-shrink-0" style={{ color: 'hsl(0 0% 56%)' }}>
                 {durationMs < 1 ? '<1ms' : `${Math.round(durationMs)}ms`}
               </span>
             )}

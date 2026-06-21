@@ -7,7 +7,7 @@ import { friendlyAgent } from '@/lib/friendly-names'
 import { traceSummary } from '@/lib/trace-summary'
 import { toolIconFor } from '@/lib/tool-icons'
 
-const TEXT   = 'hsl(30 10% 15%)'
+const TEXT   = 'hsl(0 0% 15%)'
 const MUTED  = 'hsl(var(--muted-foreground))'
 const BORDER = 'hsl(var(--border))'
 
@@ -15,7 +15,7 @@ const RISK_LEVELS = ['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const
 const RISK_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   CRITICAL: { bg: 'hsl(0 10% 97%)',  border: 'hsl(0 12% 82%)',  text: 'hsl(0 14% 42%)' },
   HIGH:     { bg: 'hsl(0 8% 97%)',   border: 'hsl(0 10% 85%)',  text: 'hsl(0 12% 46%)' },
-  MEDIUM:   { bg: 'hsl(220 14% 97%)', border: 'hsl(36 12% 85%)', text: 'hsl(220 10% 42%)' },
+  MEDIUM:   { bg: 'hsl(220 14% 97%)', border: 'hsl(0 0% 85%)', text: 'hsl(220 10% 42%)' },
   LOW:      { bg: 'hsl(36 10% 97%)', border: BORDER,             text: MUTED },
 }
 
@@ -97,7 +97,7 @@ export function ViolationsView() {
             onClick={() => setGroupByPolicy(v => !v)}
             className="relative w-8 h-4.5 rounded-full transition-colors"
             style={{
-              background: groupByPolicy ? 'hsl(232 56% 60% / 0.5)' : 'hsl(30 8% 80%)',
+              background: groupByPolicy ? 'hsl(0 0% 0% / 0.35)' : 'hsl(0 0% 80%)',
               width: 32, height: 18,
             }}
           >

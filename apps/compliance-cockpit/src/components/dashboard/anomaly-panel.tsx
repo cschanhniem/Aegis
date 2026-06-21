@@ -88,7 +88,7 @@ export function AnomalyPanel() {
       {backendEvents.length > 0 && (
         <>
           <p className="text-[10px] uppercase font-bold tracking-wider flex items-center gap-1.5 pb-1"
-            style={{ color: 'hsl(30 8% 52%)' }}>
+            style={{ color: 'hsl(0 0% 52%)' }}>
             <Brain className="h-3 w-3" />
             Behavioral Anomalies
           </p>
@@ -131,10 +131,10 @@ export function AnomalyPanel() {
                       </span>
                     </div>
                   </div>
-                  <p className="text-xs truncate" style={{ color: 'hsl(30 8% 35%)' }}>
+                  <p className="text-xs truncate" style={{ color: 'hsl(0 0% 35%)' }}>
                     {topSignal?.detail || 'behavioral deviation detected'}
                   </p>
-                  <p className="text-[10px]" style={{ color: 'hsl(30 8% 58%)' }}>
+                  <p className="text-[10px]" style={{ color: 'hsl(0 0% 58%)' }}>
                     {evt.agent_id?.substring(0, 12)}
                     {evt.created_at && ` · ${new Date(evt.created_at).toLocaleTimeString()}`}
                   </p>
@@ -150,7 +150,7 @@ export function AnomalyPanel() {
         <>
           {backendEvents.length > 0 && (
             <p className="text-[10px] uppercase font-bold tracking-wider flex items-center gap-1.5 pt-2 pb-1"
-              style={{ color: 'hsl(30 8% 52%)' }}>
+              style={{ color: 'hsl(0 0% 52%)' }}>
               <BarChart2 className="h-3 w-3" />
               Real-time Statistical
             </p>
@@ -182,8 +182,8 @@ export function AnomalyPanel() {
                       {a.severity}
                     </span>
                   </div>
-                  <p className="text-xs" style={{ color: 'hsl(30 8% 35%)' }}>{a.detail}</p>
-                  <p className="text-[10px]" style={{ color: 'hsl(30 8% 58%)' }}>
+                  <p className="text-xs" style={{ color: 'hsl(0 0% 35%)' }}>{a.detail}</p>
+                  <p className="text-[10px]" style={{ color: 'hsl(0 0% 58%)' }}>
                     {a.detectedAt.toLocaleTimeString()}
                     {a.baseline > 0 && ` · baseline ${a.baseline}${a.type === 'latency_spike' ? 'ms' : a.type === 'error_rate_spike' ? '%' : 'x'}`}
                   </p>

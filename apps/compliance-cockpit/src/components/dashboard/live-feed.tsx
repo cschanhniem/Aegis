@@ -22,7 +22,7 @@ const TOOL_COLORS: Record<string, string> = {
   web_search:   'hsl(210 20% 48%)',
   read_file:    'hsl(270 14% 48%)',
   write_file:   'hsl(270 14% 48%)',
-  execute_sql:  'hsl(232 56% 50%)',
+  execute_sql:  'hsl(0 0% 0%)',
   send_request: 'hsl(180 14% 40%)',
 }
 

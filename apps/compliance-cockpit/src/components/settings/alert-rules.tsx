@@ -13,7 +13,7 @@ const CONDITION_LABELS: Record<AlertCondition, string> = {
 
 const INPUT = {
   base: 'w-full rounded-md px-2.5 py-1.5 text-sm border outline-none',
-  style: { background: '#fff', borderColor: 'hsl(var(--border))', color: 'hsl(30 10% 15%)' },
+  style: { background: '#fff', borderColor: 'hsl(var(--border))', color: 'hsl(0 0% 15%)' },
 }
 
 export function AlertRules() {
@@ -64,7 +64,7 @@ export function AlertRules() {
         <div
           key={rule.id}
           className="rounded-lg border p-4 space-y-3"
-          style={{ borderColor: 'hsl(var(--border))', background: rule.enabled ? '#fff' : 'hsl(36 14% 97%)' }}
+          style={{ borderColor: 'hsl(var(--border))', background: rule.enabled ? '#fff' : 'hsl(0 0% 97%)' }}
         >
           {/* Row 1: name + severity + enable/delete */}
           <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export function AlertRules() {
           {(rule.destinationType ?? 'webhook') !== 'pagerduty' && (
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                Signing Secret <span style={{ color: 'hsl(30 8% 65%)', fontWeight: 400, textTransform: 'none' }}>(optional — adds X-AEGIS-Signature header)</span>
+                Signing Secret <span style={{ color: 'hsl(0 0% 65%)', fontWeight: 400, textTransform: 'none' }}>(optional — adds X-AEGIS-Signature header)</span>
               </label>
               <input
                 type="password"
@@ -218,7 +218,7 @@ export function AlertRules() {
         <button
           onClick={add}
           className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md border transition-colors"
-          style={{ borderColor: 'hsl(36 12% 85%)', color: 'hsl(30 8% 45%)', background: '#fff' }}
+          style={{ borderColor: 'hsl(0 0% 85%)', color: 'hsl(0 0% 45%)', background: '#fff' }}
         >
           <Plus className="h-3.5 w-3.5" /> Add Rule
         </button>
@@ -226,7 +226,7 @@ export function AlertRules() {
           onClick={save}
           className="flex items-center gap-1.5 text-sm px-4 py-1.5 rounded-md font-medium transition-colors ml-auto"
           style={{
-            background: saved ? 'hsl(150 14% 45% / 0.68)' : 'hsl(38 18% 50% / 0.65)',
+            background: saved ? 'hsl(150 14% 45% / 0.68)' : 'hsl(0 0% 0% / 0.65)',
             color: '#fff',
           }}
         >
