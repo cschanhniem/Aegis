@@ -32,8 +32,8 @@ const SIGNAL_META: Record<string, { icon: React.ElementType; label: string }> = 
 const SEV_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
   high:     { bg: 'hsl(0 10% 96%)',   text: 'hsl(0 14% 44%)',   dot: 'hsl(0 14% 52%)'   },
   block:    { bg: 'hsl(0 10% 96%)',   text: 'hsl(0 14% 44%)',   dot: 'hsl(0 14% 52%)'   },
-  medium:   { bg: 'hsl(36 12% 96%)',  text: 'hsl(36 18% 40%)',  dot: 'hsl(36 18% 50%)'  },
-  escalate: { bg: 'hsl(36 12% 96%)',  text: 'hsl(36 18% 40%)',  dot: 'hsl(36 18% 50%)'  },
+  medium:   { bg: 'hsl(220 14% 96%)',  text: 'hsl(220 10% 42%)',  dot: 'hsl(220 10% 50%)'  },
+  escalate: { bg: 'hsl(220 14% 96%)',  text: 'hsl(220 10% 42%)',  dot: 'hsl(220 10% 50%)'  },
   low:      { bg: 'hsl(210 10% 96%)', text: 'hsl(210 14% 42%)', dot: 'hsl(210 14% 50%)' },
   flag:     { bg: 'hsl(210 10% 96%)', text: 'hsl(210 14% 42%)', dot: 'hsl(210 14% 50%)' },
 }

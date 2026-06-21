@@ -159,8 +159,8 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
             className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md border flex-shrink-0"
             style={{
               borderColor: activeFilters > 0 ? 'hsl(var(--primary))' : BORDER,
-              color: activeFilters > 0 ? 'hsl(38 20% 42%)' : MUTED,
-              background: activeFilters > 0 ? 'hsl(38 20% 46% / 0.08)' : '#fff',
+              color: activeFilters > 0 ? 'hsl(232 56% 50%)' : MUTED,
+              background: activeFilters > 0 ? 'hsl(232 56% 60% / 0.08)' : '#fff',
             }}
           >
             Filters {activeFilters > 0 && <span className="font-bold">{activeFilters}</span>}
@@ -249,8 +249,8 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
               onClick={() => onSelectTrace(trace.trace_id)}
               className="rounded-lg border p-3 cursor-pointer transition-colors"
               style={{
-                borderColor: isActive ? 'hsl(38 20% 46% / 0.5)' : BORDER,
-                background: isActive ? 'hsl(38 20% 46% / 0.06)' : '#fff',
+                borderColor: isActive ? 'hsl(232 56% 60% / 0.5)' : BORDER,
+                background: isActive ? 'hsl(232 56% 60% / 0.06)' : '#fff',
                 animation: isNew ? 'trace-slide-in 0.4s ease-out, trace-glow 1.2s ease-out' : undefined,
               }}
             >

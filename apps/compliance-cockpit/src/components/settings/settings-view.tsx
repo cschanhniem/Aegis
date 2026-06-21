@@ -240,7 +240,7 @@ export function SettingsView() {
   const inputStyle = {
     flex: 1, fontSize: '13px', borderRadius: '6px', border: `1px solid ${BORDER}`,
     padding: '7px 10px', outline: 'none', fontFamily: 'monospace',
-    background: 'hsl(36 12% 98%)', color: TEXT,
+    background: 'hsl(220 14% 98%)', color: TEXT,
   }
 
   return (
@@ -414,7 +414,7 @@ export function SettingsView() {
         <div className="relative">
           <pre
             className="text-xs rounded-lg p-4 overflow-auto"
-            style={{ background: 'hsl(36 14% 96%)', color: TEXT, fontFamily: 'monospace' }}
+            style={{ background: 'hsl(220 14% 96%)', color: TEXT, fontFamily: 'monospace' }}
           >
             {QUICK_START}
           </pre>
@@ -440,7 +440,7 @@ export function SettingsView() {
             { label: 'smolagents', status: '✅ auto' },
           ].map(({ label, status }) => (
             <div key={label} className="rounded-md px-3 py-2 flex justify-between items-center"
-              style={{ background: 'hsl(36 14% 96%)', border: `1px solid ${BORDER}` }}>
+              style={{ background: 'hsl(220 14% 96%)', border: `1px solid ${BORDER}` }}>
               <span className="text-xs font-medium" style={{ color: TEXT }}>{label}</span>
               <span className="text-[10px]" style={{ color: 'hsl(150 14% 42%)' }}>{status}</span>
             </div>
@@ -455,7 +455,7 @@ export function SettingsView() {
         </p>
         <pre
           className="text-xs rounded-lg p-4 overflow-auto"
-          style={{ background: 'hsl(36 14% 96%)', color: TEXT, fontFamily: 'monospace' }}
+          style={{ background: 'hsl(220 14% 96%)', color: TEXT, fontFamily: 'monospace' }}
         >{`{
   "mcpServers": {
     "aegis": {
@@ -473,7 +473,7 @@ export function SettingsView() {
         </p>
         <code
           className="block mt-2 text-xs rounded-md px-3 py-2 font-mono"
-          style={{ background: 'hsl(36 14% 96%)', color: TEXT }}
+          style={{ background: 'hsl(220 14% 96%)', color: TEXT }}
         >
           POST {gatewayUrl}/api/v1/agents/:id/revoke
         </code>

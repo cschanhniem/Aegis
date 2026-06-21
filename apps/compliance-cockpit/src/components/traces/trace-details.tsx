@@ -36,7 +36,7 @@ function CollapsibleSection({
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-2 px-4 py-3 text-left transition-colors"
         style={{ color: TEXT }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'hsl(36 14% 94%)')}
+        onMouseEnter={e => (e.currentTarget.style.background = 'hsl(220 14% 94%)')}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
         <ChevronRight
@@ -150,7 +150,7 @@ function SmartDataView({ data, label }: { data: any; label?: string }) {
           onClick={() => setMode('readable')}
           className="flex items-center gap-1 px-2 py-1 rounded text-[11px] transition-colors"
           style={{
-            background: mode === 'readable' ? 'hsl(36 14% 90%)' : 'transparent',
+            background: mode === 'readable' ? 'hsl(220 14% 90%)' : 'transparent',
             color: mode === 'readable' ? TEXT : MUTED,
           }}
         >
@@ -160,7 +160,7 @@ function SmartDataView({ data, label }: { data: any; label?: string }) {
           onClick={() => setMode('raw')}
           className="flex items-center gap-1 px-2 py-1 rounded text-[11px] transition-colors"
           style={{
-            background: mode === 'raw' ? 'hsl(36 14% 90%)' : 'transparent',
+            background: mode === 'raw' ? 'hsl(220 14% 90%)' : 'transparent',
             color: mode === 'raw' ? TEXT : MUTED,
           }}
         >
@@ -172,7 +172,7 @@ function SmartDataView({ data, label }: { data: any; label?: string }) {
       ) : (
         <pre
           className="text-[11px] font-mono overflow-x-auto p-3 rounded-md"
-          style={{ background: 'hsl(36 14% 94%)', color: TEXT, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+          style={{ background: 'hsl(220 14% 94%)', color: TEXT, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
         >
           {JSON.stringify(data, null, 2)}
         </pre>
@@ -240,7 +240,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
             </CardTitle>
             {trace.pii_detected > 0 && (
               <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
-                style={{ background: 'hsl(38 22% 48% / 0.12)', color: 'hsl(38 22% 40%)' }}>
+                style={{ background: 'hsl(38 22% 48% / 0.12)', color: 'hsl(232 56% 50%)' }}>
                 <EyeOff className="h-2.5 w-2.5" />
                 {trace.pii_detected} PII redacted
               </span>
@@ -254,7 +254,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
                     ? 'hsl(210 14% 50% / 0.12)' : 'transparent',
                   color: trace.anomaly_score >= 0.85
                     ? 'hsl(0 14% 44%)' : trace.anomaly_score >= 0.6
-                    ? 'hsl(36 18% 40%)' : 'hsl(210 14% 42%)',
+                    ? 'hsl(220 10% 42%)' : 'hsl(210 14% 42%)',
                 }}>
                 <Brain className="h-2.5 w-2.5" />
                 Anomaly {trace.anomaly_score.toFixed(2)}
@@ -336,7 +336,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
         {trace.anomaly_score > 0 && trace.anomaly_signals && (
           <CollapsibleSection
             title="Behavioral Anomaly"
-            icon={<Brain className="h-3.5 w-3.5" style={{ color: trace.anomaly_score >= 0.6 ? 'hsl(36 18% 40%)' : 'hsl(210 14% 42%)' }} />}
+            icon={<Brain className="h-3.5 w-3.5" style={{ color: trace.anomaly_score >= 0.6 ? 'hsl(220 10% 42%)' : 'hsl(210 14% 42%)' }} />}
             summary={`score ${trace.anomaly_score.toFixed(2)} — ${(Array.isArray(trace.anomaly_signals) ? trace.anomaly_signals : JSON.parse(trace.anomaly_signals || '[]')).length} signal(s)`}
             defaultOpen={trace.anomaly_score >= 0.6}
           >
@@ -344,7 +344,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
               <div className="flex items-center gap-3 text-xs mb-3">
                 <span style={{ color: MUTED }}>Composite Score</span>
                 <span className="font-mono font-medium" style={{
-                  color: trace.anomaly_score >= 0.85 ? 'hsl(0 14% 44%)' : trace.anomaly_score >= 0.6 ? 'hsl(36 18% 40%)' : NUM_COLOR
+                  color: trace.anomaly_score >= 0.85 ? 'hsl(0 14% 44%)' : trace.anomaly_score >= 0.6 ? 'hsl(220 10% 42%)' : NUM_COLOR
                 }}>
                   {trace.anomaly_score.toFixed(3)}
                 </span>
@@ -360,10 +360,10 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
                 <div
                   key={i}
                   className="flex items-start gap-2 text-xs rounded-md p-2"
-                  style={{ background: 'hsl(36 14% 94%)' }}
+                  style={{ background: 'hsl(220 14% 94%)' }}
                 >
                   <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{
-                    background: signal.score >= 0.7 ? 'hsl(0 14% 52%)' : signal.score >= 0.4 ? 'hsl(36 18% 50%)' : 'hsl(210 14% 50%)',
+                    background: signal.score >= 0.7 ? 'hsl(0 14% 52%)' : signal.score >= 0.4 ? 'hsl(220 10% 50%)' : 'hsl(210 14% 50%)',
                   }} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">

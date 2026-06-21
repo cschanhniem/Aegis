@@ -11,7 +11,7 @@ const TEXT   = 'hsl(30 10% 15%)'
 const RISK_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   CRITICAL: { bg: 'hsl(0 10% 96%)',   text: 'hsl(0 14% 42%)',   border: 'hsl(0 10% 82%)'  },
   HIGH:     { bg: 'hsl(25 12% 96%)',  text: 'hsl(25 18% 40%)',  border: 'hsl(25 12% 82%)' },
-  MEDIUM:   { bg: 'hsl(36 12% 96%)',  text: 'hsl(36 18% 40%)',  border: 'hsl(36 12% 82%)' },
+  MEDIUM:   { bg: 'hsl(220 14% 96%)',  text: 'hsl(220 10% 42%)',  border: 'hsl(220 14% 88%)' },
   LOW:      { bg: 'hsl(150 10% 96%)', text: 'hsl(150 14% 38%)', border: 'hsl(150 10% 82%)'},
 }
 
@@ -125,7 +125,7 @@ export function PlaygroundView() {
                   key={ex.label}
                   onClick={() => loadExample(ex)}
                   className="text-xs px-3 py-1.5 rounded-md border transition-colors hover:opacity-80"
-                  style={{ borderColor: BORDER, color: TEXT, background: 'hsl(36 12% 97%)' }}
+                  style={{ borderColor: BORDER, color: TEXT, background: 'hsl(220 14% 97%)' }}
                 >
                   {ex.label}
                 </button>
@@ -144,7 +144,7 @@ export function PlaygroundView() {
                 value={toolName}
                 onChange={e => setToolName(e.target.value)}
                 className="w-full text-sm rounded-md border px-3 py-2 font-mono outline-none focus:ring-1"
-                style={{ borderColor: BORDER, color: TEXT, background: 'hsl(36 12% 98%)' }}
+                style={{ borderColor: BORDER, color: TEXT, background: 'hsl(220 14% 98%)' }}
                 placeholder="run_query"
               />
               <p className="text-[11px] mt-1" style={{ color: MUTED }}>
@@ -159,7 +159,7 @@ export function PlaygroundView() {
                 onChange={e => { setArgsText(e.target.value); setArgsError(null) }}
                 rows={6}
                 className="w-full text-sm rounded-md border px-3 py-2 font-mono outline-none focus:ring-1 resize-y"
-                style={{ borderColor: argsError ? 'hsl(0 14% 60%)' : BORDER, color: TEXT, background: 'hsl(36 12% 98%)' }}
+                style={{ borderColor: argsError ? 'hsl(0 14% 60%)' : BORDER, color: TEXT, background: 'hsl(220 14% 98%)' }}
                 placeholder={'{\n  "key": "value"\n}'}
               />
               {argsError && (
@@ -173,7 +173,7 @@ export function PlaygroundView() {
                 value={agentId}
                 onChange={e => setAgentId(e.target.value)}
                 className="w-full text-sm rounded-md border px-3 py-2 font-mono outline-none"
-                style={{ borderColor: BORDER, color: TEXT, background: 'hsl(36 12% 98%)' }}
+                style={{ borderColor: BORDER, color: TEXT, background: 'hsl(220 14% 98%)' }}
                 placeholder="my-agent"
               />
             </div>
@@ -196,7 +196,7 @@ export function PlaygroundView() {
             className="rounded-xl border p-4 min-h-[220px]"
             style={{
               borderColor: rc?.border ?? BORDER,
-              background:  rc?.bg ?? 'hsl(36 12% 97%)',
+              background:  rc?.bg ?? 'hsl(220 14% 97%)',
             }}
           >
             {!result ? (
@@ -256,7 +256,7 @@ export function PlaygroundView() {
                         <span
                           key={i}
                           className="text-[10px] px-2 py-0.5 rounded font-mono"
-                          style={{ background: 'hsl(36 14% 90%)', color: MUTED }}
+                          style={{ background: 'hsl(220 14% 90%)', color: MUTED }}
                         >
                           {s}
                         </span>

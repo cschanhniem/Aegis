@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 const TOOL_META: Record<string, { icon: React.ElementType; color: string }> = {
   web_search:   { icon: Globe,    color: 'hsl(210 20% 48%)' },
   read_file:    { icon: FileText, color: 'hsl(255 18% 52%)' },
-  execute_sql:  { icon: Database, color: 'hsl(38 22% 48%)'  },
+  execute_sql:  { icon: Database, color: 'hsl(232 56% 60%)'  },
   send_request: { icon: Send,     color: 'hsl(150 18% 44%)' },
 }
 
@@ -252,7 +252,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                   onClick={() => { setReplayResult(null); handleReplay(current) }}
                   disabled={replaying}
                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border font-medium transition-colors disabled:opacity-40"
-                  style={{ borderColor: 'hsl(38 20% 46% / 0.4)', color: 'hsl(38 20% 42%)', background: 'hsl(38 20% 46% / 0.08)' }}
+                  style={{ borderColor: 'hsl(38 20% 46% / 0.4)', color: 'hsl(232 56% 50%)', background: 'hsl(232 56% 60% / 0.08)' }}
                 >
                   <RotateCcw className={`h-3 w-3 ${replaying ? 'animate-spin' : ''}`} />
                   {replaying ? 'Replaying…' : 'Replay this step'}

@@ -35,7 +35,7 @@ const STATUS_STYLE: Record<Status, { bg: string; color: string; border: string; 
   active:       { bg: 'hsl(150 12% 95%)', color: 'hsl(150 18% 36%)', border: 'hsl(150 10% 80%)', label: 'Active' },
   suspended:    { bg: 'hsl(25 12% 95%)',  color: 'hsl(25 22% 40%)',  border: 'hsl(25 12% 82%)',  label: 'Suspended' },
   deprecated:   { bg: 'hsl(0 10% 95%)',   color: 'hsl(0 14% 44%)',   border: 'hsl(0 10% 82%)',   label: 'Deprecated' },
-  unregistered: { bg: 'hsl(36 12% 95%)',  color: 'hsl(36 22% 40%)',  border: 'hsl(36 12% 82%)',  label: 'Unregistered' },
+  unregistered: { bg: 'hsl(220 14% 95%)',  color: 'hsl(232 30% 38%)',  border: 'hsl(220 14% 88%)',  label: 'Unregistered' },
 }
 
 function fmtTs(s?: string): string {
@@ -338,10 +338,10 @@ export function AgentsView() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
           <div
             className="w-full max-w-md rounded-xl p-5 space-y-3"
-            style={{ background: BG, border: `1px solid hsl(36 24% 70%)` }}
+            style={{ background: BG, border: `1px solid hsl(220 14% 82%)` }}
           >
             <div className="flex items-center gap-2">
-              <KeyRound className="h-4 w-4" style={{ color: 'hsl(36 30% 45%)' }} />
+              <KeyRound className="h-4 w-4" style={{ color: 'hsl(232 56% 60%)' }} />
               <h2 className="font-semibold text-sm">Agent secret (shown once)</h2>
             </div>
             <p className="text-xs" style={{ color: MUTED }}>
@@ -349,7 +349,7 @@ export function AgentsView() {
             </p>
             <div
               className="font-mono text-xs p-2 rounded border break-all"
-              style={{ background: 'hsl(36 14% 96%)', borderColor: BORDER }}
+              style={{ background: 'hsl(220 14% 96%)', borderColor: BORDER }}
             >{newSecret}</div>
             <div className="flex justify-end gap-2 pt-1">
               <button

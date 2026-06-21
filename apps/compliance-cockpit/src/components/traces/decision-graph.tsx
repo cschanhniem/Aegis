@@ -5,7 +5,7 @@ import { Globe, FileText, Database, Send, Zap, CheckCircle, AlertCircle, ArrowDo
 const TOOL_META: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   web_search:   { icon: Globe,     color: 'hsl(210 20% 48%)', label: 'Web Search'   },
   read_file:    { icon: FileText,  color: 'hsl(255 18% 52%)', label: 'Read File'    },
-  execute_sql:  { icon: Database,  color: 'hsl(38 22% 48%)',  label: 'SQL Query'    },
+  execute_sql:  { icon: Database,  color: 'hsl(232 56% 60%)',  label: 'SQL Query'    },
   send_request: { icon: Send,      color: 'hsl(150 18% 44%)', label: 'HTTP Request' },
 }
 
@@ -47,7 +47,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
         {/* Start node */}
         <div
           className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase mb-0"
-          style={{ background: 'hsl(38 20% 46% / 0.12)', color: 'hsl(38 20% 42%)', border: '1px solid hsl(38 20% 46% / 0.3)' }}
+          style={{ background: 'hsl(232 56% 60% / 0.12)', color: 'hsl(232 56% 50%)', border: '1px solid hsl(38 20% 46% / 0.3)' }}
         >
           Agent Session
         </div>
@@ -64,7 +64,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
             <div key={trace.trace_id} className="flex flex-col items-center w-full max-w-xl">
               {/* Arrow */}
               <div className="flex flex-col items-center py-1">
-                <div className="w-px h-4" style={{ background: 'hsl(36 12% 80%)' }} />
+                <div className="w-px h-4" style={{ background: 'hsl(220 14% 86%)' }} />
                 <ArrowDown className="h-3 w-3 -mt-0.5" style={{ color: 'hsl(36 12% 72%)' }} />
               </div>
 
@@ -133,7 +133,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
 
         {/* End arrow */}
         <div className="flex flex-col items-center py-1">
-          <div className="w-px h-4" style={{ background: 'hsl(36 12% 80%)' }} />
+          <div className="w-px h-4" style={{ background: 'hsl(220 14% 86%)' }} />
           <ArrowDown className="h-3 w-3 -mt-0.5" style={{ color: 'hsl(36 12% 72%)' }} />
         </div>
 

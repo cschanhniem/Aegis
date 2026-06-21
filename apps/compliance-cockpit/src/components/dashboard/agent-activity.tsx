@@ -19,7 +19,7 @@ function ToolIcon({ name }: { name: string }) {
 const TOOL_COLORS: Record<string, string> = {
   web_search:   'hsl(210 20% 48%)',
   read_file:    'hsl(255 18% 52%)',
-  execute_sql:  'hsl(38 22% 48%)',
+  execute_sql:  'hsl(232 56% 60%)',
   send_request: 'hsl(150 18% 44%)',
 }
 

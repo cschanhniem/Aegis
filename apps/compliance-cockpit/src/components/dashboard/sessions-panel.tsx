@@ -75,7 +75,7 @@ function SessionTraces({ sessionId }: { sessionId: string }) {
       {traces.map((t: any, i: number) => {
         const hasError = !!t.observation?.error
         return (
-          <div key={t.trace_id} className="flex items-center gap-2 py-1.5 px-2 rounded" style={{ background: 'hsl(36 14% 96%)' }}>
+          <div key={t.trace_id} className="flex items-center gap-2 py-1.5 px-2 rounded" style={{ background: 'hsl(220 14% 96%)' }}>
             <span className="text-[10px] font-mono w-4 text-right flex-shrink-0" style={{ color: MUTED }}>{i + 1}</span>
             {hasError
               ? <AlertCircle className="h-3 w-3 flex-shrink-0" style={{ color: 'hsl(0 18% 50%)' }} />

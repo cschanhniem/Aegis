@@ -54,11 +54,11 @@ const ACTIVE_BG = 'hsl(var(--sidebar-active))'
 function AegisLogo() {
   return (
     <svg width="100" height="32" viewBox="0 0 100 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 4 L20 4 L22 8 L22 20 Q22 26 16 28 Q10 26 10 20 L10 8 Z" fill="hsl(38 20% 42%)" opacity="0.12" />
+      <path d="M12 4 L20 4 L22 8 L22 20 Q22 26 16 28 Q10 26 10 20 L10 8 Z" fill="hsl(232 56% 50%)" opacity="0.12" />
       <text x="2" y="23" fontFamily="var(--font-plus-jakarta), system-ui, sans-serif" fontWeight="900" fontStyle="italic" fontSize="26" letterSpacing="3" fill="hsl(var(--foreground))">AEGIS</text>
       <line x1="46" y1="6" x2="56" y2="26" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
-      <line x1="2" y1="28" x2="88" y2="28" stroke="hsl(38 20% 42%)" strokeWidth="1" opacity="0.25" />
-      <line x1="2" y1="28" x2="32" y2="28" stroke="hsl(38 20% 42%)" strokeWidth="1.5" opacity="0.5" />
+      <line x1="2" y1="28" x2="88" y2="28" stroke="hsl(232 56% 50%)" strokeWidth="1" opacity="0.25" />
+      <line x1="2" y1="28" x2="32" y2="28" stroke="hsl(232 56% 50%)" strokeWidth="1.5" opacity="0.5" />
     </svg>
   )
 }

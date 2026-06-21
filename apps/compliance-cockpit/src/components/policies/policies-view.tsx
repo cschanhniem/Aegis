@@ -11,7 +11,7 @@ const TEXT   = 'hsl(30 10% 15%)'
 
 const RISK_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   LOW:      { bg: 'hsl(150 10% 95%)', color: 'hsl(150 14% 36%)', border: 'hsl(150 10% 82%)' },
-  MEDIUM:   { bg: 'hsl(36 12% 95%)',  color: 'hsl(36 18% 38%)',  border: 'hsl(36 12% 82%)' },
+  MEDIUM:   { bg: 'hsl(220 14% 95%)',  color: 'hsl(220 10% 36%)',  border: 'hsl(220 14% 88%)' },
   HIGH:     { bg: 'hsl(25 12% 95%)',  color: 'hsl(25 18% 40%)',  border: 'hsl(25 12% 82%)' },
   CRITICAL: { bg: 'hsl(0 10% 95%)',   color: 'hsl(0 14% 42%)',   border: 'hsl(0 10% 82%)' },
 }
@@ -269,7 +269,7 @@ export function PoliciesView() {
       {creating && (
         <div style={{
           border: `1px solid hsl(36 14% 82%)`,
-          background: 'hsl(36 12% 98%)',
+          background: 'hsl(220 14% 98%)',
           borderRadius: '12px',
           padding: '20px',
         }}>

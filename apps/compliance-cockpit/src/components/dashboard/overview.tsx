@@ -119,7 +119,7 @@ function GlobalSearch() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: MUTED }} />
         <input
           className="w-full rounded-lg pl-10 pr-10 py-2.5 text-sm border outline-none transition-shadow"
-          style={{ borderColor: open && results.length > 0 ? 'hsl(38 20% 46% / 0.4)' : BORDER, background: '#fff', color: TEXT, boxShadow: open && results.length > 0 ? '0 4px 16px hsl(38 20% 46% / 0.08)' : 'none' }}
+          style={{ borderColor: open && results.length > 0 ? 'hsl(38 20% 46% / 0.4)' : BORDER, background: '#fff', color: TEXT, boxShadow: open && results.length > 0 ? '0 4px 16px hsl(232 56% 60% / 0.08)' : 'none' }}
           placeholder="Search agents, tools, trace IDs..."
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true) }}
@@ -312,15 +312,15 @@ export function DashboardOverview() {
           href="/approvals"
           className="flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors"
           style={{
-            background: 'hsl(38 30% 95%)',
-            borderColor: 'hsl(38 24% 78%)',
+            background: 'hsl(220 14% 96%)',
+            borderColor: 'hsl(220 14% 86%)',
             color: 'hsl(30 14% 25%)',
           }}
           onMouseEnter={e => (e.currentTarget.style.background = 'hsl(38 30% 92%)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'hsl(38 30% 95%)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'hsl(220 14% 96%)')}
         >
           <span className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0"
-            style={{ background: 'hsl(38 28% 88%)' }}>
+            style={{ background: 'hsl(232 30% 90%)' }}>
             <AlertTriangle className="h-4 w-4" style={{ color: 'hsl(30 30% 38%)' }} />
           </span>
           <p className="flex-1 text-sm font-semibold">

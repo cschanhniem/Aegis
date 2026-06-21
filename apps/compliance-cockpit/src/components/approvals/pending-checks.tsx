@@ -11,7 +11,7 @@ const TEXT   = 'hsl(30 10% 15%)'
 const RISK_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   CRITICAL: { bg: 'hsl(0 10% 96%)',  text: 'hsl(0 14% 42%)',  border: 'hsl(0 10% 82%)' },
   HIGH:     { bg: 'hsl(25 12% 96%)', text: 'hsl(25 18% 40%)', border: 'hsl(25 12% 82%)' },
-  MEDIUM:   { bg: 'hsl(36 12% 96%)', text: 'hsl(36 18% 40%)', border: 'hsl(36 12% 82%)' },
+  MEDIUM:   { bg: 'hsl(220 14% 96%)', text: 'hsl(220 10% 42%)', border: 'hsl(220 14% 88%)' },
   LOW:      { bg: 'hsl(150 10% 96%)',text: 'hsl(150 14% 38%)',border: 'hsl(150 10% 82%)' },
 }
 
@@ -51,7 +51,7 @@ function LiveTimer({ since }: { since: string }) {
       className="text-[11px] font-mono font-medium px-1.5 py-0.5 rounded"
       style={{
         background: isLong ? 'hsl(0 12% 95%)' : 'hsl(38 20% 94%)',
-        color: isLong ? 'hsl(0 14% 46%)' : 'hsl(38 20% 42%)',
+        color: isLong ? 'hsl(0 14% 46%)' : 'hsl(232 56% 50%)',
       }}
     >
       waiting {label}
@@ -138,7 +138,7 @@ export function PendingChecks() {
                   </span>
                   <span
                     className="text-[10px] px-1.5 py-0.5 rounded"
-                    style={{ background: 'hsl(36 14% 90%)', color: MUTED }}
+                    style={{ background: 'hsl(220 14% 90%)', color: MUTED }}
                   >
                     {check.category}
                   </span>

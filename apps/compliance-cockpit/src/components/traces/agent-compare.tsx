@@ -6,7 +6,7 @@ import { CheckCircle, AlertCircle, Clock, Zap, BarChart2 } from 'lucide-react'
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
-const GOLD   = 'hsl(38 20% 42%)'
+const GOLD   = 'hsl(232 56% 50%)'
 
 interface AgentStats {
   agentId: string
@@ -132,7 +132,7 @@ export function AgentCompare({ traces }: AgentCompareProps) {
                 style={{
                   borderColor: selectedIds.includes(s.agentId) ? GOLD : BORDER,
                   color:       selectedIds.includes(s.agentId) ? GOLD : MUTED,
-                  background:  selectedIds.includes(s.agentId) ? 'hsl(38 20% 46% / 0.08)' : '#fff',
+                  background:  selectedIds.includes(s.agentId) ? 'hsl(232 56% 60% / 0.08)' : '#fff',
                 }}
               >
                 {s.agentId.substring(0, 8)}… <span style={{ color: MUTED }}>({s.traceCount})</span>

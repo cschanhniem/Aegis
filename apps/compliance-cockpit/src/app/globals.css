@@ -5,34 +5,34 @@
 @layer base {
   :root {
     /* Beige + black — paper-and-ink. CTAs are black on beige. */
-    --background:           42 31% 87%;   /* ~#eae3d2 warm beige */
-    --foreground:           0 0% 4%;      /* ~#0a0a0a near-black */
-    --card:                 44 38% 90%;   /* ~#f2edd8 lighter surface */
-    --card-foreground:      0 0% 4%;
-    --popover:              44 38% 90%;
-    --popover-foreground:   0 0% 4%;
-    --primary:              22 22% 24%;   /* warm espresso — was 0 0% 4% (pure black) */
-    --primary-foreground:   42 31% 92%;   /* light beige type on espresso */
-    --secondary:            42 24% 82%;
-    --secondary-foreground: 22 22% 24%;
-    --muted:                42 24% 84%;
-    --muted-foreground:     45 8% 34%;    /* smoke grey */
-    --accent:               22 22% 24%;   /* warm espresso — was 0 0% 4% */
-    --accent-foreground:    42 31% 92%;
-    --destructive:          0 50% 38%;
-    --destructive-foreground: 42 31% 87%;
-    --border:               42 14% 74%;   /* hairline that reads on beige */
-    --input:                42 14% 74%;
-    --ring:                 22 22% 24%;
+    --background:           0 0% 98%;     /* ~#FAFAFA off-white (Linear) */
+    --foreground:           220 27% 6%;   /* ~#0B0E14 ink black */
+    --card:                 0 0% 100%;    /* pure white surface */
+    --card-foreground:      220 27% 6%;
+    --popover:              0 0% 100%;
+    --popover-foreground:   220 27% 6%;
+    --primary:              232 56% 60%;   /* warm espresso — was 0 0% 4% (pure black) */
+    --primary-foreground:   0 0% 100%;
+    --secondary:            220 14% 96%;
+    --secondary-foreground: 220 27% 14%;
+    --muted:                220 14% 96%;
+    --muted-foreground:     220 10% 42%;  /* cool slate */
+    --accent:               232 56% 60%;   /* warm espresso — was 0 0% 4% */
+    --accent-foreground:    0 0% 100%;
+    --destructive:          0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border:               220 14% 91%;  /* cool gray hairline */
+    --input:                220 14% 91%;
+    --ring:                 232 56% 60%;
     --radius:               0.5rem;
     /* Sidebar-specific surfaces — slightly deeper beige */
-    --sidebar:              42 26% 83%;
-    --sidebar-active:       42 24% 78%;
+    --sidebar:              220 14% 96%;
+    --sidebar-active:       232 56% 95%;
     /* Semantic status colours used by alignment / code-shield /
        trace panels. Lightness tuned for the light scheme. */
-    --status-ok:            150 22% 32%;
-    --status-attn:          36 60% 32%;
-    --status-drift:         0 50% 38%;
+    --status-ok:            142 71% 36%;
+    --status-attn:           46 87% 47%;
+    --status-drift:           0 72% 51%;
   }
 
   /*

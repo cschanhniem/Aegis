@@ -13,8 +13,8 @@ const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(30 10% 15%)'
 const BG     = '#fff'
-const CODE_BG = 'hsl(36 14% 96%)'
-const CODE_BORDER = 'hsl(36 12% 86%)'
+const CODE_BG = 'hsl(220 14% 96%)'
+const CODE_BORDER = 'hsl(220 14% 88%)'
 const MONO = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace'
 
 type Framework = 'soc2' | 'iso27001' | 'nist-ai-rmf' | 'eu-ai-act'
@@ -200,7 +200,7 @@ export function ComplianceView() {
                   borderColor: BORDER,
                   background: active ? 'hsl(var(--sidebar-active))' : 'transparent',
                 }}
-                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'hsl(36 14% 96%)' }}
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'hsl(220 14% 96%)' }}
                 onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
               >
                 <Icon className="h-4 w-4 flex-shrink-0" style={{ color: STATUS_FG[c.status] }} />
