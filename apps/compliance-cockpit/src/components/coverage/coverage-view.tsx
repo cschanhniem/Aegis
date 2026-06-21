@@ -206,7 +206,7 @@ export function CoverageView() {
             style={{
               background: filter === f ? 'hsl(var(--accent))' : 'transparent',
               borderColor: filter === f ? BORDER : 'transparent',
-              color: TEXT,
+              color: filter === f ? 'hsl(var(--accent-foreground))' : MUTED,
             }}
           >
             {f === 'all' ? 'All nodes' : f === 'covered' ? 'Covered' : 'Open / uncovered'}

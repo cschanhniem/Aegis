@@ -186,7 +186,7 @@ export function AgentsView() {
             style={{
               background: filter === s ? 'hsl(var(--accent))' : 'transparent',
               borderColor: filter === s ? 'hsl(var(--border))' : 'transparent',
-              color: TEXT,
+              color: filter === s ? 'hsl(var(--accent-foreground))' : MUTED,
             }}
           >
             {s === 'all' ? 'All' : STATUS_STYLE[s].label}
