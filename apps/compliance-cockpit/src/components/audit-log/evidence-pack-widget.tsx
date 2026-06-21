@@ -94,16 +94,13 @@ export function EvidencePackWidget() {
             <Package className="h-3 w-3" /> SOC 2 evidence pack
           </div>
           <p className="text-[12px] leading-snug" style={{ color: MUTED }}>
-            One-shot signed bundle of every audit row + policy + tenant
-            config + integrity verdict at this moment. Auditor can verify
-            it offline with{' '}
-            <code className="font-mono" style={{ color: TEXT }}>agentguard evidence-pack verify</code>.
+            Signed snapshot for auditor handoff.
           </p>
         </div>
         <button
           onClick={downloadPack}
           disabled={downloading}
-          className="text-sm px-3 py-1.5 rounded-md inline-flex items-center gap-1.5 disabled:opacity-40 flex-shrink-0"
+          className="text-sm px-3 py-1.5 rounded-md inline-flex items-center gap-1.5 disabled:opacity-40 flex-shrink-0 whitespace-nowrap"
           style={{ background: ACCENT, color: ON_PRIM }}
         >
           {downloading ? (
