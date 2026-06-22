@@ -68,7 +68,7 @@ export function EvalPanel() {
           { label: 'Good',        value: `${thumbsUp} (${upPct}%)`,   icon: ThumbsUp,   color: GREEN },
           { label: 'Bad',         value: `${thumbsDown} (${downPct}%)`, icon: ThumbsDown, color: RED },
         ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} style={{ border: `1px solid ${BORDER}`, background: '#fff', borderRadius: '10px', padding: '14px 16px' }}>
+          <div key={label} style={{ border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', borderRadius: '10px', padding: '14px 16px' }}>
             <div className="flex items-center gap-2 mb-1">
               <Icon className="h-3.5 w-3.5" style={{ color }} />
               <span className="text-[11px] font-medium" style={{ color: MUTED }}>{label}</span>

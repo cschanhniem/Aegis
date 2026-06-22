@@ -43,7 +43,7 @@ export function BlockAlertToast({ alerts, dismissAlert }: Props) {
             key={alert.id}
             className="pointer-events-auto rounded-xl shadow-lg border overflow-hidden"
             style={{
-              background:  '#fff',
+              background: 'hsl(var(--card))',
               borderColor: 'hsl(var(--border))',
               borderLeft:  `4px solid ${style.bar}`,
               animation:   'slideInRight 0.2s ease-out',

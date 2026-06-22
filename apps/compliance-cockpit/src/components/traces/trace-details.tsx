@@ -466,7 +466,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
               </div>
               <textarea
                 className="w-full text-xs rounded-md border px-2 py-1.5 resize-none outline-none"
-                style={{ borderColor: BORDER, color: TEXT, background: '#fff' }}
+                style={{ borderColor: BORDER, color: TEXT, background: 'hsl(var(--card))' }}
                 placeholder="Optional feedback…"
                 rows={2}
                 value={feedback}

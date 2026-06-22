@@ -116,7 +116,7 @@ export function PlaygroundView() {
           {/* Examples */}
           <div
             className="rounded-xl border p-4"
-            style={{ borderColor: BORDER, background: '#fff' }}
+            style={{ borderColor: BORDER, background: 'hsl(var(--card))' }}
           >
             <p className="text-xs font-semibold mb-3" style={{ color: MUTED }}>QUICK EXAMPLES</p>
             <div className="flex flex-wrap gap-2">
@@ -136,7 +136,7 @@ export function PlaygroundView() {
           {/* Tool name */}
           <div
             className="rounded-xl border p-4 space-y-3"
-            style={{ borderColor: BORDER, background: '#fff' }}
+            style={{ borderColor: BORDER, background: 'hsl(var(--card))' }}
           >
             <div>
               <label className="block text-xs font-semibold mb-1.5" style={{ color: MUTED }}>TOOL NAME</label>
@@ -271,7 +271,7 @@ export function PlaygroundView() {
           {/* How it works mini card */}
           <div
             className="rounded-xl border p-4 text-xs space-y-2"
-            style={{ borderColor: BORDER, background: '#fff', color: MUTED }}
+            style={{ borderColor: BORDER, background: 'hsl(var(--card))', color: MUTED }}
           >
             <p className="font-semibold" style={{ color: TEXT }}>How classification works</p>
             <p>① Argument content scan — SQL, paths, shell chars, prompt injection</p>

@@ -326,7 +326,7 @@ export function SettingsView() {
             </div>
             <button
               onClick={() => { navigator.clipboard.writeText(apiKey); setKeyCopied(true); setTimeout(() => setKeyCopied(false), 2000) }}
-              style={{ padding: '7px 10px', borderRadius: '6px', border: `1px solid ${BORDER}`, background: '#fff', color: MUTED, cursor: 'pointer' }}
+              style={{ padding: '7px 10px', borderRadius: '6px', border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', color: MUTED, cursor: 'pointer' }}
               title="Copy"
             >
               {keyCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -340,7 +340,7 @@ export function SettingsView() {
             <button
               onClick={regenerateKey}
               disabled={regenerating}
-              style={{ padding: '7px 10px', borderRadius: '6px', border: `1px solid hsl(0 10% 82%)`, background: '#fff', color: 'hsl(0 14% 50%)', cursor: regenerating ? 'wait' : 'pointer', opacity: regenerating ? 0.5 : 1 }}
+              style={{ padding: '7px 10px', borderRadius: '6px', border: `1px solid hsl(0 10% 82%)`, background: 'hsl(var(--card))', color: 'hsl(0 14% 50%)', cursor: regenerating ? 'wait' : 'pointer', opacity: regenerating ? 0.5 : 1 }}
               title="Regenerate key (old key stops working)"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${regenerating ? 'animate-spin' : ''}`} />
@@ -363,7 +363,7 @@ export function SettingsView() {
             <select
               value={aiProvider}
               onChange={e => setAiProvider(e.target.value as 'openai' | 'anthropic')}
-              style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', fontSize: '13px', border: `1px solid ${BORDER}`, background: '#fff', color: TEXT, outline: 'none' }}
+              style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', fontSize: '13px', border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', color: TEXT, outline: 'none' }}
             >
               <option value="openai">OpenAI (gpt-4o-mini)</option>
               <option value="anthropic">Anthropic (claude-haiku)</option>

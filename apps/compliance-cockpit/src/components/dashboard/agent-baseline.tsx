@@ -44,7 +44,7 @@ export function AgentBaseline({ agentId }: Props) {
   const maxCount = Math.max(...(data.top_tools as any[]).map((t: any) => t.count), 1)
 
   return (
-    <div className="rounded-xl border p-4 space-y-4" style={{ borderColor: BORDER, background: '#fff' }}>
+    <div className="rounded-xl border p-4 space-y-4" style={{ borderColor: BORDER, background: 'hsl(var(--card))' }}>
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold" style={{ color: TEXT }}>Behavior Profile — last 7 days</p>
         <span className="text-[10px] font-mono px-2 py-0.5 rounded" style={{ background: 'hsl(220 14% 94%)', color: MUTED }}>{agentId}</span>

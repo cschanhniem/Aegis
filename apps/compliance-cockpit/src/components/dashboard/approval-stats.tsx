@@ -16,7 +16,7 @@ function CustomTooltip({ active, payload }: any) {
   const seg = SEGMENTS.find(s => s.key === name)
   return (
     <div style={{
-      background: '#ffffff',
+      background: 'hsl(var(--card))',
       border: `1px solid ${seg?.color ?? '#fff'}30`,
       borderRadius: 8,
       padding: '8px 14px',

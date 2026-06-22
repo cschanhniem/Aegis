@@ -71,12 +71,12 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
               {/* Step card */}
               <div
                 className="w-full rounded-lg border p-4 relative"
-                style={{ background: '#ffffff', borderColor: hasErr ? 'hsl(0 10% 84%)' : `${meta.color}40` }}
+                style={{ background: 'hsl(var(--card))', borderColor: hasErr ? 'hsl(0 10% 84%)' : `${meta.color}40` }}
               >
                 {/* Step number */}
                 <span
                   className="absolute -top-2.5 left-4 text-[10px] font-bold px-1.5 py-0.5 rounded"
-                  style={{ background: '#ffffff', color: 'hsl(var(--muted-foreground))', border: '1px solid hsl(0 0% 85%)' }}
+                  style={{ background: 'hsl(var(--card))', color: 'hsl(var(--muted-foreground))', border: '1px solid hsl(0 0% 85%)' }}
                 >
                   STEP {i + 1}
                 </span>

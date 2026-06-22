@@ -105,7 +105,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
         {/* ── Left: Step list ── */}
         <div
           className="w-48 flex-shrink-0 border-r flex flex-col"
-          style={{ borderColor: 'hsl(var(--border))', background: '#ffffff' }}
+          style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}
         >
           <div className="px-3 py-2.5 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
             <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -156,7 +156,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
           {/* Controls */}
           <div
             className="flex items-center gap-2 px-4 py-2.5 border-b"
-            style={{ borderColor: 'hsl(var(--border))', background: '#ffffff' }}
+            style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}
           >
             <button
               onClick={() => { setPlaying(false); setIdx(0) }}

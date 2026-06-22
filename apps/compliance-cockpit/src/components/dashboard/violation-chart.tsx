@@ -25,7 +25,7 @@ function CustomTooltip({ active, payload, label }: any) {
   const c = RISK_COLOR[risk] || RISK_COLOR.LOW
   return (
     <div style={{
-      background: '#ffffff',
+      background: 'hsl(var(--card))',
       border: `1px solid ${c.bar}40`,
       borderRadius: 8,
       padding: '10px 14px',

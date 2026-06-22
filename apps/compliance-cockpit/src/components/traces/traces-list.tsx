@@ -141,7 +141,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: MUTED }} />
             <input
               className="w-full rounded-md pl-8 pr-3 py-1.5 text-sm border outline-none"
-              style={{ borderColor: BORDER, background: '#fff', color: TEXT }}
+              style={{ borderColor: BORDER, background: 'hsl(var(--card))', color: TEXT }}
               placeholder="Search…"
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -173,7 +173,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
           <div className="flex items-center gap-2 pt-1">
             <select
               className="text-xs rounded-md px-2 py-1 border outline-none"
-              style={{ borderColor: BORDER, background: '#fff', color: TEXT }}
+              style={{ borderColor: BORDER, background: 'hsl(var(--card))', color: TEXT }}
               value={toolFilter}
               onChange={e => setToolFilter(e.target.value)}
             >
@@ -184,7 +184,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
 
             <select
               className="text-xs rounded-md px-2 py-1 border outline-none"
-              style={{ borderColor: BORDER, background: '#fff', color: TEXT }}
+              style={{ borderColor: BORDER, background: 'hsl(var(--card))', color: TEXT }}
               value={status}
               onChange={e => setStatus(e.target.value)}
             >
@@ -195,7 +195,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
 
             <select
               className="text-xs rounded-md px-2 py-1 border outline-none"
-              style={{ borderColor: BORDER, background: '#fff', color: TEXT }}
+              style={{ borderColor: BORDER, background: 'hsl(var(--card))', color: TEXT }}
               value={timeRange}
               onChange={e => setTimeRange(e.target.value)}
             >

@@ -237,7 +237,7 @@ export function PoliciesView() {
             rows={3}
             style={{
               width: '100%', padding: '8px 10px', borderRadius: '6px', fontSize: '13px',
-              border: `1px solid hsl(var(--border))`, background: '#fff', color: TEXT,
+              border: `1px solid hsl(var(--border))`, background: 'hsl(var(--card))', color: TEXT,
               outline: 'none', resize: 'vertical', fontFamily: 'inherit',
             }}
           />
@@ -249,7 +249,7 @@ export function PoliciesView() {
               onClick={() => { setShowGenerate(false); setGenerateDesc('') }}
               style={{
                 padding: '7px 14px', borderRadius: '6px', fontSize: '13px',
-                border: `1px solid ${BORDER}`, background: '#fff', color: MUTED, cursor: 'pointer',
+                border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', color: MUTED, cursor: 'pointer',
               }}
             >Cancel</button>
             <button
@@ -289,7 +289,7 @@ export function PoliciesView() {
                 placeholder="e.g. my-policy"
                 style={{
                   width: '100%', padding: '7px 10px', borderRadius: '6px', fontSize: '13px',
-                  border: `1px solid ${BORDER}`, background: '#fff', color: TEXT, outline: 'none',
+                  border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', color: TEXT, outline: 'none',
                 }}
               />
             </div>
@@ -300,7 +300,7 @@ export function PoliciesView() {
                 onChange={e => setForm(f => ({ ...f, risk_level: e.target.value as any }))}
                 style={{
                   width: '100%', padding: '7px 10px', borderRadius: '6px', fontSize: '13px',
-                  border: `1px solid ${BORDER}`, background: '#fff', color: TEXT, outline: 'none',
+                  border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', color: TEXT, outline: 'none',
                 }}
               >
                 <option value="LOW">LOW</option>
@@ -318,7 +318,7 @@ export function PoliciesView() {
               placeholder="Human-readable policy name"
               style={{
                 width: '100%', padding: '7px 10px', borderRadius: '6px', fontSize: '13px',
-                border: `1px solid ${BORDER}`, background: '#fff', color: TEXT, outline: 'none',
+                border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', color: TEXT, outline: 'none',
               }}
             />
           </div>
@@ -330,7 +330,7 @@ export function PoliciesView() {
               placeholder="What does this policy do?"
               style={{
                 width: '100%', padding: '7px 10px', borderRadius: '6px', fontSize: '13px',
-                border: `1px solid ${BORDER}`, background: '#fff', color: TEXT, outline: 'none',
+                border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', color: TEXT, outline: 'none',
               }}
             />
           </div>
@@ -342,7 +342,7 @@ export function PoliciesView() {
               rows={5}
               style={{
                 width: '100%', padding: '8px 10px', borderRadius: '6px', fontSize: '12px',
-                fontFamily: 'monospace', border: `1px solid ${BORDER}`, background: '#fff',
+                fontFamily: 'monospace', border: `1px solid ${BORDER}`, background: 'hsl(var(--card))',
                 color: TEXT, outline: 'none', resize: 'vertical',
               }}
             />
@@ -355,7 +355,7 @@ export function PoliciesView() {
               onClick={() => { setCreating(false); setForm(BLANK_FORM) }}
               style={{
                 padding: '7px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 500,
-                border: `1px solid ${BORDER}`, background: '#fff', color: MUTED, cursor: 'pointer',
+                border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', color: MUTED, cursor: 'pointer',
               }}
             >Cancel</button>
             <button

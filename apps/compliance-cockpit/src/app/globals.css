@@ -47,32 +47,35 @@
    */
   :root.dark,
   :root[data-theme="dark"] {
-    --background:           220 4% 8%;
-    --foreground:           42 22% 90%;
-    --card:                 220 4% 11%;
-    --card-foreground:      42 22% 90%;
-    --popover:              220 4% 11%;
-    --popover-foreground:   42 22% 90%;
-    --primary:              42 22% 90%;
-    --primary-foreground:   220 6% 10%;
-    --secondary:            220 4% 16%;
-    --secondary-foreground: 42 22% 90%;
-    --muted:                220 4% 14%;
-    --muted-foreground:     42 8% 68%;
-    --accent:               42 22% 90%;
-    --accent-foreground:    220 6% 10%;
-    --destructive:          0 50% 56%;
-    --destructive-foreground: 220 6% 10%;
-    --border:               220 4% 22%;
-    --input:                220 4% 22%;
-    --ring:                 42 22% 90%;
-    --sidebar:              220 4% 10%;
-    --sidebar-active:       220 4% 16%;
-    /* Lift status colours toward the foreground in dark mode so
-       small score values stay legible on a near-black surface. */
-    --status-ok:            150 30% 60%;
-    --status-attn:          36 70% 60%;
-    --status-drift:         0 65% 62%;
+    /* Pure monochrome dark — inverts the light palette. White is now
+       the brand, black is the surface. Same rule: only chromatic
+       accents are semantic status pills. */
+    --background:           0 0% 4%;     /* near-pure-black */
+    --foreground:           0 0% 98%;    /* near-pure-white */
+    --card:                 0 0% 8%;     /* very dark gray */
+    --card-foreground:      0 0% 98%;
+    --popover:              0 0% 8%;
+    --popover-foreground:   0 0% 98%;
+    --primary:              0 0% 98%;    /* white CTA on dark */
+    --primary-foreground:   0 0% 0%;     /* black text on white CTA */
+    --secondary:            0 0% 14%;
+    --secondary-foreground: 0 0% 98%;
+    --muted:                0 0% 12%;
+    --muted-foreground:     0 0% 62%;
+    --accent:               0 0% 98%;
+    --accent-foreground:    0 0% 0%;
+    --destructive:          0 60% 55%;   /* lifted red for dark surface */
+    --destructive-foreground: 0 0% 98%;
+    --border:               0 0% 18%;
+    --input:                0 0% 18%;
+    --ring:                 0 0% 98%;
+    --sidebar:              0 0% 6%;
+    --sidebar-active:       0 0% 14%;
+    /* Status colours lifted toward the dark foreground so small score
+       values stay legible on a near-black surface. */
+    --status-ok:            142 50% 55%;
+    --status-attn:           36 80% 60%;
+    --status-drift:           0 65% 62%;
   }
 
   /*
@@ -82,30 +85,30 @@
    */
   @media (prefers-color-scheme: dark) {
     :root:not(.light):not([data-theme="light"]) {
-      --background:           220 4% 8%;
-      --foreground:           42 22% 90%;
-      --card:                 220 4% 11%;
-      --card-foreground:      42 22% 90%;
-      --popover:              220 4% 11%;
-      --popover-foreground:   42 22% 90%;
-      --primary:              42 22% 90%;
-      --primary-foreground:   220 6% 10%;
-      --secondary:            220 4% 16%;
-      --secondary-foreground: 42 22% 90%;
-      --muted:                220 4% 14%;
-      --muted-foreground:     42 8% 68%;
-      --accent:               42 22% 90%;
-      --accent-foreground:    220 6% 10%;
-      --destructive:          0 50% 56%;
-      --destructive-foreground: 220 6% 10%;
-      --border:               220 4% 22%;
-      --input:                220 4% 22%;
-      --ring:                 42 22% 90%;
-      --sidebar:              220 4% 10%;
-      --sidebar-active:       220 4% 16%;
-      --status-ok:            150 30% 60%;
-      --status-attn:          36 70% 60%;
-      --status-drift:         0 65% 62%;
+      --background:           0 0% 4%;
+      --foreground:           0 0% 98%;
+      --card:                 0 0% 8%;
+      --card-foreground:      0 0% 98%;
+      --popover:              0 0% 8%;
+      --popover-foreground:   0 0% 98%;
+      --primary:              0 0% 98%;
+      --primary-foreground:   0 0% 0%;
+      --secondary:            0 0% 14%;
+      --secondary-foreground: 0 0% 98%;
+      --muted:                0 0% 12%;
+      --muted-foreground:     0 0% 62%;
+      --accent:               0 0% 98%;
+      --accent-foreground:    0 0% 0%;
+      --destructive:          0 60% 55%;
+      --destructive-foreground: 0 0% 98%;
+      --border:               0 0% 18%;
+      --input:                0 0% 18%;
+      --ring:                 0 0% 98%;
+      --sidebar:              0 0% 6%;
+      --sidebar-active:       0 0% 14%;
+      --status-ok:            142 50% 55%;
+      --status-attn:           36 80% 60%;
+      --status-drift:           0 65% 62%;
     }
   }
 }

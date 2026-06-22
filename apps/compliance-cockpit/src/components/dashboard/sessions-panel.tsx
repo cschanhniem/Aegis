@@ -134,7 +134,7 @@ export function SessionsPanel() {
           { label: 'Total Traces', value: fmtK(sessions.reduce((s: number, x: any) => s + (x.trace_count ?? 0), 0)), color: 'hsl(0 0% 35%)' },
           { label: 'Total Cost',   value: fmt$(sessions.reduce((s: number, x: any) => s + (x.total_cost_usd ?? 0), 0)), color: 'hsl(0 0% 35%)' },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ border: `1px solid ${BORDER}`, background: '#fff', borderRadius: '10px', padding: '14px 16px' }}>
+          <div key={label} style={{ border: `1px solid ${BORDER}`, background: 'hsl(var(--card))', borderRadius: '10px', padding: '14px 16px' }}>
             <p className="text-[11px] font-medium mb-1" style={{ color: MUTED }}>{label}</p>
             <p className="text-xl font-bold" style={{ color }}>{value}</p>
           </div>
@@ -150,7 +150,7 @@ export function SessionsPanel() {
           return (
             <div
               key={`${s.session_id}-${s.agent_id}`}
-              style={{ border: `1px solid ${isOpen ? 'hsl(0 0% 0% / 0.3)' : BORDER}`, borderRadius: '10px', padding: '12px 14px', background: '#fff', cursor: 'pointer', transition: 'border-color 0.15s' }}
+              style={{ border: `1px solid ${isOpen ? 'hsl(0 0% 0% / 0.3)' : BORDER}`, borderRadius: '10px', padding: '12px 14px', background: 'hsl(var(--card))', cursor: 'pointer', transition: 'border-color 0.15s' }}
               onClick={() => setExpanded(isOpen ? null : s.session_id)}
             >
               <div className="flex items-start justify-between gap-3">

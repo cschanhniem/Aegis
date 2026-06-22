@@ -186,7 +186,7 @@ export function PendingChecks() {
                   onClick={() => decide(check.check_id, 'block')}
                   disabled={!!loading}
                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border font-medium transition-colors disabled:opacity-40"
-                  style={{ borderColor: 'hsl(0 10% 82%)', color: 'hsl(0 14% 46%)', background: '#fff' }}
+                  style={{ borderColor: 'hsl(0 10% 82%)', color: 'hsl(0 14% 46%)', background: 'hsl(var(--card))' }}
                 >
                   <XCircle className="h-3.5 w-3.5" />
                   {loading === 'blocking' ? '…' : 'Block'}

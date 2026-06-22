@@ -78,7 +78,7 @@ export function TracesView() {
             onClick={() => handleExportCsv(traces?.traces || [])}
             disabled={!traces?.traces?.length}
             className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg border font-medium transition-colors disabled:opacity-40"
-            style={{ borderColor: 'hsl(0 0% 85%)', color: 'hsl(0 0% 25%)', background: '#fff' }}
+            style={{ borderColor: 'hsl(0 0% 85%)', color: 'hsl(0 0% 25%)', background: 'hsl(var(--card))' }}
           >
             <FileDown className="h-4 w-4" />
             Export CSV
@@ -87,7 +87,7 @@ export function TracesView() {
             onClick={() => handleExport(traces?.traces || [])}
             disabled={exporting || !traces?.traces?.length}
             className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg border font-medium transition-colors disabled:opacity-40"
-            style={{ borderColor: 'hsl(0 0% 85%)', color: 'hsl(0 0% 25%)', background: '#fff' }}
+            style={{ borderColor: 'hsl(0 0% 85%)', color: 'hsl(0 0% 25%)', background: 'hsl(var(--card))' }}
           >
             <FileDown className="h-4 w-4" />
             {exporting ? 'Generating…' : 'Export PDF'}

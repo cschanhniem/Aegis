@@ -13,7 +13,7 @@ const CONDITION_LABELS: Record<AlertCondition, string> = {
 
 const INPUT = {
   base: 'w-full rounded-md px-2.5 py-1.5 text-sm border outline-none',
-  style: { background: '#fff', borderColor: 'hsl(var(--border))', color: 'hsl(0 0% 15%)' },
+  style: { background: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', color: 'hsl(0 0% 15%)' },
 }
 
 export function AlertRules() {
@@ -218,7 +218,7 @@ export function AlertRules() {
         <button
           onClick={add}
           className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md border transition-colors"
-          style={{ borderColor: 'hsl(0 0% 85%)', color: 'hsl(0 0% 45%)', background: '#fff' }}
+          style={{ borderColor: 'hsl(0 0% 85%)', color: 'hsl(0 0% 45%)', background: 'hsl(var(--card))' }}
         >
           <Plus className="h-3.5 w-3.5" /> Add Rule
         </button>
