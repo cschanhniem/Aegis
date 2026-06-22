@@ -1,0 +1,461 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import DecisionLog from '@/components/DecisionLog.astro';
+import Icon from '@/components/Icon.astro';
+
+// 4 vertical packs (mirrors what the gateway ships at /api/v1/policies/packs)
+const PACKS = [
+  {
+    slug: 'payments',
+    name: 'Payments & Fintech',
+    tone: 'rgb(99, 91, 255)',
+    summary: 'PCI-DSS aware. PAN/CVV redaction, high-value review, OFAC screening.',
+    compliance: ['PCI-DSS 3.4', 'SOC 2', 'Reg E'],
+    policies: [
+      'PCI · Block PAN storage',
+      'PCI · Block CVV/CVC in arguments',
+      'High-value transfer — human approval',
+      'AML · Sanctions screening',
+      'Refunds require audit reason',
+    ],
+  },
+  {
+    slug: 'healthcare',
+    name: 'Healthcare & Life Sciences',
+    tone: 'rgb(20, 184, 166)',
+    summary: 'HIPAA-aware. PHI redaction, minimum-necessary, treatment-change approval.',
+    compliance: ['HIPAA 164.312', 'HITECH', 'GDPR Art. 9'],
+    policies: [
+      'HIPAA · Block PHI in tool arguments',
+      'HIPAA · Minimum-necessary access',
+      'HIPAA · TLS-only outbound',
+      'HIPAA · Block uncontrolled PHI exports',
+      'HIPAA · Treatment changes require approval',
+    ],
+  },
+  {
+    slug: 'finance',
+    name: 'Banking & Capital Markets',
+    tone: 'rgb(245, 158, 11)',
+    summary: 'BSA / AML / SOX. KYC enforcement, cross-border review, sanctions block.',
+    compliance: ['BSA/AML', 'KYC', 'SOX 404', 'OFAC SDN'],
+    policies: [
+      'KYC · Verified counterparty required',
+      'SOX · Material change requires justification',
+      'Cross-border wire — PENDING review',
+      'BSA · CTR threshold flagged',
+      'OFAC · Sanctions list block',
+    ],
+  },
+  {
+    slug: 'saas',
+    name: 'B2B SaaS & Privacy',
+    tone: 'rgb(16, 185, 129)',
+    summary: 'GDPR + CCPA + multi-tenant isolation. Erasure, scope, prod-write guards.',
+    compliance: ['GDPR Art. 17', 'CCPA', 'SOC 2 CC6.6'],
+    policies: [
+      'GDPR · Right-to-erasure is human-only',
+      'Multi-tenant isolation',
+      'No prod DB writes from agent',
+      'PII bulk export flagged',
+      'OAuth scope creep block',
+    ],
+  },
+];
+---
+<Layout
+  title="See AEGIS catch an attack — live demo"
+  description="Watch AEGIS scan a repo, understand the workflow, install a Payments pack, and block a $47,000 transfer with PCI violations — all in one scroll."
+>
+  <Header current="demo" />
+
+  <main>
+    <!-- ── HERO ─────────────────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="container container-narrow">
+        <p class="eyebrow">Live demo · ~ 90 seconds end-to-end</p>
+        <h1>From <em>git clone</em> to first blocked tool call.</h1>
+        <p class="lede">
+          Watch AEGIS scan a real payments-agent repo, extract the workflow,
+          install a Payments policy pack, and block a $47,000 transfer that
+          carries a credit card number — all on this page.
+        </p>
+        <div class="hero-cta">
+          <a href="#step-1" class="btn">Start the walkthrough ↓</a>
+          <a href="/signup" class="btn-secondary">Skip — try it on my code</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 1: SCAN ─────────────────────────────────────────────── -->
+    <section class="step" id="step-1">
+      <div class="container container-narrow">
+        <div class="step-header">
+          <span class="step-num">01</span>
+          <div>
+            <h2>Point AEGIS at your repo.</h2>
+            <p class="step-lede">
+              One CLI command. Tree-sitter parses every Python / JS / TS file
+              and finds every LLM call, every <code>@tool</code>, every
+              MCP config — even the ones imported dynamically.
+            </p>
+          </div>
+        </div>
+
+        <div class="terminal">
+          <div class="terminal-chrome">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="path">~/acme-payments</span>
+          </div>
+          <pre><code><span class="t-prompt">$</span> agentguard scan .
+
+<span class="t-muted">Scanned 8,402 source files under ~/acme-payments</span>
+<span class="t-muted">Repo: acme-payments@4.7.2  ·  Branch: main</span>
+
+<span class="t-bold">CANDIDATES:</span>
+  <span class="t-muted">KIND   CONF    FRAMEWORK    ENTRY  PATH</span>
+  import <span class="t-ok">high</span>    anthropic    yes    src/agents/billing.py
+  import <span class="t-ok">high</span>    langgraph    WF     src/orchestrator/router.py
+  import <span class="t-ok">high</span>    crewai       WF     src/crews/refunds.py
+  http   <span class="t-warn">medium</span>  openai-http         svc/legacy_proxy.py
+
+<span class="t-bold">WORKFLOW GRAPH</span> (langgraph)
+  nodes:        14 (1 entry · 11 agent · 1 router · 1 terminal)
+  edges:        19 (16 control · 3 handoff)
+  tools:        22 — stripe_charge, send_email, db_query, refund_card, …
+  <span class="t-warn">risk_signals: 3 sensitive-relays</span>
+                  db_query → send_email
+                  stripe_charge → http_post
+                  refund_card → file_write
+
+<span class="t-ok">✓ ready to instrument — run `agentguard inject` next</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 2: WORKFLOW UNDERSTANDING ──────────────────────────── -->
+    <section class="step alt" id="step-2">
+      <div class="container container-narrow">
+        <div class="step-header">
+          <span class="step-num">02</span>
+          <div>
+            <h2>AEGIS reads your workflow graph.</h2>
+            <p class="step-lede">
+              The scanner doesn't just count files — it builds the actual
+              control + handoff graph that your LangGraph / CrewAI / AutoGen
+              orchestrator runs. That's what every policy gets attached to.
+            </p>
+          </div>
+        </div>
+
+        <figure class="graph">
+          <svg viewBox="0 0 760 280" role="img" aria-label="Workflow graph extracted by AEGIS">
+            <defs>
+              <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M0 0L10 5L0 10z" fill="currentColor"/>
+              </marker>
+            </defs>
+
+            <!-- Entry -->
+            <g transform="translate(20 122)">
+              <rect width="100" height="38" rx="6" fill="var(--surface)" stroke="var(--hairline-strong)"/>
+              <text x="50" y="24" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text)" font-family="var(--font-mono)">entry</text>
+            </g>
+            <path d="M125 141 L 170 141" stroke="var(--muted)" stroke-width="1.5" fill="none" marker-end="url(#arr2)" style="color:var(--muted)"/>
+
+            <!-- Router -->
+            <g transform="translate(175 100)">
+              <rect width="120" height="82" rx="8" fill="hsl(36 25% 90%)" stroke="hsl(36 35% 60%)"/>
+              <text x="60" y="22" text-anchor="middle" font-size="11" font-weight="600" fill="hsl(36 50% 25%)" font-family="var(--font-mono)">router</text>
+              <text x="60" y="42" text-anchor="middle" font-size="10" fill="hsl(36 35% 35%)">classify_intent</text>
+              <text x="60" y="62" text-anchor="middle" font-size="9" fill="hsl(36 30% 45%)">→ 3 handoffs</text>
+            </g>
+            <path d="M298 130 Q 340 95 380 78" stroke="var(--muted)" stroke-width="1.2" fill="none" marker-end="url(#arr2)" style="color:var(--muted)"/>
+            <path d="M298 141 L 380 141" stroke="var(--muted)" stroke-width="1.2" fill="none" marker-end="url(#arr2)" style="color:var(--muted)"/>
+            <path d="M298 152 Q 340 187 380 204" stroke="var(--muted)" stroke-width="1.2" fill="none" marker-end="url(#arr2)" style="color:var(--muted)"/>
+
+            <!-- 3 agent nodes -->
+            <g transform="translate(385 56)">
+              <rect width="180" height="44" rx="6" fill="var(--surface)" stroke="var(--hairline-strong)"/>
+              <text x="14" y="20" font-size="11" font-weight="600" fill="var(--text)" font-family="var(--font-mono)">billing-agent</text>
+              <text x="14" y="36" font-size="9" fill="var(--muted)">stripe_charge · refund_card</text>
+            </g>
+            <g transform="translate(385 119)">
+              <rect width="180" height="44" rx="6" fill="var(--surface)" stroke="var(--hairline-strong)"/>
+              <text x="14" y="20" font-size="11" font-weight="600" fill="var(--text)" font-family="var(--font-mono)">support-agent</text>
+              <text x="14" y="36" font-size="9" fill="var(--muted)">send_email · db_query</text>
+            </g>
+            <g transform="translate(385 182)">
+              <rect width="180" height="44" rx="6" fill="var(--surface)" stroke="var(--hairline-strong)"/>
+              <text x="14" y="20" font-size="11" font-weight="600" fill="var(--text)" font-family="var(--font-mono)">refund-agent</text>
+              <text x="14" y="36" font-size="9" fill="var(--muted)">refund_card · db_query · file_write</text>
+            </g>
+
+            <!-- Risk signals dotted lines -->
+            <path d="M565 78 Q 620 78 620 141 Q 620 204 565 204" stroke="hsl(0 45% 50%)" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/>
+            <g transform="translate(625 130)">
+              <rect width="120" height="44" rx="6" fill="hsl(0 30% 92%)" stroke="hsl(0 35% 75%)"/>
+              <text x="14" y="20" font-size="10" font-weight="600" fill="hsl(0 50% 30%)">RISK SIGNAL</text>
+              <text x="14" y="36" font-size="9" fill="hsl(0 40% 40%)">3 sensitive relays</text>
+            </g>
+          </svg>
+          <figcaption>
+            22 tools across 3 agents. 3 risk signals AEGIS will watch automatically.
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ── STEP 3: DESCRIBE IN ENGLISH ──────────────────────────────── -->
+    <section class="step" id="step-3">
+      <div class="container container-narrow">
+        <div class="step-header">
+          <span class="step-num">03</span>
+          <div>
+            <h2>Write a policy in plain English.</h2>
+            <p class="step-lede">
+              No DSL. No JSON Schema. Type what you want — AEGIS generates a
+              policy bundle that passes the AJV self-test before it's saved.
+            </p>
+          </div>
+        </div>
+
+        <div class="describe-grid">
+          <div class="describe-input">
+            <div class="describe-label">Operator types</div>
+            <p class="describe-text">
+              "Refunds over $5,000 should always go to a human. Block any tool
+              call that includes a raw credit card number. And if the
+              counterparty country is on the OFAC list, block immediately and
+              page on-call."
+            </p>
+          </div>
+          <div class="describe-arrow" aria-hidden="true">→</div>
+          <div class="describe-output">
+            <div class="describe-label">AEGIS emits</div>
+            <pre><code><span class="t-key">{</span>
+  <span class="t-key">"id"</span>: <span class="t-str">"refund-high-value-pending"</span>,
+  <span class="t-key">"risk_level"</span>: <span class="t-str">"HIGH"</span>,
+  <span class="t-key">"decision"</span>: <span class="t-str">"pending"</span>,
+  <span class="t-key">"applies_to"</span>: [<span class="t-str">"refund_card"</span>],
+  <span class="t-key">"when"</span>: { <span class="t-key">"amount"</span>: { <span class="t-key">">"</span>: <span class="t-num">5000</span> } }
+<span class="t-key">}</span>,
+<span class="t-key">{</span>
+  <span class="t-key">"id"</span>: <span class="t-str">"pci-no-pan-in-args"</span>,
+  <span class="t-key">"risk_level"</span>: <span class="t-str">"CRITICAL"</span>,
+  <span class="t-key">"decision"</span>: <span class="t-str">"block"</span>,
+  <span class="t-key">"applies_to"</span>: [<span class="t-str">"*"</span>],
+  <span class="t-key">"match"</span>: { <span class="t-key">"pattern"</span>: <span class="t-str">"\\b([0-9][ -]?){13,19}\\b"</span> }
+<span class="t-key">}</span>,
+<span class="t-key">{</span>
+  <span class="t-key">"id"</span>: <span class="t-str">"ofac-sanctions-block"</span>,
+  <span class="t-key">"risk_level"</span>: <span class="t-str">"CRITICAL"</span>,
+  <span class="t-key">"decision"</span>: <span class="t-str">"block"</span>,
+  <span class="t-key">"applies_to"</span>: [<span class="t-str">"stripe_charge"</span>, <span class="t-str">"http_post"</span>],
+  <span class="t-key">"match"</span>: { <span class="t-key">"country"</span>: [<span class="t-str">"CU"</span>, <span class="t-str">"IR"</span>, <span class="t-str">"KP"</span>, <span class="t-str">"SY"</span>] },
+  <span class="t-key">"on_block"</span>: { <span class="t-key">"page"</span>: <span class="t-str">"oncall-secops"</span> }
+<span class="t-key">}</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 4: VERTICAL PACKS ──────────────────────────────────── -->
+    <section class="step alt" id="step-4">
+      <div class="container">
+        <div class="step-header container-narrow">
+          <span class="step-num">04</span>
+          <div>
+            <h2>Or — install a vertical pack in one click.</h2>
+            <p class="step-lede">
+              Curated bundles for regulated industries. Each pack ships with
+              5 named policies a compliance lead can defend in an audit.
+            </p>
+          </div>
+        </div>
+
+        <div class="pack-grid">
+          {PACKS.map(p => (
+            <article class="pack-card" style={`--tone:${p.tone}`}>
+              <header class="pack-head">
+                <h3>{p.name}</h3>
+                <div class="pack-tags">
+                  {p.compliance.map(c => <span class="pack-tag">{c}</span>)}
+                </div>
+              </header>
+              <p class="pack-summary">{p.summary}</p>
+              <ul class="pack-policies">
+                {p.policies.map(name => <li>{name}</li>)}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 5: LIVE BLOCK ──────────────────────────────────────── -->
+    <section class="step" id="step-5">
+      <div class="container container-narrow">
+        <div class="step-header">
+          <span class="step-num">05</span>
+          <div>
+            <h2>Then watch it work.</h2>
+            <p class="step-lede">
+              The billing agent tries to charge a card. The card number leaks
+              into the tool argument. AEGIS blocks it in under 5 ms and
+              writes the decision into the audit log.
+            </p>
+          </div>
+        </div>
+
+        <DecisionLog />
+
+        <p class="step-note">
+          The bottom row, <code>orchestrator → db_query · DROP TABLE users</code>,
+          fires the <code>sql-injection</code> default policy. The pending
+          <code>finance-bot → transfer · amount: $47,200</code> fires the Payments
+          pack's <code>high-value-transfer-review</code>. Both pages your on-call
+          via the configured destination.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── CTA ─────────────────────────────────────────────────────── -->
+    <section class="cta-strip">
+      <div class="container container-narrow">
+        <h2>Run this on your own repo.</h2>
+        <p class="muted">
+          Free tier: scan, install one pack, watch 1,000 tool calls a day. No card.
+        </p>
+        <div class="cta-buttons">
+          <a class="btn" href="/signup">Start free</a>
+          <a class="btn-secondary" href="/download">Download desktop</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+
+  <style>
+    /* ── hero ─────────────────────────────────────────── */
+    .hero { padding: 5rem 0 2.5rem; }
+    .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.4rem; }
+    .hero h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1.05; margin: 0.4rem 0 1rem; max-width: 16ch; }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero .lede { color: var(--muted); font-size: 1.1rem; margin: 0 0 1.8rem; max-width: 60ch; }
+    .hero-cta { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+    /* ── step common ─────────────────────────────────── */
+    .step { padding: 4.5rem 0; border-top: 1px solid var(--hairline); }
+    .step.alt { background: var(--surface); }
+    .step-header { display: flex; align-items: flex-start; gap: 1.2rem; margin: 0 0 2rem; }
+    .step-num {
+      font-family: var(--font-mono); font-size: 0.78rem;
+      letter-spacing: 0.08em; color: var(--accent);
+      background: hsl(var(--ring) / 0.06); padding: 0.45rem 0.7rem;
+      border-radius: 6px; line-height: 1; font-weight: 600; flex-shrink: 0; margin-top: 0.2rem;
+    }
+    .step h2 { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.15; margin: 0 0 0.6rem; max-width: 20ch; }
+    .step-lede { color: var(--muted); font-size: 0.96rem; margin: 0; max-width: 56ch; }
+
+    /* ── terminal (step 1) ───────────────────────────── */
+    .terminal {
+      background: var(--surface); border: 1px solid var(--hairline);
+      border-radius: 10px; overflow: hidden;
+    }
+    .terminal-chrome {
+      background: hsl(36 25% 88%); padding: 0.5rem 0.7rem;
+      display: flex; align-items: center; gap: 0.4rem;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .dot.r { background: #ed6a5e; } .dot.y { background: #f4be4f; } .dot.g { background: #61c554; }
+    .terminal-chrome .path { margin-left: auto; font-family: var(--font-mono); font-size: 0.78rem; color: hsl(36 25% 35%); }
+    .terminal pre {
+      margin: 0; padding: 1.1rem 1.2rem;
+      font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.55;
+      color: var(--text); overflow-x: auto;
+      background: transparent;
+    }
+    .t-prompt { color: var(--accent); font-weight: 700; margin-right: 0.4rem; }
+    .t-muted  { color: var(--muted); }
+    .t-bold   { font-weight: 700; }
+    .t-ok     { color: hsl(140 50% 35%); font-weight: 600; }
+    .t-warn   { color: hsl(36 65% 38%); font-weight: 600; }
+
+    /* ── graph (step 2) ──────────────────────────────── */
+    .graph {
+      margin: 0; background: var(--bg); border: 1px solid var(--hairline);
+      border-radius: 12px; padding: 1.2rem;
+    }
+    .graph svg { width: 100%; height: auto; display: block; }
+    .graph figcaption { margin-top: 0.8rem; text-align: center; font-size: 0.84rem; color: var(--muted); }
+
+    /* ── describe (step 3) ───────────────────────────── */
+    .describe-grid {
+      display: grid; grid-template-columns: 1fr auto 1.4fr;
+      gap: 1.2rem; align-items: stretch;
+    }
+    .describe-input, .describe-output {
+      background: var(--surface); border: 1px solid var(--hairline);
+      border-radius: 10px; padding: 1.2rem;
+    }
+    .describe-label {
+      font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.6rem; font-weight: 500;
+    }
+    .describe-text { font-size: 0.96rem; line-height: 1.6; color: var(--text); margin: 0; }
+    .describe-arrow { align-self: center; font-size: 1.5rem; color: var(--muted); }
+    .describe-output pre { background: transparent; border: none; padding: 0; margin: 0; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.55; }
+    .t-key  { color: hsl(232 56% 45%); }
+    .t-str  { color: hsl(140 45% 32%); }
+    .t-num  { color: hsl(0 50% 45%); }
+    @media (max-width: 880px) {
+      .describe-grid { grid-template-columns: 1fr; }
+      .describe-arrow { transform: rotate(90deg); justify-self: center; }
+    }
+
+    /* ── packs (step 4) ──────────────────────────────── */
+    .pack-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem; margin-top: 1rem;
+    }
+    .pack-card {
+      background: var(--bg); border: 1px solid var(--hairline);
+      border-radius: 12px; padding: 1.3rem 1.2rem 1.1rem;
+      border-left: 4px solid var(--tone, var(--accent));
+    }
+    .pack-head h3 { font-family: var(--font-serif); font-size: 1.1rem; margin: 0 0 0.4rem; }
+    .pack-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.7rem; }
+    .pack-tag {
+      font-family: var(--font-mono); font-size: 0.7rem;
+      padding: 0.1rem 0.45rem; border-radius: 4px;
+      background: var(--surface); color: var(--muted);
+    }
+    .pack-summary { font-size: 0.86rem; color: var(--muted); margin: 0 0 0.9rem; line-height: 1.5; }
+    .pack-policies {
+      list-style: none; padding: 0; margin: 0;
+      font-size: 0.84rem; color: var(--text);
+    }
+    .pack-policies li {
+      padding: 0.32rem 0; border-top: 1px dashed var(--hairline);
+    }
+    .pack-policies li:first-child { border-top: none; }
+    .pack-policies li::before { content: "✓ "; color: var(--tone, var(--accent)); font-weight: 700; margin-right: 0.3rem; }
+
+    /* ── step 5 note ─────────────────────────────────── */
+    .step-note {
+      margin-top: 1.1rem; font-size: 0.86rem; color: var(--muted); line-height: 1.6;
+    }
+    .step-note code { font-family: var(--font-mono); font-size: 0.84em; background: var(--surface); padding: 0 0.3em; border-radius: 3px; }
+
+    /* ── CTA ─────────────────────────────────────────── */
+    .cta-strip { padding: 4.5rem 0; border-top: 1px solid var(--hairline); background: var(--surface); text-align: center; }
+    .cta-strip h2 { font-family: var(--font-serif); margin: 0 0 0.4rem; }
+    .cta-strip .muted { color: var(--muted); font-size: 0.95rem; margin: 0 0 1.3rem; }
+    .cta-buttons { display: flex; gap: 0.7rem; flex-wrap: wrap; justify-content: center; }
+  </style>
+</Layout>
