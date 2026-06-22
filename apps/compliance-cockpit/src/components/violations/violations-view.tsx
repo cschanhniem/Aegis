@@ -5,7 +5,7 @@ import { AlertTriangle, Shield } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { friendlyAgent } from '@/lib/friendly-names'
 import { traceSummary } from '@/lib/trace-summary'
-import { toolIconFor } from '@/lib/tool-icons'
+import { ToolIcon } from '@/lib/tool-icons'
 
 const TEXT   = 'hsl(var(--foreground))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -147,7 +147,6 @@ export function ViolationsView() {
                 {items.map((trace: any) => {
                   const risk = trace.safety_validation?.risk_level || 'LOW'
                   const rc = RISK_COLORS[risk] || RISK_COLORS.LOW
-                  const { Icon, color: toolColor } = toolIconFor(trace.tool_call?.tool_name)
                   return (
                     <div
                       key={trace.trace_id}
@@ -155,8 +154,8 @@ export function ViolationsView() {
                       style={{ borderColor: rc.border, background: rc.bg }}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex flex-col items-center gap-1 flex-shrink-0 mt-1">
-                          <Icon className="h-4 w-4" style={{ color: toolColor }} />
+                        <div className="flex flex-col items-center gap-1.5 flex-shrink-0 mt-0.5">
+                          <ToolIcon name={trace.tool_call?.tool_name} size={26} />
                           <span
                             className="w-1.5 h-1.5 rounded-full"
                             style={{ background: rc.text }}

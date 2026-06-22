@@ -6,7 +6,7 @@ import { CheckCircle, XCircle, Clock } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { friendlyAgent } from '@/lib/friendly-names'
 import { traceSummary } from '@/lib/trace-summary'
-import { toolIconFor } from '@/lib/tool-icons'
+import { ToolIcon } from '@/lib/tool-icons'
 import { PendingChecks } from './pending-checks'
 
 const BORDER  = 'hsl(var(--border))'
@@ -156,13 +156,12 @@ export function ApprovalsView() {
         <div className="space-y-2">
           {traces.map((trace: any) => {
             const toolName  = trace.tool_call?.tool_name || 'unknown'
-            const { Icon, color } = toolIconFor(toolName)
             const status    = trace.approval_status
             const isPending = !status
             const isApproved = status === 'APPROVED'
             const prompt    = String(trace.input_context?.prompt || '').slice(0, 80)
             const loading   = deciding[trace.trace_id]
-            const dotColor = isPending ? 'hsl(36 55% 40%)' : isApproved ? 'hsl(150 35% 32%)' : 'hsl(0 45% 38%)'
+            const dotColor = isPending ? 'hsl(var(--status-attn))' : isApproved ? 'hsl(var(--status-ok))' : 'hsl(var(--status-drift))'
 
             return (
               <div
@@ -176,8 +175,8 @@ export function ApprovalsView() {
                 <div className="flex items-start justify-between gap-4">
                   {/* Left: tool + info */}
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="flex flex-col items-center gap-1 flex-shrink-0 mt-1">
-                      <Icon className="h-4 w-4" style={{ color }} />
+                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0 mt-0.5">
+                      <ToolIcon name={toolName} size={26} />
                       <span
                         className="w-1.5 h-1.5 rounded-full"
                         style={{ background: dotColor }}

@@ -257,7 +257,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
               <div className="flex items-start gap-3">
                 {/* Leading: tool icon + status dot */}
                 <div className="flex flex-col items-center gap-1 pt-0.5 flex-shrink-0">
-                  <ToolIcon name={trace.tool_call?.tool_name} size={16} />
+                  <ToolIcon name={trace.tool_call?.tool_name} size={22} />
                   <span
                     className="w-1.5 h-1.5 rounded-full"
                     style={{ background: dotColor }}
