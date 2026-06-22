@@ -119,7 +119,7 @@ export function JudgePanel() {
       {/* Config bar */}
       <div style={{
         display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap',
-        padding: 16, borderRadius: 8, border: `1px solid ${BORDER}`, background: 'hsl(0 0% 98%)',
+        padding: 16, borderRadius: 8, border: `1px solid ${BORDER}`, background: 'hsl(var(--secondary))',
       }}>
         <div>
           <label style={{ fontSize: 12, color: MUTED, display: 'block', marginBottom: 4 }}>Provider</label>

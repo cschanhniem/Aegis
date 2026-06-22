@@ -140,7 +140,7 @@ function GlobalSearch() {
               className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
               style={{ color: TEXT }}
               onMouseDown={() => { router.push(`/traces?id=${t.trace_id}`); setOpen(false); setQuery('') }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'hsl(0 0% 95%)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'hsl(var(--secondary))')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               <div className="min-w-0 flex-1">
@@ -312,15 +312,15 @@ export function DashboardOverview() {
           href="/approvals"
           className="flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors"
           style={{
-            background: 'hsl(220 14% 96%)',
+            background: 'hsl(var(--secondary))',
             borderColor: 'hsl(220 14% 86%)',
             color: 'hsl(30 14% 25%)',
           }}
           onMouseEnter={e => (e.currentTarget.style.background = 'hsl(38 30% 92%)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'hsl(220 14% 96%)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'hsl(var(--secondary))')}
         >
           <span className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0"
-            style={{ background: 'hsl(0 0% 90%)' }}>
+            style={{ background: 'hsl(var(--secondary))' }}>
             <AlertTriangle className="h-4 w-4" style={{ color: 'hsl(30 30% 38%)' }} />
           </span>
           <p className="flex-1 text-sm font-semibold">

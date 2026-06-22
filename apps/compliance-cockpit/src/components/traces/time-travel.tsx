@@ -83,7 +83,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
     return (
       <div
         className="flex items-center justify-center rounded-lg h-64 text-sm"
-        style={{ background: 'hsl(0 0% 97%)', color: 'hsl(var(--muted-foreground))' }}
+        style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))' }}
       >
         No traces to replay
       </div>
@@ -99,7 +99,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
   return (
     <div
       className="rounded-lg border overflow-hidden"
-      style={{ background: 'hsl(0 0% 97%)', borderColor: 'hsl(var(--border))', height: 'calc(100vh - 280px)' }}
+      style={{ background: 'hsl(var(--secondary))', borderColor: 'hsl(var(--border))', height: 'calc(100vh - 280px)' }}
     >
       <div className="flex h-full">
         {/* ── Left: Step list ── */}
@@ -182,7 +182,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
               onClick={() => setPlaying(p => !p)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-colors"
               style={{
-                background: playing ? 'hsl(0 0% 92%)' : 'hsl(43 56% 42% / 0.12)',
+                background: playing ? 'hsl(var(--secondary))' : 'hsl(43 56% 42% / 0.12)',
                 color: playing ? 'hsl(var(--foreground))' : 'hsl(43 56% 38%)',
                 border: `1px solid ${playing ? 'hsl(0 0% 84%)' : 'hsl(43 56% 42% / 0.35)'}`,
               }}
@@ -236,10 +236,10 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                 </div>
                 <div className="ml-auto">
                   {hasErr
-                    ? <div className="flex items-center gap-1.5 text-xs px-2 py-1 rounded" style={{ background: 'hsl(0 10% 95%)', color: 'hsl(0 14% 46%)' }}>
+                    ? <div className="flex items-center gap-1.5 text-xs px-2 py-1 rounded" style={{ background: 'hsl(var(--status-drift) / 0.12)', color: 'hsl(0 14% 46%)' }}>
                         <AlertCircle className="h-3 w-3" /> Error
                       </div>
-                    : <div className="flex items-center gap-1.5 text-xs px-2 py-1 rounded" style={{ background: 'hsl(150 10% 93%)', color: 'hsl(150 18% 36%)' }}>
+                    : <div className="flex items-center gap-1.5 text-xs px-2 py-1 rounded" style={{ background: 'hsl(var(--status-ok) / 0.12)', color: 'hsl(150 18% 36%)' }}>
                         <CheckCircle className="h-3 w-3" /> OK
                       </div>
                   }
@@ -269,7 +269,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
                   Input Prompt
                 </p>
-                <div className="rounded-md px-3 py-2.5 text-sm break-all" style={{ background: 'hsl(0 0% 96%)', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' }}>
+                <div className="rounded-md px-3 py-2.5 text-sm break-all" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' }}>
                   {current.input_context?.prompt || '—'}
                 </div>
               </div>
@@ -280,7 +280,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                   <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     Thought Chain
                   </p>
-                  <div className="rounded-md px-3 py-2.5 text-xs italic break-all" style={{ background: 'hsl(0 0% 96%)', color: 'hsl(0 0% 45%)', border: '1px solid hsl(var(--border))' }}>
+                  <div className="rounded-md px-3 py-2.5 text-xs italic break-all" style={{ background: 'hsl(var(--secondary))', color: 'hsl(0 0% 45%)', border: '1px solid hsl(var(--border))' }}>
                     {current.thought_chain.raw_tokens}
                   </div>
                 </div>
@@ -294,7 +294,7 @@ export function TimeTravel({ traces, selectedAgent }: TimeTravelProps) {
                 <div
                   className="rounded-md px-3 py-2.5 text-xs font-mono break-all"
                   style={{
-                    background: hasErr ? 'hsl(0 10% 97%)' : 'hsl(0 0% 96%)',
+                    background: hasErr ? 'hsl(0 10% 97%)' : 'hsl(var(--secondary))',
                     color: hasErr ? 'hsl(0 14% 46%)' : 'hsl(0 0% 30%)',
                     border: `1px solid ${hasErr ? 'hsl(0 10% 88%)' : 'hsl(var(--border))'}`,
                   }}

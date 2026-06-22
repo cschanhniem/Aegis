@@ -11,7 +11,7 @@ const TEXT   = 'hsl(var(--foreground))'
 const RISK_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   CRITICAL: { bg: 'hsl(0 10% 96%)',  text: 'hsl(0 14% 42%)',  border: 'hsl(0 10% 82%)' },
   HIGH:     { bg: 'hsl(25 12% 96%)', text: 'hsl(25 18% 40%)', border: 'hsl(25 12% 82%)' },
-  MEDIUM:   { bg: 'hsl(220 14% 96%)', text: 'hsl(220 10% 42%)', border: 'hsl(220 14% 88%)' },
+  MEDIUM:   { bg: 'hsl(var(--secondary))', text: 'hsl(220 10% 42%)', border: 'hsl(220 14% 88%)' },
   LOW:      { bg: 'hsl(150 10% 96%)',text: 'hsl(150 14% 38%)',border: 'hsl(150 10% 82%)' },
 }
 
@@ -50,7 +50,7 @@ function LiveTimer({ since }: { since: string }) {
     <span
       className="text-[11px] font-mono font-medium px-1.5 py-0.5 rounded"
       style={{
-        background: isLong ? 'hsl(0 12% 95%)' : 'hsl(0 0% 94%)',
+        background: isLong ? 'hsl(0 12% 95%)' : 'hsl(var(--secondary))',
         color: isLong ? 'hsl(0 14% 46%)' : 'hsl(0 0% 0%)',
       }}
     >
@@ -138,7 +138,7 @@ export function PendingChecks() {
                   </span>
                   <span
                     className="text-[10px] px-1.5 py-0.5 rounded"
-                    style={{ background: 'hsl(220 14% 90%)', color: MUTED }}
+                    style={{ background: 'hsl(var(--secondary))', color: MUTED }}
                   >
                     {check.category}
                   </span>
@@ -158,7 +158,7 @@ export function PendingChecks() {
                 {check.arguments && Object.keys(check.arguments).length > 0 && (
                   <pre
                     className="text-[10px] rounded px-2 py-1 max-h-16 overflow-hidden"
-                    style={{ background: 'hsl(0 0% 93%)', color: MUTED }}
+                    style={{ background: 'hsl(var(--secondary))', color: MUTED }}
                   >
                     {JSON.stringify(check.arguments, null, 2).slice(0, 200)}
                   </pre>

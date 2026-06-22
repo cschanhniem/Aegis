@@ -124,7 +124,7 @@ export function ApprovalStats() {
                 </div>
               </div>
               {/* Progress bar */}
-              <div className="h-1 rounded-full overflow-hidden" style={{ background: 'hsl(36 12% 91%)' }}>
+              <div className="h-1 rounded-full overflow-hidden" style={{ background: 'hsl(var(--secondary))' }}>
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${pct}%`, background: seg.color, opacity: 0.8 }}

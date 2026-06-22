@@ -26,7 +26,7 @@ function Section({ title, icon: Icon, children, defaultOpen = true }: {
         onClick={() => setOpen(!open)}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-          padding: '12px 16px', background: 'hsl(0 0% 98%)',
+          padding: '12px 16px', background: 'hsl(var(--secondary))',
           border: 'none', cursor: 'pointer', color: TEXT,
           fontSize: 14, fontWeight: 600, textAlign: 'left',
         }}

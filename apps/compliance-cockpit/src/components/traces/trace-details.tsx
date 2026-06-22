@@ -30,13 +30,13 @@ function CollapsibleSection({
   return (
     <div
       className="rounded-lg border overflow-hidden"
-      style={{ borderColor: BORDER, background: 'hsl(0 0% 97%)' }}
+      style={{ borderColor: BORDER, background: 'hsl(var(--secondary))' }}
     >
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-2 px-4 py-3 text-left transition-colors"
         style={{ color: TEXT }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'hsl(220 14% 94%)')}
+        onMouseEnter={e => (e.currentTarget.style.background = 'hsl(var(--secondary))')}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
         <ChevronRight
@@ -150,7 +150,7 @@ function SmartDataView({ data, label }: { data: any; label?: string }) {
           onClick={() => setMode('readable')}
           className="flex items-center gap-1 px-2 py-1 rounded text-[11px] transition-colors"
           style={{
-            background: mode === 'readable' ? 'hsl(220 14% 90%)' : 'transparent',
+            background: mode === 'readable' ? 'hsl(var(--secondary))' : 'transparent',
             color: mode === 'readable' ? TEXT : MUTED,
           }}
         >
@@ -160,7 +160,7 @@ function SmartDataView({ data, label }: { data: any; label?: string }) {
           onClick={() => setMode('raw')}
           className="flex items-center gap-1 px-2 py-1 rounded text-[11px] transition-colors"
           style={{
-            background: mode === 'raw' ? 'hsl(220 14% 90%)' : 'transparent',
+            background: mode === 'raw' ? 'hsl(var(--secondary))' : 'transparent',
             color: mode === 'raw' ? TEXT : MUTED,
           }}
         >
@@ -172,7 +172,7 @@ function SmartDataView({ data, label }: { data: any; label?: string }) {
       ) : (
         <pre
           className="text-[11px] font-mono overflow-x-auto p-3 rounded-md"
-          style={{ background: 'hsl(220 14% 94%)', color: TEXT, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+          style={{ background: 'hsl(var(--secondary))', color: TEXT, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
         >
           {JSON.stringify(data, null, 2)}
         </pre>
@@ -360,7 +360,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
                 <div
                   key={i}
                   className="flex items-start gap-2 text-xs rounded-md p-2"
-                  style={{ background: 'hsl(220 14% 94%)' }}
+                  style={{ background: 'hsl(var(--secondary))' }}
                 >
                   <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{
                     background: signal.score >= 0.7 ? 'hsl(0 14% 52%)' : signal.score >= 0.4 ? 'hsl(220 10% 50%)' : 'hsl(210 14% 50%)',
@@ -398,7 +398,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
               <span className="font-mono" style={{ color: NUM_COLOR }}>{trace.observation.duration_ms}ms</span>
             </div>
             {trace.observation.error ? (
-              <div className="rounded-md p-3" style={{ background: 'hsl(0 12% 96%)', border: '1px solid hsl(0 10% 88%)' }}>
+              <div className="rounded-md p-3" style={{ background: 'hsl(var(--status-drift) / 0.10)', border: '1px solid hsl(0 10% 88%)' }}>
                 <p className="text-xs font-medium mb-1" style={{ color: 'hsl(0 14% 42%)' }}>Error</p>
                 <p className="text-xs" style={{ color: 'hsl(0 10% 35%)' }}>{trace.observation.error}</p>
               </div>

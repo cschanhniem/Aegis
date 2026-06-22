@@ -11,7 +11,7 @@ const TEXT   = 'hsl(var(--foreground))'
 
 const RISK_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   LOW:      { bg: 'hsl(150 10% 95%)', color: 'hsl(150 14% 36%)', border: 'hsl(150 10% 82%)' },
-  MEDIUM:   { bg: 'hsl(220 14% 95%)',  color: 'hsl(220 10% 36%)',  border: 'hsl(220 14% 88%)' },
+  MEDIUM:   { bg: 'hsl(var(--secondary))',  color: 'hsl(220 10% 36%)',  border: 'hsl(220 14% 88%)' },
   HIGH:     { bg: 'hsl(25 12% 95%)',  color: 'hsl(25 18% 40%)',  border: 'hsl(25 12% 82%)' },
   CRITICAL: { bg: 'hsl(0 10% 95%)',   color: 'hsl(0 14% 42%)',   border: 'hsl(0 10% 82%)' },
 }
@@ -194,17 +194,17 @@ export function PoliciesView() {
       {/* Summary chips */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm"
-          style={{ borderColor: 'hsl(150 10% 82%)', background: 'hsl(150 10% 96%)' }}>
+          style={{ borderColor: 'hsl(150 10% 82%)', background: 'hsl(var(--secondary))' }}>
           <ShieldCheck className="h-3.5 w-3.5" style={{ color: 'hsl(150 18% 40%)' }} />
           <span style={{ color: 'hsl(150 18% 34%)' }}><b>{enabled.length}</b> active</span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm"
-          style={{ borderColor: BORDER, background: 'hsl(0 0% 95%)' }}>
+          style={{ borderColor: BORDER, background: 'hsl(var(--secondary))' }}>
           <Shield className="h-3.5 w-3.5" style={{ color: MUTED }} />
           <span style={{ color: MUTED }}><b>{disabled.length}</b> disabled</span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm"
-          style={{ borderColor: 'hsl(0 10% 82%)', background: 'hsl(0 10% 96%)' }}>
+          style={{ borderColor: 'hsl(0 10% 82%)', background: 'hsl(var(--secondary))' }}>
           <ShieldAlert className="h-3.5 w-3.5" style={{ color: 'hsl(0 18% 48%)' }} />
           <span style={{ color: 'hsl(0 14% 44%)' }}>
             <b>{policies.filter((p: any) => p.enabled && (p.risk_level === 'HIGH' || p.risk_level === 'CRITICAL')).length}</b> high-risk active
@@ -216,7 +216,7 @@ export function PoliciesView() {
       {showGenerate && (
         <div style={{
           border: '1px solid hsl(38 40% 78%)',
-          background: 'hsl(38 60% 98%)',
+          background: 'hsl(var(--secondary))',
           borderRadius: '12px',
           padding: '20px',
         }}>
@@ -269,7 +269,7 @@ export function PoliciesView() {
       {creating && (
         <div style={{
           border: `1px solid hsl(0 0% 82%)`,
-          background: 'hsl(220 14% 98%)',
+          background: 'hsl(var(--secondary))',
           borderRadius: '12px',
           padding: '20px',
         }}>
@@ -397,7 +397,7 @@ export function PoliciesView() {
                 key={policy.id}
                 style={{
                   border: `1px solid ${policy.enabled ? BORDER : 'hsl(36 12% 90%)'}`,
-                  background: policy.enabled ? '#ffffff' : 'hsl(0 0% 97%)',
+                  background: policy.enabled ? '#ffffff' : 'hsl(var(--secondary))',
                   borderRadius: '10px',
                   opacity: policy.enabled ? 1 : 0.7,
                 }}
@@ -427,7 +427,7 @@ export function PoliciesView() {
                   {/* Applies to */}
                   {appliesTo && (
                     <span className="text-[10px] px-2 py-0.5 rounded hidden lg:block" style={{
-                      background: 'hsl(0 0% 93%)', color: MUTED, flexShrink: 0,
+                      background: 'hsl(var(--secondary))', color: MUTED, flexShrink: 0,
                     }}>
                       {appliesTo}
                     </span>
@@ -503,13 +503,13 @@ export function PoliciesView() {
                   <div style={{
                     borderTop: `1px solid ${BORDER}`,
                     padding: '12px 16px',
-                    background: 'hsl(0 0% 98%)',
+                    background: 'hsl(var(--secondary))',
                     borderRadius: '0 0 10px 10px',
                   }}>
                     <p className="text-[10px] font-semibold mb-2" style={{ color: MUTED }}>JSON Schema</p>
                     <pre style={{
                       fontSize: '11px', fontFamily: 'monospace', color: TEXT,
-                      background: 'hsl(0 0% 94%)', padding: '10px 12px',
+                      background: 'hsl(var(--secondary))', padding: '10px 12px',
                       borderRadius: '6px', overflow: 'auto', margin: 0,
                     }}>
                       {JSON.stringify(policy.policy_schema, null, 2)}

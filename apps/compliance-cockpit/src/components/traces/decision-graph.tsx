@@ -27,7 +27,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
     return (
       <div
         className="flex items-center justify-center rounded-lg h-64 text-sm"
-        style={{ background: 'hsl(0 0% 97%)', color: 'hsl(var(--muted-foreground))' }}
+        style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))' }}
       >
         Select a trace session to view execution flow
       </div>
@@ -38,7 +38,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
     <div
       className="rounded-lg border overflow-y-auto p-6"
       style={{
-        background: 'hsl(0 0% 97%)',
+        background: 'hsl(var(--secondary))',
         borderColor: 'hsl(var(--border))',
         maxHeight: 'calc(100vh - 280px)',
       }}
@@ -140,7 +140,7 @@ export function DecisionGraph({ agentId, traces }: DecisionGraphProps) {
         {/* End node */}
         <div
           className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase"
-          style={{ background: 'hsl(150 10% 92%)', color: 'hsl(150 18% 36%)', border: '1px solid hsl(150 10% 80%)' }}
+          style={{ background: 'hsl(var(--status-ok) / 0.12)', color: 'hsl(150 18% 36%)', border: '1px solid hsl(150 10% 80%)' }}
         >
           Complete — {sorted.length} steps
         </div>

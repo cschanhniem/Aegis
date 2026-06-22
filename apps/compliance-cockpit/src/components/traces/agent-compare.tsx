@@ -150,7 +150,7 @@ export function AgentCompare({ traces }: AgentCompareProps) {
           style={{
             gridTemplateColumns: `160px repeat(${comparing.length}, 1fr)`,
             borderColor: BORDER,
-            background: 'hsl(0 0% 97%)',
+            background: 'hsl(var(--secondary))',
           }}
         >
           <div className="px-3 py-2.5" />
@@ -224,7 +224,7 @@ export function AgentCompare({ traces }: AgentCompareProps) {
             className="grid border-b last:border-b-0"
             style={{ gridTemplateColumns: `160px repeat(${comparing.length}, 1fr)`, borderColor: BORDER }}
           >
-            <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'hsl(0 0% 97%)' }}>
+            <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'hsl(var(--secondary))' }}>
               <Icon className="h-3.5 w-3.5 flex-shrink-0" style={{ color: MUTED }} />
               <span className="text-xs font-medium" style={{ color: TEXT }}>{label}</span>
             </div>
@@ -241,7 +241,7 @@ export function AgentCompare({ traces }: AgentCompareProps) {
           className="grid"
           style={{ gridTemplateColumns: `160px repeat(${comparing.length}, 1fr)` }}
         >
-          <div className="flex items-center gap-2 px-3 py-3" style={{ background: 'hsl(0 0% 97%)' }}>
+          <div className="flex items-center gap-2 px-3 py-3" style={{ background: 'hsl(var(--secondary))' }}>
             <Zap className="h-3.5 w-3.5 flex-shrink-0" style={{ color: MUTED }} />
             <span className="text-xs font-medium" style={{ color: TEXT }}>Tools Used</span>
           </div>

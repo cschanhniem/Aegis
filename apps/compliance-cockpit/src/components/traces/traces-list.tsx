@@ -281,7 +281,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
                   {showCriticalRisk && (
                     <span
                       className="inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide mt-1"
-                      style={{ background: 'hsl(0 35% 92%)', color: 'hsl(0 45% 32%)' }}
+                      style={{ background: 'hsl(var(--status-drift) / 0.15)', color: 'hsl(0 45% 32%)' }}
                     >
                       Critical
                     </span>

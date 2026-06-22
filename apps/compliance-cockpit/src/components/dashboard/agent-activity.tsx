@@ -67,7 +67,7 @@ export function AgentActivity() {
           <div
             key={trace.trace_id}
             className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
-            style={{ background: 'hsl(0 0% 93%)' }}
+            style={{ background: 'hsl(var(--secondary))' }}
           >
             {/* Tool badge */}
             <div

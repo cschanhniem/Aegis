@@ -7,7 +7,7 @@ import type { BlockAlert } from '@/hooks/useTraceStream'
 const RISK_STYLE: Record<string, { bar: string; icon: string; badge: string }> = {
   CRITICAL: { bar: 'hsl(0 14% 46%)',   icon: 'hsl(0 14% 46%)',   badge: 'hsl(0 10% 94%)' },
   HIGH:     { bar: 'hsl(25 18% 44%)',  icon: 'hsl(25 18% 44%)',  badge: 'hsl(25 12% 94%)' },
-  MEDIUM:   { bar: 'hsl(0 0% 44%)',  icon: 'hsl(0 0% 44%)',  badge: 'hsl(0 0% 94%)' },
+  MEDIUM:   { bar: 'hsl(0 0% 44%)',  icon: 'hsl(0 0% 44%)',  badge: 'hsl(var(--secondary))' },
   LOW:      { bar: 'hsl(150 14% 40%)', icon: 'hsl(150 14% 40%)', badge: 'hsl(150 10% 94%)' },
 }
 
