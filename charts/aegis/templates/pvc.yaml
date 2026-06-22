@@ -1,0 +1,15 @@
+{{- if and (not .Values.gateway.database.dbUrl) .Values.gateway.database.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "aegis.gateway.fullname" . }}-data
+  labels: {{- include "aegis.labels" . | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: {{ .Values.gateway.database.persistence.size }}
+  {{- with .Values.gateway.database.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+{{- end }}

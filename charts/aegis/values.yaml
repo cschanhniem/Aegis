@@ -1,0 +1,107 @@
+# AEGIS — Helm values.
+#
+# Quick install:
+#   helm repo add aegis https://justin0504.github.io/Aegis/charts
+#   helm install aegis aegis/aegis -n aegis --create-namespace
+#
+# Production: set ingress.enabled=true + a real host + cert-manager
+# annotations; replace SQLite with managed Postgres via gateway.database.
+
+# ── Gateway (policy engine) ─────────────────────────────────────────────────
+gateway:
+  image:
+    repository: ghcr.io/justin0504/aegis-gateway
+    tag: ""           # defaults to .Chart.appVersion
+    pullPolicy: IfNotPresent
+
+  replicas: 1
+  port: 8080
+
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: 500m, memory: 512Mi }
+
+  # Defaults to SQLite on a PVC. Set DB_URL for managed Postgres:
+  #   database:
+  #     dbUrl: "postgres://aegis:****@postgres.host:5432/aegis"
+  database:
+    dbUrl: ""                # if blank → SQLite on /data
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: ""       # blank = cluster default
+
+  license:
+    tier: community          # community | pro | enterprise
+    key: ""                  # set when tier > community
+
+  # Optional bootstrap API key — leave blank to let the gateway
+  # auto-generate one on first start (logged to stdout).
+  apiKey: ""
+
+  service:
+    type: ClusterIP
+    annotations: {}
+
+  env: {}                    # extra env vars
+
+# ── Cockpit (Next.js dashboard) ────────────────────────────────────────────
+cockpit:
+  enabled: true
+
+  image:
+    repository: ghcr.io/justin0504/aegis-cockpit
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  replicas: 1
+  port: 3000
+
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: 500m, memory: 512Mi }
+
+  service:
+    type: ClusterIP
+    annotations: {}
+
+  env: {}
+
+# ── Ingress (optional — disabled by default) ───────────────────────────────
+ingress:
+  enabled: false
+  className: ""              # 'nginx' / 'traefik' / etc.
+  annotations: {}            # e.g. cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: aegis.local
+      paths:
+        - path: /            # → cockpit
+          service: cockpit
+        - path: /api         # → gateway
+          service: gateway
+  tls: []
+  # tls:
+  #   - hosts: [aegis.example.com]
+  #     secretName: aegis-tls
+
+# ── Service Account / RBAC ─────────────────────────────────────────────────
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# ── Pod-level security defaults ────────────────────────────────────────────
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+  readOnlyRootFilesystem: false
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

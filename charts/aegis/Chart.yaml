@@ -1,0 +1,25 @@
+apiVersion: v2
+name: aegis
+description: AEGIS — runtime safety layer for AI agents. Gateway + compliance cockpit on Kubernetes.
+type: application
+version: 0.1.0
+appVersion: "1.2.5"
+home: https://aegis.dev
+sources:
+  - https://github.com/Justin0504/Aegis
+icon: https://raw.githubusercontent.com/Justin0504/Aegis/main/apps/compliance-cockpit/public/aegis-logo.png
+maintainers:
+  - name: AEGIS
+    url: https://github.com/Justin0504/Aegis
+keywords:
+  - ai
+  - agent
+  - safety
+  - firewall
+  - compliance
+  - soc2
+  - hipaa
+  - pci
+annotations:
+  category: AI/Security
+  licenses: MIT

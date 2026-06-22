@@ -1,0 +1,87 @@
+{{- if .Values.cockpit.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aegis.cockpit.fullname" . }}
+  labels:
+    {{- include "aegis.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cockpit
+spec:
+  replicas: {{ .Values.cockpit.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "aegis.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: cockpit
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "aegis.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: cockpit
+    spec:
+      serviceAccountName: {{ include "aegis.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: cockpit
+          image: "{{ .Values.cockpit.image.repository }}:{{ default .Chart.AppVersion .Values.cockpit.image.tag }}"
+          imagePullPolicy: {{ .Values.cockpit.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.cockpit.port }}
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: GATEWAY_URL
+              value: "http://{{ include "aegis.gateway.fullname" . }}:{{ .Values.gateway.port }}"
+            {{- if .Values.gateway.apiKey }}
+            - name: GATEWAY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aegis.fullname" . }}-config
+                  key: GATEWAY_API_KEY
+            {{- end }}
+            {{- range $k, $v := .Values.cockpit.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          readinessProbe:
+            httpGet: { path: /, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources: {{- toYaml .Values.cockpit.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aegis.cockpit.fullname" . }}
+  labels:
+    {{- include "aegis.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cockpit
+  {{- with .Values.cockpit.service.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.cockpit.service.type }}
+  ports:
+    - port: {{ .Values.cockpit.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "aegis.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: cockpit
+{{- end }}

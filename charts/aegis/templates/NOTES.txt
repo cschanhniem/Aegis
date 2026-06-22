@@ -1,0 +1,54 @@
+
+AEGIS {{ .Chart.AppVersion }} installed into namespace {{ .Release.Namespace }}.
+
+Gateway:  http://{{ include "aegis.gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.gateway.port }}
+{{- if .Values.cockpit.enabled }}
+Cockpit:  http://{{ include "aegis.cockpit.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.cockpit.port }}
+{{- end }}
+
+Quick access — port-forward from your laptop:
+
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "aegis.gateway.fullname" . }} 8080:{{ .Values.gateway.port }}
+{{- if .Values.cockpit.enabled }}
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "aegis.cockpit.fullname" . }} 3000:{{ .Values.cockpit.port }}
+{{- end }}
+
+Then open:
+  Gateway   http://localhost:8080/health
+{{- if .Values.cockpit.enabled }}
+  Cockpit   http://localhost:3000
+{{- end }}
+
+{{- if not .Values.gateway.apiKey }}
+
+The gateway auto-generated a bootstrap API key on first start.
+Reveal it once:
+
+  kubectl logs -n {{ .Release.Namespace }} deploy/{{ include "aegis.gateway.fullname" . }} | grep -i 'Dashboard API key'
+
+Or fetch via the API (no auth required for the bootstrap call):
+
+  curl http://localhost:8080/api/v1/auth/key
+{{- end }}
+
+{{- if not .Values.ingress.enabled }}
+
+Expose externally — enable ingress in values.yaml:
+
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: aegis.example.com
+        paths:
+          - { path: /,    service: cockpit }
+          - { path: /api, service: gateway }
+{{- end }}
+
+Run an agent through the gateway:
+
+  pip install agentguard-aegis        # Python
+  npm i @justinnn/agentguard           # JS / TS
+
+  OPENAI_BASE_URL=http://aegis.example.com/api/v1/openai
+  AEGIS_API_KEY=<your-key>
