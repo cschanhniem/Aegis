@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { gw } from '@/lib/gateway'
 
-const TEXT  = 'hsl(0 0% 15%)'
+const TEXT  = 'hsl(var(--foreground))'
 const MUTED = 'hsl(var(--muted-foreground))'
 const BORDER = 'hsl(var(--border))'
 

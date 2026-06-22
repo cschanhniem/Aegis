@@ -9,7 +9,7 @@ import {
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 const BG     = '#fff'
 
 type Status = 'active' | 'suspended' | 'deprecated' | 'unregistered'

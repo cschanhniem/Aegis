@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 
 const RISK_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   LOW:      { bg: 'hsl(150 10% 95%)', color: 'hsl(150 14% 36%)', border: 'hsl(150 10% 82%)' },

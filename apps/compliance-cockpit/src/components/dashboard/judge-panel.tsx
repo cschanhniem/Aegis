@@ -6,7 +6,7 @@ import { gw } from '@/lib/gateway'
 import { Bot, Play, BarChart3, AlertTriangle, TrendingUp, TrendingDown, Minus, Clock, Zap } from 'lucide-react'
 
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 const BORDER = 'hsl(var(--border))'
 const ACCENT = 'hsl(36 60% 50%)'
 const GREEN  = 'hsl(142 50% 36%)'

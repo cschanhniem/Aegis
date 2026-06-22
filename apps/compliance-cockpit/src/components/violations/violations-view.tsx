@@ -7,7 +7,7 @@ import { friendlyAgent } from '@/lib/friendly-names'
 import { traceSummary } from '@/lib/trace-summary'
 import { toolIconFor } from '@/lib/tool-icons'
 
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 const MUTED  = 'hsl(var(--muted-foreground))'
 const BORDER = 'hsl(var(--border))'
 

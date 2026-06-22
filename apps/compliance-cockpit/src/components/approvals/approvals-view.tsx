@@ -11,7 +11,7 @@ import { PendingChecks } from './pending-checks'
 
 const BORDER  = 'hsl(var(--border))'
 const MUTED   = 'hsl(var(--muted-foreground))'
-const TEXT    = 'hsl(0 0% 15%)'
+const TEXT    = 'hsl(var(--foreground))'
 
 export function ApprovalsView() {
   const queryClient = useQueryClient()
@@ -117,9 +117,9 @@ export function ApprovalsView() {
                 fontWeight: active ? 600 : 400,
                 cursor: 'pointer',
                 border: 'none',
-                background: active ? '#ffffff' : 'transparent',
+                background: active ? 'hsl(var(--card))' : 'transparent',
                 color: active ? TEXT : MUTED,
-                boxShadow: active ? '0 1px 3px hsl(36 12% 80% / 0.8)' : 'none',
+                boxShadow: active ? '0 1px 3px hsl(0 0% 0% / 0.10)' : 'none',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -131,8 +131,8 @@ export function ApprovalsView() {
                 fontWeight: 600,
                 padding: '1px 5px',
                 borderRadius: '4px',
-                background: active ? 'hsl(0 0% 0% / 0.08)' : 'hsl(var(--border))',
-                color: active ? 'hsl(0 0% 0%)' : MUTED,
+                background: active ? 'hsl(var(--foreground) / 0.08)' : 'hsl(var(--border))',
+                color: active ? TEXT : MUTED,
               }}>
                 {count}
               </span>

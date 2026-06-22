@@ -6,7 +6,7 @@ import { CheckCircle, XCircle, Clock, Shield, AlertTriangle } from 'lucide-react
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 
 const RISK_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   CRITICAL: { bg: 'hsl(0 10% 96%)',  text: 'hsl(0 14% 42%)',  border: 'hsl(0 10% 82%)' },

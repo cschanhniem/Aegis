@@ -25,7 +25,7 @@ import { Sparkline } from '@/components/ui/sparkline'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 
 function StatCards({ stats }: { stats: any }) {
   const { actions, blocked, isLoading } = useSparklineSeries()

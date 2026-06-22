@@ -31,7 +31,7 @@ const TIME_OPTIONS = [
 
 const BORDER  = 'hsl(var(--border))'
 const MUTED   = 'hsl(var(--muted-foreground))'
-const TEXT    = 'hsl(0 0% 15%)'
+const TEXT    = 'hsl(var(--foreground))'
 
 function Highlight({ text, query }: { text: string; query: string }) {
   if (!query.trim()) return <>{text}</>

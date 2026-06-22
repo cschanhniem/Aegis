@@ -12,7 +12,7 @@ import { AnomalyExplanationPanel } from './anomaly-explanation-panel'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 const KEY_COLOR = 'hsl(0 0% 42%)'
 const STR_COLOR = 'hsl(150 14% 38%)'
 const NUM_COLOR = 'hsl(210 18% 44%)'

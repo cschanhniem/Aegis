@@ -6,7 +6,7 @@ import { ShieldCheck, ShieldAlert, Layers, X, Loader2, ExternalLink } from 'luci
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 const BG     = '#fff'
 
 // Colour ramp for coverage fraction. Warm light theme — pick from the

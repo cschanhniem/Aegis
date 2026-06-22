@@ -8,7 +8,7 @@ import { CheckCircle, XCircle, Loader2, Copy, Check, Eye, EyeOff, RefreshCw, Dat
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 const BG     = '#fff'
 
 const QUICK_START = `pip install agentguard-aegis

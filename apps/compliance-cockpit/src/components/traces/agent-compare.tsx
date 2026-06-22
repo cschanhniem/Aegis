@@ -5,7 +5,7 @@ import { CheckCircle, AlertCircle, Clock, Zap, BarChart2 } from 'lucide-react'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
-const TEXT   = 'hsl(0 0% 15%)'
+const TEXT   = 'hsl(var(--foreground))'
 const GOLD   = 'hsl(0 0% 0%)'
 
 interface AgentStats {
