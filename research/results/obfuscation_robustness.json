@@ -1,0 +1,106 @@
+{
+  "base64_wrap": {
+    "n_total": 3413,
+    "n_malicious": 3413,
+    "n_benign": 0,
+    "block_rate": 0.9906,
+    "fp_rate": 0.0,
+    "blocked_mal": 3381,
+    "blocked_ben": 0,
+    "time_s": 2.9
+  },
+  "case_flip": {
+    "n_total": 3413,
+    "n_malicious": 3413,
+    "n_benign": 0,
+    "block_rate": 0.9748,
+    "fp_rate": 0.0,
+    "blocked_mal": 3327,
+    "blocked_ben": 0,
+    "time_s": 3.23
+  },
+  "double_url_encode": {
+    "n_total": 3413,
+    "n_malicious": 3413,
+    "n_benign": 0,
+    "block_rate": 0.9827,
+    "fp_rate": 0.0,
+    "blocked_mal": 3354,
+    "blocked_ben": 0,
+    "time_s": 2.98
+  },
+  "hex_payload": {
+    "n_total": 3413,
+    "n_malicious": 3413,
+    "n_benign": 0,
+    "block_rate": 1.0,
+    "fp_rate": 0.0,
+    "blocked_mal": 3413,
+    "blocked_ben": 0,
+    "time_s": 2.7
+  },
+  "paraphrase_prompt": {
+    "n_total": 3413,
+    "n_malicious": 3413,
+    "n_benign": 0,
+    "block_rate": 0.9974,
+    "fp_rate": 0.0,
+    "blocked_mal": 3404,
+    "blocked_ben": 0,
+    "time_s": 3.22
+  },
+  "sql_comment_split": {
+    "n_total": 3413,
+    "n_malicious": 3413,
+    "n_benign": 0,
+    "block_rate": 0.9971,
+    "fp_rate": 0.0,
+    "blocked_mal": 3403,
+    "blocked_ben": 0,
+    "time_s": 3.34
+  },
+  "unicode_homoglyph": {
+    "n_total": 3413,
+    "n_malicious": 3413,
+    "n_benign": 0,
+    "block_rate": 0.9909,
+    "fp_rate": 0.0,
+    "blocked_mal": 3382,
+    "blocked_ben": 0,
+    "time_s": 3.54
+  },
+  "unknown": {
+    "n_total": 2112,
+    "n_malicious": 0,
+    "n_benign": 2112,
+    "block_rate": 0.0,
+    "fp_rate": 0.0,
+    "blocked_mal": 0,
+    "blocked_ben": 0,
+    "time_s": 2.19
+  },
+  "url_encode": {
+    "n_total": 3413,
+    "n_malicious": 3413,
+    "n_benign": 0,
+    "block_rate": 0.9827,
+    "fp_rate": 0.0,
+    "blocked_mal": 3354,
+    "blocked_ben": 0,
+    "time_s": 3.85
+  },
+  "whitespace_pad": {
+    "n_total": 3413,
+    "n_malicious": 3413,
+    "n_benign": 0,
+    "block_rate": 0.9865,
+    "fp_rate": 0.0,
+    "blocked_mal": 3367,
+    "blocked_ben": 0,
+    "time_s": 3.75
+  },
+  "_clean_baseline": {
+    "n_malicious": 3413,
+    "block_rate": 0.9974
+  }
+}

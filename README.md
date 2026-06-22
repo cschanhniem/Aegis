@@ -84,10 +84,25 @@ to bypass once. Intel x64, Windows, and Linux builds land in 0.2.x.</sub>
 
 ---
 
-## Quick Start — Linux, Windows, or building from source
+## Deploy in 30 seconds
 
-If you're not on macOS (or you just want the Docker / source path
-explicitly):
+<p align="center">
+  <a href="https://render.com/deploy?repo=https://github.com/Justin0504/Aegis">
+    <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" height="32"></a>
+  &nbsp;
+  <a href="https://railway.app/new/template?template=https%3A%2F%2Fgithub.com%2FJustin0504%2FAegis">
+    <img src="https://railway.app/button.svg" alt="Deploy on Railway" height="32"></a>
+  &nbsp;
+  <a href="https://fly.io/launch?from=https://github.com/Justin0504/Aegis">
+    <img src="https://fly.io/static/images/launch/launch.svg" alt="Launch on Fly.io" height="32"></a>
+  &nbsp;
+  <a href="https://cloud.digitalocean.com/apps/new?repo=https://github.com/Justin0504/Aegis/tree/main">
+    <img src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to DO" height="32"></a>
+</p>
+
+<sub>Each button reads the platform-specific config we ship (<code>render.yaml</code>, <code>railway.json</code>, <code>fly.toml</code>, <code>.do/app.yaml</code>) and stands up a public gateway + cockpit on the host's free tier in ~30 seconds. No CLI needed.</sub>
+
+## Or run it locally (one command)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash

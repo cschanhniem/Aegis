@@ -1,0 +1,86 @@
+{
+  "n_predictions_matched": 4469,
+  "n_malicious": 3413,
+  "n_benign": 1056,
+  "block_rate": 0.0067,
+  "fp_rate": 0.0606,
+  "latency_ms": {
+    "p50": 4.063,
+    "p95": 4.379,
+    "p99": 4.623
+  },
+  "total_cost_usd": 0.0,
+  "by_distribution": {
+    "in_distribution": {
+      "n_malicious": 53,
+      "n_benign": 2,
+      "block_rate": 0.2830188679245283,
+      "fp_rate": 0.0
+    },
+    "near_ood": {
+      "n_malicious": 3340,
+      "n_benign": 1054,
+      "block_rate": 0.0,
+      "fp_rate": 0.06072106261859583
+    },
+    "far_ood": {
+      "n_malicious": 20,
+      "n_benign": 0,
+      "block_rate": 0.4,
+      "fp_rate": null
+    }
+  },
+  "by_category": {
+    "sql_injection": {
+      "n": 17,
+      "block_rate": 0.0
+    },
+    "path_traversal": {
+      "n": 11,
+      "block_rate": 0.5454545454545454
+    },
+    "sensitive_file": {
+      "n": 9,
+      "block_rate": 0.6666666666666666
+    },
+    "shell_injection": {
+      "n": 11,
+      "block_rate": 0.6363636363636364
+    },
+    "prompt_injection": {
+      "n": 14,
+      "block_rate": 0.0
+    },
+    "data_exfiltration": {
+      "n": 2178,
+      "block_rate": 0.0004591368227731864
+    },
+    "uncategorized": {
+      "n": 7,
+      "block_rate": 0.2857142857142857
+    },
+    "unauthorized_action": {
+      "n": 1164,
+      "block_rate": 0.0
+    },
+    "pii_leakage": {
+      "n": 2,
+      "block_rate": 0.5
+    }
+  },
+  "method": "cascade",
+  "use_l1": false,
+  "use_l2": true,
+  "use_l3": false,
+  "l1_baseline": null,
+  "l3_baseline": null,
+  "l3_model": null,
+  "thresholds": {
+    "tau_high": 0.7,
+    "tau_low": 0.4
+  },
+  "l2_fit_n": 1056,
+  "n_test": 4469,
+  "wall_time_s": 18.362,
+  "timestamp": "20260416-161518"
+}

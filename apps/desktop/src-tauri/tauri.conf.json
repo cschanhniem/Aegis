@@ -10,6 +10,7 @@
     "frontendDist": "frontend"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "label": "main",
@@ -61,7 +62,8 @@
     "resources": {
       "../sidecar-stage/gateway-bin":   "gateway-bin",
       "../sidecar-stage/cockpit-static": "cockpit-static",
-      "../sidecar-stage/node-runtime":   "node-runtime"
+      "../sidecar-stage/node-runtime":   "node-runtime",
+      "../sidecar-stage/tools":          "tools"
     },
     "macOS": {
       "minimumSystemVersion": "11.0",

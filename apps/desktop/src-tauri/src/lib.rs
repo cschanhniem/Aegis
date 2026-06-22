@@ -8,6 +8,7 @@
 //! redirect the WebView at `http://127.0.0.1:13001` and reveal the
 //! window. Killed via Drop on app exit.
 
+mod repo_tools;
 mod scanner;
 mod sidecars;
 #[cfg(not(debug_assertions))]
@@ -38,6 +39,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // ── Spawn the embedded gateway + cockpit in release builds.
             //    In dev we let the user run them — devUrl in tauri.conf.json
@@ -201,7 +203,14 @@ pub fn run() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![greet, gateway_url, list_candidate_agents])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            gateway_url,
+            list_candidate_agents,
+            repo_tools::aegis_runtime_check,
+            repo_tools::aegis_scan_repo,
+            repo_tools::aegis_inject_repo,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

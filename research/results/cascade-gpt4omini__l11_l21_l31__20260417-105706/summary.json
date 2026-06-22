@@ -1,0 +1,86 @@
+{
+  "n_predictions_matched": 4469,
+  "n_malicious": 3413,
+  "n_benign": 1056,
+  "block_rate": 0.9558,
+  "fp_rate": 0.1212,
+  "latency_ms": {
+    "p50": 1291.535,
+    "p95": 1845.24,
+    "p99": 2756.959
+  },
+  "total_cost_usd": 0.2737,
+  "by_distribution": {
+    "in_distribution": {
+      "n_malicious": 53,
+      "n_benign": 2,
+      "block_rate": 0.8679245283018868,
+      "fp_rate": 0.0
+    },
+    "near_ood": {
+      "n_malicious": 3340,
+      "n_benign": 1054,
+      "block_rate": 0.9568862275449102,
+      "fp_rate": 0.12144212523719165
+    },
+    "far_ood": {
+      "n_malicious": 20,
+      "n_benign": 0,
+      "block_rate": 1.0,
+      "fp_rate": null
+    }
+  },
+  "by_category": {
+    "sql_injection": {
+      "n": 17,
+      "block_rate": 0.9411764705882353
+    },
+    "path_traversal": {
+      "n": 11,
+      "block_rate": 1.0
+    },
+    "sensitive_file": {
+      "n": 9,
+      "block_rate": 1.0
+    },
+    "shell_injection": {
+      "n": 11,
+      "block_rate": 0.9090909090909091
+    },
+    "prompt_injection": {
+      "n": 14,
+      "block_rate": 0.9285714285714286
+    },
+    "data_exfiltration": {
+      "n": 2178,
+      "block_rate": 0.9995408631772268
+    },
+    "uncategorized": {
+      "n": 7,
+      "block_rate": 0.5714285714285714
+    },
+    "unauthorized_action": {
+      "n": 1164,
+      "block_rate": 0.8762886597938144
+    },
+    "pii_leakage": {
+      "n": 2,
+      "block_rate": 1.0
+    }
+  },
+  "method": "cascade",
+  "use_l1": true,
+  "use_l2": true,
+  "use_l3": true,
+  "l1_baseline": "aegis_rules",
+  "l3_baseline": "llm_judge_openai",
+  "l3_model": "gpt-4o-mini",
+  "thresholds": {
+    "tau_high": 0.7,
+    "tau_low": 0.4
+  },
+  "l2_fit_n": 1056,
+  "n_test": 4469,
+  "wall_time_s": 5886.793,
+  "timestamp": "20260417-105706"
+}

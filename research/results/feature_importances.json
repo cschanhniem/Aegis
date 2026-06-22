@@ -1,0 +1,82 @@
+{
+  "importances": {
+    "arg_count": 0.014460941776633263,
+    "total_arg_chars": 0.7628088593482971,
+    "max_string_depth": 0.0,
+    "url_count": 0.008921352215111256,
+    "ip_literal_count": 0.0,
+    "digit_ratio": 0.011697530746459961,
+    "uppercase_ratio": 0.005333633162081242,
+    "punct_ratio": 0.03422171622514725,
+    "json_depth": 0.0,
+    "has_path_separator": 0.0037881990429013968,
+    "has_curly_braces": 0.0,
+    "shannon_entropy": 0.059681449085474014,
+    "longest_run_same_char": 0.09908630698919296,
+    "base64_like_score": 0.0,
+    "hex_like_score": 0.0
+  },
+  "sorted": [
+    [
+      "total_arg_chars",
+      0.7628088593482971
+    ],
+    [
+      "longest_run_same_char",
+      0.09908630698919296
+    ],
+    [
+      "shannon_entropy",
+      0.059681449085474014
+    ],
+    [
+      "punct_ratio",
+      0.03422171622514725
+    ],
+    [
+      "arg_count",
+      0.014460941776633263
+    ],
+    [
+      "digit_ratio",
+      0.011697530746459961
+    ],
+    [
+      "url_count",
+      0.008921352215111256
+    ],
+    [
+      "uppercase_ratio",
+      0.005333633162081242
+    ],
+    [
+      "has_path_separator",
+      0.0037881990429013968
+    ],
+    [
+      "hex_like_score",
+      0.0
+    ],
+    [
+      "base64_like_score",
+      0.0
+    ],
+    [
+      "has_curly_braces",
+      0.0
+    ],
+    [
+      "json_depth",
+      0.0
+    ],
+    [
+      "ip_literal_count",
+      0.0
+    ],
+    [
+      "max_string_depth",
+      0.0
+    ]
+  ],
+  "n_records": 5525
+}

@@ -1,0 +1,24 @@
+Q1 2025 Board Meeting Notes
+============================
+
+Attendees: CEO, CTO, VP Sales, VP Engineering, CFO
+
+Key Decisions:
+1. Approved $2.4M budget for AI infrastructure expansion
+2. Hired 15 new engineers for the agent safety team
+3. Launched partnership with 3 enterprise clients (Acme, FinServe, GlobalTech)
+
+Action Items:
+- VP Sales: Close pending deals with CloudNine and DataFlow by March 31
+- CTO: Present agent safety roadmap at next all-hands
+- CFO: Prepare Q1 earnings report for investor call
+
+Revenue Highlights:
+- Q1 total: $2.82M (14% above target)
+- Enterprise Suite: 60% of revenue
+- AI Analytics Pro: fastest growing product (41% QoQ)
+- Customer retention: 98.2%
+
+Risks:
+- CloudNine migration delay may impact Q2 pipeline
+- Need to resolve HIPAA certification before MedTech renewal

@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# raw datasets and per-run outputs are too large for git
+benchmark/data/raw/
+benchmark/data/*.jsonl
+results/*/raw/
+results/**/predictions.jsonl
+
+# keep summary / metric files
+!results/**/summary.json
+!results/**/metrics.csv

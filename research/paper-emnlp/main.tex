@@ -28,7 +28,7 @@
   numbers=none,
 }
 
-\title{\system: A Cost-Aware Pre-Execution Firewall\\ for Tool-Using LLM Agents}
+\title{AEGIS: No Tool Call Left Unchecked --- A Pre-Execution Firewall and Audit Layer for AI Agents}
 
 \author{Aojie Yuan \\
   University of Southern California \\
@@ -68,7 +68,7 @@ Runtime defenses face a trade-off: rule-based layers are fast ($<$1\,ms) but mis
 The key insight is that most tool calls in production are benign---cheap rules can handle them at negligible cost, while the expensive LLM judge only needs to inspect the small fraction that rules cannot resolve.
 We demonstrate three novel capabilities:
 \begin{enumerate}[nosep,leftmargin=*]
-\item \textbf{Cost-aware cascade defense.} A three-layer pipeline (rules $\to$ anomaly detection $\to$ LLM judge) that short-circuits at the cheapest confident layer.
+\item \textbf{Cost-aware cascade defense.} A three-layer pipeline (rules $\to$ XGBoost classifier $\to$ LLM judge) that short-circuits at the cheapest confident layer.
 \item \textbf{Framework-agnostic interception.} Two-line integration across 14 frameworks in Python, JavaScript, and Go.
 \item \textbf{Auditable enforcement.} Tamper-evident audit trails with Ed25519 signatures, human-in-the-loop approval workflows, and compliance reporting.
 \end{enumerate}
@@ -80,14 +80,14 @@ Figure~\ref{fig:architecture} shows the \system architecture. The SDK layer inte
 Intercepted calls are forwarded to the Gateway, which runs a three-layer cascade and returns one of three decisions: \emph{allow}, \emph{block}, or \emph{pending} (routed to human review).
 All decisions are recorded in the tamper-evident audit layer and visible in the Compliance Cockpit.
 
-\begin{figure}[t]
+\begin{figure*}[t]
     \centering
-    \includegraphics[width=\columnwidth]{../../AEGIS_ACM_CAI_/images/framework.pdf}
-    \vspace{-0.2in}
-    \caption{\system architecture. SDKs intercept tool calls across 14 frameworks. The Gateway runs a three-layer cascade (L1: rules, L2: Isolation Forest, L3: LLM judge). Pending calls route to the Compliance Cockpit for human approval.}
-    \vspace{-0.15in}
+    \includegraphics[width=0.93\textwidth]{figures/framework.pdf}
+    \vspace{-0.1in}
+    \caption{\system architecture. SDKs intercept tool calls across 14 frameworks. The Gateway runs a three-layer cascade (L1: rules, L2: XGBoost classifier, L3: LLM judge). Pending calls route to the Compliance Cockpit for human approval.}
+    \vspace{-0.1in}
     \label{fig:architecture}
-\end{figure}
+\end{figure*}
 
 \subsection{SDK Layer}
 \label{sec:sdk}

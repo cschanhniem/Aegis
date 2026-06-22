@@ -1,0 +1,76 @@
+{
+  "n_predictions_matched": 5525,
+  "n_malicious": 3413,
+  "n_benign": 2112,
+  "block_rate": 0.012,
+  "fp_rate": 0.0,
+  "latency_ms": {
+    "p50": 0.688,
+    "p95": 1.694,
+    "p99": 2.566
+  },
+  "total_cost_usd": 0.0,
+  "by_distribution": {
+    "in_distribution": {
+      "n_malicious": 53,
+      "n_benign": 4,
+      "block_rate": 0.7735849056603774,
+      "fp_rate": 0.0
+    },
+    "near_ood": {
+      "n_malicious": 3340,
+      "n_benign": 2108,
+      "block_rate": 0.0,
+      "fp_rate": 0.0
+    },
+    "far_ood": {
+      "n_malicious": 20,
+      "n_benign": 0,
+      "block_rate": 0.0,
+      "fp_rate": null
+    }
+  },
+  "by_category": {
+    "sql_injection": {
+      "n": 17,
+      "block_rate": 0.6470588235294118
+    },
+    "path_traversal": {
+      "n": 11,
+      "block_rate": 0.5454545454545454
+    },
+    "sensitive_file": {
+      "n": 9,
+      "block_rate": 0.6666666666666666
+    },
+    "shell_injection": {
+      "n": 11,
+      "block_rate": 0.6363636363636364
+    },
+    "prompt_injection": {
+      "n": 14,
+      "block_rate": 0.7142857142857143
+    },
+    "data_exfiltration": {
+      "n": 2178,
+      "block_rate": 0.0
+    },
+    "uncategorized": {
+      "n": 7,
+      "block_rate": 0.14285714285714285
+    },
+    "unauthorized_action": {
+      "n": 1164,
+      "block_rate": 0.0
+    },
+    "pii_leakage": {
+      "n": 2,
+      "block_rate": 0.0
+    }
+  },
+  "baseline": "aegis_rules",
+  "benchmark": "aegis-bench",
+  "n_records": 5525,
+  "wall_time_s": 2.898,
+  "timestamp": "20260416-173938"
+}

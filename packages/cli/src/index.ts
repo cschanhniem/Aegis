@@ -1748,4 +1748,117 @@ oc
     console.log('  Python SDK auto-patch                intercepted if AGENTGUARD_URL set\n');
   });
 
+// ── scan ───────────────────────────────────────────────────────────────────
+// Walks a repo and emits the AEGIS onboarding-format report (JSON to
+// stdout, friendly table to stderr). Defers to tools/repo-scanner/index.mjs
+// which is bundled into ./repo-scanner/ at publish time.
+program
+  .command('scan [path]')
+  .description('Scan a repo for files that import LLM/agent frameworks')
+  .option('--json',           'Emit machine-readable JSON only')
+  .option('--include-tests',  'Do not skip test files / test dirs')
+  .option('--max-files <n>',  'Cap files scanned (default 5000)', undefined)
+  .action(async (pathArg, opts) => {
+    const target = pathArg ?? process.cwd();
+    const candidates = [
+      path.join(__dirname, '..', '..', '..', 'tools', 'repo-scanner', 'index.mjs'),
+      path.join(__dirname, '..', 'repo-scanner', 'index.mjs'),
+      path.join(__dirname, 'repo-scanner', 'index.mjs'),
+    ];
+    const scanPath = candidates.find(p => { try { return fs.existsSync(p); } catch { return false; } });
+    if (!scanPath) {
+      console.error('✗ repo-scanner script not found. Reinstall agentguard-cli or run from the monorepo.');
+      process.exit(2);
+    }
+    const args: string[] = [scanPath, target];
+    if (opts.json)          args.push('--json');
+    if (opts.includeTests)  args.push('--include-tests');
+    if (opts.maxFiles)      args.push('--max-files', String(opts.maxFiles));
+    const { spawn } = await import('child_process');
+    const child = spawn(process.execPath, args, { stdio: 'inherit' });
+    child.on('exit', code => process.exit(code ?? 0));
+  });
+
+// ── inject ─────────────────────────────────────────────────────────────────
+// Inserts the AEGIS bootstrap snippet at the top of entry files. Defaults
+// to dry-run; pass --write to apply, --revert to undo.
+program
+  .command('inject')
+  .description('Insert agentguard.auto(...) at the top of entry files in a repo')
+  .option('--report <path>',  'Path to scanner report JSON')
+  .option('--file <path>',    'Single file to inject')
+  .option('--language <l>',   'python | javascript (when using --file)')
+  .option('--gateway <url>',  'Gateway URL', undefined)
+  .option('--api-key <key>',  'API key (defaults to configured key)', undefined)
+  .option('--agent-id <id>',  'Override the suggested agent id (single-file mode only)', undefined)
+  .option('--only-entry-points', 'Only inject into files where is_entry_point=true', false)
+  .option('--include-protected', 'Inject even if file already looks protected', false)
+  .option('--write',          'Apply the edits (default is dry-run)', false)
+  .option('--revert',         'Restore .aegis.bak backups for files in the report/positional list', false)
+  .action(async (opts, cmd) => {
+    const cfg = loadConfig();
+    const candidates = [
+      path.join(__dirname, '..', '..', '..', 'tools', 'codemod-inject', 'index.mjs'),
+      path.join(__dirname, '..', 'codemod-inject', 'index.mjs'),
+      path.join(__dirname, 'codemod-inject', 'index.mjs'),
+    ];
+    const injectPath = candidates.find(p => { try { return fs.existsSync(p); } catch { return false; } });
+    if (!injectPath) {
+      console.error('✗ codemod-inject script not found. Reinstall agentguard-cli or run from the monorepo.');
+      process.exit(2);
+    }
+    const args: string[] = [injectPath];
+    if (opts.report)            args.push('--report', opts.report);
+    if (opts.file)              args.push('--file', opts.file);
+    if (opts.language)          args.push('--language', opts.language);
+    args.push('--gateway', opts.gateway ?? cfg.gateway_url);
+    const apiKey = opts.apiKey ?? cfg.api_key;
+    if (apiKey)                 args.push('--api-key', apiKey);
+    if (opts.agentId)           args.push('--agent-id', opts.agentId);
+    if (opts.onlyEntryPoints)   args.push('--only-entry-points');
+    if (opts.includeProtected)  args.push('--include-protected');
+    if (opts.write)             args.push('--write');
+    if (opts.revert)            args.push('--revert');
+    // Pass through extra positional arguments (e.g. file paths for --revert)
+    for (const arg of cmd?.args ?? []) args.push(arg);
+    const { spawn } = await import('child_process');
+    const child = spawn(process.execPath, args, { stdio: 'inherit' });
+    child.on('exit', code => process.exit(code ?? 0));
+  });
+
+// ── demo ───────────────────────────────────────────────────────────────────
+// Self-contained walkthrough — drives the gateway with a realistic mix of
+// safe + risky tool calls so the Cockpit panels light up end-to-end.
+// Spawns tools/demo-agent/index.mjs (works when installed in the monorepo)
+// or falls back to the bundled copy (npm-published variant).
+program
+  .command('demo')
+  .description('Run the AEGIS demo agent against the gateway')
+  .option('--gateway <url>', 'Gateway URL', undefined)
+  .option('--api-key <key>', 'API key (defaults to configured key)', undefined)
+  .option('--count <n>',     'Number of tool calls to simulate', '12')
+  .option('--delay <ms>',    'Delay between calls in ms',       '1500')
+  .option('--agent-id <id>', 'Override the demo agent id',       undefined)
+  .action(async (opts) => {
+    const cfg     = loadConfig();
+    const gateway = opts.gateway ?? cfg.gateway_url;
+    const apiKey  = opts.apiKey  ?? cfg.api_key ?? '';
+    const candidates = [
+      path.join(__dirname, '..', '..', '..', 'tools', 'demo-agent', 'index.mjs'),
+      path.join(__dirname, '..', 'demo-agent', 'index.mjs'),
+      path.join(__dirname, 'demo-agent', 'index.mjs'),
+    ];
+    const demoPath = candidates.find(p => { try { return fs.existsSync(p); } catch { return false; } });
+    if (!demoPath) {
+      console.error('✗ demo agent script not found. Reinstall agentguard-cli or run it from the monorepo.');
+      process.exit(2);
+    }
+    const args = [demoPath, '--gateway', gateway, '--count', String(opts.count), '--delay', String(opts.delay)];
+    if (apiKey)      args.push('--api-key', apiKey);
+    if (opts.agentId) args.push('--agent-id', opts.agentId);
+    const { spawn } = await import('child_process');
+    const child = spawn(process.execPath, args, { stdio: 'inherit' });
+    child.on('exit', code => process.exit(code ?? 0));
+  });
+
 program.parse(process.argv);

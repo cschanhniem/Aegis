@@ -1,0 +1,37 @@
+[project]
+name = "aegis-research"
+version = "0.1.0"
+description = "AEGIS EMNLP research artifacts"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.6",
+    "datasets>=2.18",
+    "requests>=2.31",
+    "tqdm>=4.66",
+    "orjson>=3.9",
+    "scikit-learn>=1.4",
+    "numpy>=1.26",
+    "pandas>=2.2",
+]
+
+[project.optional-dependencies]
+llm = [
+    "anthropic>=0.39",
+    "openai>=1.40",
+]
+guard = [
+    "transformers>=4.43",
+    "torch>=2.3",
+    "accelerate>=0.30",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

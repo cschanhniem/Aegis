@@ -1,0 +1,45 @@
+# CAIS 2026 Demo Deployment — Render Blueprint
+# Deploy: Go to https://dashboard.render.com/blueprints → New Blueprint Instance
+# Point to this repo, set root to demo/cais-deploy/
+#
+# After deploy:
+# 1. Wait for gateway to be healthy
+# 2. Run: python seed_rich.py --gateway https://YOUR-GATEWAY.onrender.com
+
+services:
+  - type: web
+    name: aegis-gateway-demo
+    runtime: docker
+    dockerfilePath: ../../docker/gateway.Dockerfile
+    dockerContext: ../../
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: DB_PATH
+        value: /data/agentguard.db
+    disk:
+      name: aegis-demo-data
+      mountPath: /data
+      sizeGB: 1
+
+  - type: web
+    name: aegis-cockpit-demo
+    runtime: docker
+    dockerfilePath: ../../docker/cockpit.Dockerfile
+    dockerContext: ../../
+    plan: free
+    envVars:
+      - key: GATEWAY_URL
+        fromService:
+          type: web
+          name: aegis-gateway-demo
+          property: host
+      - key: NEXT_PUBLIC_GATEWAY_URL
+        fromService:
+          type: web
+          name: aegis-gateway-demo
+          property: hostport

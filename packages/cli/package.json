@@ -8,12 +8,22 @@
     "aegis-http-proxy": "./dist/http-proxy.js"
   },
   "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "demo-agent",
+    "repo-scanner",
+    "codemod-inject"
+  ],
   "scripts": {
-    "build": "tsc",
-    "dev": "ts-node src/index.ts"
+    "build": "tsc && node ./scripts/bundle-demo-agent.mjs",
+    "dev":   "ts-node src/index.ts",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "commander": "^12.1.0"
+  },
+  "optionalDependencies": {
+    "web-tree-sitter": "^0.20.8"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

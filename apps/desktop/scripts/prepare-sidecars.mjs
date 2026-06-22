@@ -238,4 +238,51 @@ if (!fs.existsSync(nodeBin)) {
 const version = execSync(`"${nodeBin}" --version`).toString().trim();
 log(`Staged Node ${version}`);
 
+// ── 5. repo-onboarding Node tools ─────────────────────────────────
+// tools/repo-scanner + tools/codemod-inject ship with the .app so the
+// "Choose folder…" / "Apply" buttons in the repo wizard can shell out
+// to them from src-tauri/repo_tools.rs.
+log('Staging repo-onboarding tools (scanner + injector)');
+const toolsStage = path.join(STAGE, 'tools');
+mkdirp(toolsStage);
+// Each tool may have one or more .mjs files — copy *every* .mjs in the
+// tool directory so multi-file tools (signatures.mjs alongside index.mjs)
+// keep working out of the bundle.
+//
+// The scanner ALSO needs its tree-sitter-python.wasm grammar file +
+// a tiny bundled copy of web-tree-sitter (4 files, ~270 KB) so the
+// AST detection stage works in the sealed desktop environment. If
+// either is missing the scanner falls back to regex-only — but we
+// want the desktop build to ship the better code path.
+for (const tool of ['repo-scanner', 'codemod-inject', 'demo-agent']) {
+  const srcDir = path.join(REPO_ROOT, 'tools', tool);
+  if (!fs.existsSync(srcDir)) {
+    warn(`tools/${tool}/ missing — skipping`);
+    continue;
+  }
+  const dstDir = path.join(toolsStage, tool);
+  mkdirp(dstDir);
+  for (const f of fs.readdirSync(srcDir)) {
+    if (f.endsWith('.mjs') || f.endsWith('.wasm')) {
+      copyFile(path.join(srcDir, f), path.join(dstDir, f));
+    }
+  }
+}
+
+// Vendor web-tree-sitter inside the scanner staging dir so the
+// `import 'web-tree-sitter'` inside ast-python.mjs resolves from the
+// sidecar's local node_modules without a network or npm step.
+const wtsSrc = path.join(REPO_ROOT, 'node_modules', 'web-tree-sitter');
+const wtsDst = path.join(toolsStage, 'repo-scanner', 'node_modules', 'web-tree-sitter');
+if (fs.existsSync(wtsSrc)) {
+  mkdirp(wtsDst);
+  for (const f of ['package.json', 'tree-sitter.js', 'tree-sitter.wasm', 'tree-sitter-web.d.ts']) {
+    const src = path.join(wtsSrc, f);
+    if (fs.existsSync(src)) copyFile(src, path.join(wtsDst, f));
+  }
+  log('Vendored web-tree-sitter into scanner sidecar (AST detection enabled)');
+} else {
+  warn('node_modules/web-tree-sitter missing — desktop scanner will fall back to regex');
+}
+
 log(`Sidecars staged under ${STAGE}`);

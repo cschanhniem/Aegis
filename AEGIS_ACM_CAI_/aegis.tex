@@ -1,4 +1,4 @@
-\documentclass[sigconf,nonacm]{acmart}
+\documentclass[sigconf,anonymous]{acmart}
 
 \usepackage{booktabs}
 \usepackage{graphicx}
@@ -34,17 +34,14 @@
   numbers=none,
 }
 
-\settopmatter{printacmref=false, printfolios=true}
-\renewcommand\footnotetextcopyrightpermission[1]{}
-\pagestyle{plain}
-\AtBeginDocument{\pagestyle{plain}}
+%% ACM metadata — fill in final camera-ready values
+\settopmatter{printacmref=true, printfolios=true}
 
 \begin{document}
 
-\acmConference{}{}{}
-\authorsaddresses{}
+\acmConference[CAIS '26]{ACM Conference on AI Safety}{2026}{}
 
-\title{AEGIS: A Pre-Execution Firewall for AI Agents with\\ Cost-Aware Cascade Defense}
+\title{AEGIS: No Tool Call Left Unchecked --- A Pre-Execution Firewall and Audit Layer for AI Agents}
 
 \author{Aojie Yuan}
 \affiliation{%
@@ -75,7 +72,7 @@
 
 \begin{abstract}
 AI agents increasingly execute tool calls---database queries, shell commands, file operations, and HTTP requests---yet most agent frameworks forward these calls to execution with no pre-execution mediation.
-We present \system\footnote{Open-source (MIT). Code: \url{https://github.com/Justin0504/Aegis}. Demo: \url{https://www.youtube.com/watch?v=8ebpjCMRRic}}, a pre-execution firewall and audit layer for AI agents.
+We present \system, a pre-execution firewall and audit layer for AI agents.\footnote{Open-source (MIT). Code and demo video available at \url{[anonymized for review]}.}
 \system interposes on the tool-execution path with a three-layer cost-aware cascade: (L1)~pattern-based rule scanning at sub-millisecond latency, (L2)~a supervised XGBoost classifier over 15 structural features, and (L3)~LLM-judge escalation for the few ambiguous cases that survive L2.
 To validate the system, we introduce \bench, a benchmark of 3{,}413 malicious and 2{,}112 benign tool calls drawn from four public sources spanning three distribution shifts.
 The full cascade achieves \textbf{99.9\% block rate} with 0.09\% false positives at \textbf{1.1\,ms median latency} and \textbf{\$0.05 total cost} per benchmark run---outperforming all standalone LLM judges on every metric simultaneously.
@@ -90,7 +87,7 @@ The full cascade achieves \textbf{99.9\% block rate} with 0.09\% false positives
     \centering
     \includegraphics[width=0.93\textwidth]{images/framework.pdf}
     \vspace{-0.1in}
-    \caption{\system architecture overview. The SDK layer instruments 14 agent frameworks to intercept \texttt{tool\_use} calls before execution. The Gateway runs a three-layer cascade (L1: rules, L2: Isolation Forest, L3: LLM judge). Pending calls route to the Compliance Cockpit for human review. All traces are logged to a tamper-evident audit trail with Ed25519 signatures and SHA-256 hash chaining.}
+    \caption{\system architecture overview. The SDK layer instruments 14 agent frameworks to intercept \texttt{tool\_use} calls before execution. The Gateway runs a three-layer cascade (L1: rules, L2: XGBoost classifier, L3: LLM judge). Pending calls route to the Compliance Cockpit for human review. All traces are logged to a tamper-evident audit trail with Ed25519 signatures and SHA-256 hash chaining.}
     \vspace{-0.1in}
     \label{fig:architecture}
 \end{figure*}
@@ -258,7 +255,7 @@ AEGIS-rules (L1 only) & 1.2 & 0.00 & 1 & 0.00 \\
 \vspace{-0.1in}
 \end{table}
 
-The AEGIS cascade achieves 94.1\% block rate with 0\% false positives, approaching LLM-judge recall. The 1.2\% block rate of L1-only reflects the honest out-of-distribution evaluation: L1 rules achieve 77.4\% on in-distribution attacks but 0\% on near-OOD InjecAgent attacks that use natural-language prompt injection rather than syntactic patterns (Table~\ref{tab:perdist}). This generalization gap motivates the cascade design.
+With XGBoost L2, the AEGIS cascade achieves \textbf{99.9\% block rate} at 0.09\% FP and 1.1\,ms P50---dominating all standalone LLM judges on every metric. For comparison, the unsupervised IForest variant reaches 94.1\% block at 2{,}146\,ms. The 1.2\% block rate of L1-only reflects the honest out-of-distribution evaluation: L1 rules achieve 77.4\% on in-distribution attacks but 0\% on near-OOD InjecAgent attacks that use natural-language prompt injection rather than syntactic patterns (Table~\ref{tab:perdist}). This generalization gap motivates the cascade design.
 
 \paragraph{Per-Layer Resolution.}
 Table~\ref{tab:perlayer} compares per-layer resolution between the unsupervised (IForest) and supervised (XGBoost) L2 variants. With IForest, 92.7\% of calls reach L3 because the unsupervised model cannot confidently classify most attacks. With XGBoost, L2 resolves $>$98\% of calls at $<$1\,ms, reducing L3 invocations to $<$2\%---a 46$\times$ reduction in LLM cost.
@@ -319,7 +316,7 @@ In production settings, $\ge$99\% of tool calls are benign. Under this assumptio
 Layer & \% calls & Latency & Cost/call \\
 \midrule
 L1 (rules) & 99.0+ & $<$1\,ms & \$0 \\
-L2 (IForest) & $<$1.0 & $<$10\,ms & \$0 \\
+L2 (XGBoost) & $<$1.0 & $<$10\,ms & \$0 \\
 L3 (LLM judge) & $<$0.3 & $\sim$2\,s & $\sim$\$0.001 \\
 \midrule
 \textbf{Effective avg.} & 100 & $<$\textbf{10\,ms} & $<$\textbf{\$0.00001} \\
@@ -328,7 +325,7 @@ L3 (LLM judge) & $<$0.3 & $\sim$2\,s & $\sim$\$0.001 \\
 \vspace{-0.1in}
 \end{table}
 
-This represents a \textbf{99.7\% cost reduction} compared to routing every call through an LLM judge, while maintaining 94.1\% block rate on the malicious fraction.
+This represents a \textbf{99.7\% cost reduction} compared to routing every call through an LLM judge, while maintaining 99.9\% block rate on the malicious fraction.
 
 \subsection{Adaptive Robustness}
 

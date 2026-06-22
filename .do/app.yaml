@@ -1,0 +1,43 @@
+# AEGIS — DigitalOcean App Platform 1-click deploy spec.
+#
+# Used by the "Deploy to DO" button in README. The button URL points to
+#   https://cloud.digitalocean.com/apps/new?repo=https://github.com/Justin0504/Aegis
+# and the App Platform picks this file up automatically.
+
+name: aegis
+region: nyc
+
+services:
+  - name: gateway
+    dockerfile_path: docker/gateway.Dockerfile
+    source_dir: /
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    http_port: 8080
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 15
+      period_seconds: 10
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: DB_PATH
+        value: /data/agentguard.db
+      - key: AEGIS_LICENSE_TIER
+        value: community
+
+  - name: cockpit
+    dockerfile_path: docker/cockpit.Dockerfile
+    source_dir: /
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    http_port: 3000
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: GATEWAY_URL
+        value: ${gateway.PRIVATE_URL}
+      - key: NEXT_PUBLIC_GATEWAY_URL
+        value: ${gateway.PUBLIC_URL}

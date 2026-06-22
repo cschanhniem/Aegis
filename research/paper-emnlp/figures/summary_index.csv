@@ -1,0 +1,12 @@
+run,defender,benchmark,n_records,block_rate,fp_rate,p50_ms,cost_usd,wall_time_s
+aegis_rules__aegis-bench__20260416-173938,AEGIS-rules (L1),aegis-bench,5525,0.012,0.0,0.688,0.0,2.898
+cascade-L2only__l10_l21_l30__20260416-161518,AEGIS-L2,,4469,0.0067,0.0606,4.063,0.0,18.362
+cascade-triage__l11_l21_l31__20260417-032649,AEGIS-L1+L2+L3,,4469,0.9414,0.0,2145.966,4.1808,9791.875
+keyword_blacklist__aegis-bench-obfuscated__20260415-224327,Keyword blacklist,aegis-bench-obfuscated,32829,0.0084,0.0,0.005,0.0,0.254
+keyword_blacklist__aegis-bench__20260415-224314,Keyword blacklist,aegis-bench,5525,0.0249,0.0,0.004,0.0,0.045
+llama_guard__aegis-bench__20260417-102343,Llama-Guard-3,aegis-bench,5525,0.671,0.0005,73.231,0.0,496.145
+llm_judge_anthropic__aegis-bench-500__20260417-070439,LLM-judge claude-sonnet-4-6,aegis-bench-500,500,0.9567,0.0,3829.077,1.289,1986.931
+llm_judge_anthropic__aegis-bench__20260416-171722,LLM-judge claude-haiku-4-5-20251001,aegis-bench,5525,0.9663,0.0,2211.204,5.3162,12499.039
+llm_judge_openai__aegis-bench-500__20260417-070605,LLM-judge gpt-4o,aegis-bench-500,500,0.9567,0.0,1384.909,0.6259,712.136
+llm_judge_openai__aegis-bench__20260417-041945,LLM-judge gpt-4o-mini,aegis-bench,5525,0.988,0.1188,1203.821,0.3597,7080.45
+no_defense__aegis-bench__20260415-224314,No defense,aegis-bench,5525,0.0,0.0,0.0,0.0,0.026

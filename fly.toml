@@ -1,0 +1,43 @@
+# AEGIS — Fly.io 1-click deploy spec.
+#
+# Used by:
+#   fly launch --copy-config --name aegis --region iad
+#   (or the "Deploy to Fly" button in README)
+#
+# Spins up the gateway only; the cockpit can be deployed separately
+# with `fly launch --dockerfile docker/cockpit.Dockerfile --name aegis-cockpit`.
+
+app = "aegis-gateway"
+primary_region = "iad"
+
+[build]
+  dockerfile = "docker/gateway.Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT     = "8080"
+  DB_PATH  = "/data/agentguard.db"
+  AEGIS_LICENSE_TIER = "community"
+
+[[mounts]]
+  source      = "agentguard_data"
+  destination = "/data"
+
+[http_service]
+  internal_port       = 8080
+  force_https         = true
+  auto_stop_machines  = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period   = "15s"
+    interval       = "10s"
+    method         = "GET"
+    path           = "/health"
+    timeout        = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

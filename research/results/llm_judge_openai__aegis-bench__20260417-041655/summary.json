@@ -1,0 +1,33 @@
+{
+  "n_predictions_matched": 10,
+  "n_malicious": 10,
+  "n_benign": 0,
+  "block_rate": 1.0,
+  "fp_rate": 0.0,
+  "latency_ms": {
+    "p50": 1335.763,
+    "p95": 2916.385,
+    "p99": 2916.385
+  },
+  "total_cost_usd": 0.0006,
+  "by_distribution": {
+    "in_distribution": {
+      "n_malicious": 10,
+      "n_benign": 0,
+      "block_rate": 1.0,
+      "fp_rate": null
+    }
+  },
+  "by_category": {
+    "sql_injection": {
+      "n": 10,
+      "block_rate": 1.0
+    }
+  },
+  "baseline": "llm_judge_openai",
+  "benchmark": "aegis-bench",
+  "n_records": 10,
+  "wall_time_s": 15.76,
+  "timestamp": "20260417-041655",
+  "model": "gpt-4o-mini"
+}

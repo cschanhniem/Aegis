@@ -116,11 +116,17 @@ class L2XGBoost:
         self._model.fit(X_train, y_train)
         self._fitted = True
 
+        # Extract feature importances (gain-based).
+        feat_names = encode(records[0].tool_call).names
+        importances = self._model.feature_importances_
+        self.feature_importances_ = dict(zip(feat_names, importances.tolist()))
+
         stats: dict = {
             "n_train": len(X_train),
             "n_val": len(X_val) if X_val is not None else 0,
             "n_pos_train": int(y_train.sum()),
             "n_neg_train": int((y_train == 0).sum()),
+            "feature_importances": self.feature_importances_,
         }
 
         # Calibrate thresholds on validation set.
