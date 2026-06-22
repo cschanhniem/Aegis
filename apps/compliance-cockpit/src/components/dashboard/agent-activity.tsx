@@ -1,27 +1,8 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { formatDistanceToNow } from 'date-fns'
-import { CheckCircle, AlertCircle, Globe, FileText, Database, Send, Zap } from 'lucide-react'
-
-const TOOL_ICONS: Record<string, React.ElementType> = {
-  web_search:   Globe,
-  read_file:    FileText,
-  execute_sql:  Database,
-  send_request: Send,
-}
-
-function ToolIcon({ name }: { name: string }) {
-  const Icon = TOOL_ICONS[name] || Zap
-  return <Icon className="h-3.5 w-3.5" />
-}
-
-const TOOL_COLORS: Record<string, string> = {
-  web_search:   'hsl(210 20% 48%)',
-  read_file:    'hsl(255 18% 52%)',
-  execute_sql:  'hsl(0 0% 0%)',
-  send_request: 'hsl(150 18% 44%)',
-}
+import { CheckCircle, AlertCircle } from 'lucide-react'
+import { ToolIcon } from '@/lib/tool-icons'
 
 export function AgentActivity() {
   const { data, isLoading } = useQuery({
@@ -58,7 +39,6 @@ export function AgentActivity() {
     <div className="space-y-1 overflow-y-auto max-h-72">
       {traces.slice(0, 20).map((trace: any) => {
         const toolName = trace.tool_call?.tool_name || 'unknown'
-        const color = TOOL_COLORS[toolName] || 'hsl(0 0% 50%)'
         const hasError = !!trace.observation?.error
         const durationMs = trace.observation?.duration_ms
         const prompt = trace.input_context?.prompt || ''
@@ -69,14 +49,11 @@ export function AgentActivity() {
             className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
             style={{ background: 'hsl(var(--secondary))' }}
           >
-            {/* Tool badge */}
-            <div
-              className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium flex-shrink-0"
-              style={{ background: `${color}18`, color }}
-            >
-              <ToolIcon name={toolName} />
-              <span>{toolName}</span>
-            </div>
+            {/* Tool badge — colored brand/category icon */}
+            <ToolIcon name={toolName} size={22} />
+            <span className="text-[12px] font-medium flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>
+              {toolName}
+            </span>
 
             {/* Prompt preview */}
             <span className="flex-1 text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
