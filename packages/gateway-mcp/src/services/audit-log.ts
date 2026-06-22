@@ -24,7 +24,8 @@ export type AuditAction =
   | 'admin.bulk_register'
   | 'rollback.compensate' | 'rollback.chain'
   | 'outbox.enqueue' | 'outbox.cancel' | 'outbox.fire'
-  | 'predeploy.scan';
+  | 'predeploy.scan'
+  | 'policy.pack_install';
 
 export type ResourceType =
   | 'policy' | 'approval' | 'apikey' | 'agent'

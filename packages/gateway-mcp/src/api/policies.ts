@@ -4,6 +4,7 @@ import { Logger } from 'pino';
 import { z } from 'zod';
 import { PolicyEngine } from '../policies/policy-engine';
 import { AuditLogService } from '../services/audit-log';
+import { listPacks, getPack } from '../policies/packs';
 
 const CreatePolicySchema = z.object({
   id: z.string(),
@@ -44,6 +45,46 @@ export class PolicyAPI {
   }
 
   private setupRoutes() {
+    // ── Vertical policy packs ────────────────────────────────────────────
+    // List available packs (no auth required for metadata; install does)
+    this.router.get('/packs', async (_req: Request, res: Response) => {
+      res.json({ packs: listPacks() })
+    })
+
+    // Preview a pack's policies before install
+    this.router.get('/packs/:slug', async (req: Request, res: Response) => {
+      const pack = getPack(req.params.slug)
+      if (!pack) return res.status(404).json({ error: `Unknown pack: ${req.params.slug}` })
+      res.json(pack)
+    })
+
+    // Install a pack — batch-inserts its policies as this tenant's overrides.
+    // Skip already-installed policies (matching id, same tenant) silently.
+    this.router.post('/packs/:slug/install', async (req: Request, res: Response) => {
+      const pack = getPack(req.params.slug)
+      if (!pack) return res.status(404).json({ error: `Unknown pack: ${req.params.slug}` })
+      const orgId = orgIdOf(req)
+      const existing = new Set((await this.policyEngine.getAllPolicies(orgId)).map((p: any) => p.id))
+      const created: string[] = []
+      const skipped: string[] = []
+      for (const policy of pack.policies) {
+        if (existing.has(policy.id)) { skipped.push(policy.id); continue }
+        try {
+          await this.policyEngine.addPolicy(policy as any, orgId)
+          created.push(policy.id)
+        } catch (e: any) {
+          this.logger.warn({ pack: pack.slug, policy: policy.id, err: e.message }, 'pack install: policy add failed')
+        }
+      }
+      this.auditLog?.log({
+        org_id: orgId, action: 'policy.pack_install', resource_type: 'policy',
+        resource_id: pack.slug,
+        details: { name: pack.name, created_count: created.length, skipped_count: skipped.length },
+        ip_address: req.ip,
+      })
+      res.status(201).json({ pack: pack.slug, created, skipped, total: pack.policies.length })
+    })
+
     // List policies — wildcard platform defaults + this tenant's overrides
     this.router.get('/', async (req: Request, res: Response) => {
       try {

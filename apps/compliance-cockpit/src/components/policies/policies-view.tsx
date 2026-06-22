@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Shield, ShieldAlert, ShieldCheck, Plus, Trash2, ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X, FlaskConical } from 'lucide-react'
+import { Shield, ShieldAlert, ShieldCheck, Plus, Trash2, ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X, FlaskConical, Layers, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const BORDER = 'hsl(var(--border))'
@@ -54,6 +54,9 @@ export function PoliciesView() {
   const [generateDesc, setGenerateDesc] = useState('')
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState('')
+  const [showPacks, setShowPacks] = useState(false)
+  const [installingPack, setInstallingPack] = useState<string | null>(null)
+  const [installResult, setInstallResult] = useState<{ pack: string; created: number; skipped: number } | null>(null)
 
   const { data: policies = [], isLoading } = useQuery({
     queryKey: ['policies'],
@@ -169,11 +172,25 @@ export function PoliciesView() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowPacks(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
+              background: 'transparent', color: 'hsl(var(--foreground))',
+              border: '1px solid hsl(var(--border))', cursor: 'pointer',
+            }}
+            title="Install a curated industry pack (Payments / Healthcare / etc.)"
+          >
+            <Layers className="h-3.5 w-3.5" />
+            Install pack
+          </button>
+          <button
             onClick={() => { setShowGenerate(true); setGenerateError('') }}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: 'hsl(0 0% 0% / 0.65)', color: '#fff', border: 'none', cursor: 'pointer',
+              background: 'transparent', color: 'hsl(var(--foreground))',
+              border: '1px solid hsl(var(--border))', cursor: 'pointer',
             }}
           >
             Describe
@@ -183,7 +200,8 @@ export function PoliciesView() {
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-              background: 'hsl(30 10% 25% / 0.72)', color: '#fff', border: 'none', cursor: 'pointer',
+              background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))',
+              border: 'none', cursor: 'pointer',
             }}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -522,6 +540,137 @@ export function PoliciesView() {
           })}
         </div>
       )}
+
+      {/* ── Pack install modal ──────────────────────────────────────── */}
+      {showPacks && (
+        <PackInstallModal
+          onClose={() => { setShowPacks(false); setInstallResult(null) }}
+          onInstall={async slug => {
+            setInstallingPack(slug)
+            try {
+              const res = await fetch(`/api/gateway/policies/packs/${slug}/install`, { method: 'POST' })
+              if (!res.ok) throw new Error(`HTTP ${res.status}`)
+              const data = await res.json()
+              setInstallResult({ pack: slug, created: data.created.length, skipped: data.skipped.length })
+              queryClient.invalidateQueries({ queryKey: ['policies'] })
+            } finally {
+              setInstallingPack(null)
+            }
+          }}
+          installingPack={installingPack}
+          installResult={installResult}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Pack install modal ─────────────────────────────────────────────────────
+
+function PackInstallModal({
+  onClose, onInstall, installingPack, installResult,
+}: {
+  onClose: () => void
+  onInstall: (slug: string) => Promise<void>
+  installingPack: string | null
+  installResult: { pack: string; created: number; skipped: number } | null
+}) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['policy-packs'],
+    queryFn: async () => {
+      const res = await fetch('/api/gateway/policies/packs')
+      if (!res.ok) throw new Error('Failed to load packs')
+      return res.json() as Promise<{ packs: Array<{
+        slug: string; name: string; industry: string; summary: string;
+        compliance: string[]; policy_count: number;
+      }> }>
+    },
+  })
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'hsl(0 0% 0% / 0.5)' }}
+      onClick={onClose}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        className="rounded-xl border max-w-3xl w-full max-h-[85vh] overflow-y-auto"
+        style={{ background: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
+      >
+        <div className="flex items-start justify-between px-5 pt-5 pb-3 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+          <div>
+            <h2 className="text-lg font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
+              Install a vertical policy pack
+            </h2>
+            <p className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              Curated bundles for regulated industries. Each pack installs 5 named policies you can tune individually after.
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-3">
+          {isLoading && (
+            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>Loading packs…</p>
+          )}
+          {data?.packs.map(pack => {
+            const isInstalling = installingPack === pack.slug
+            const wasJustInstalled = installResult?.pack === pack.slug
+            return (
+              <div
+                key={pack.slug}
+                className="rounded-lg border p-4 flex items-start gap-4"
+                style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--background))' }}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Layers className="h-4 w-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                    <span className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
+                      {pack.name}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded" style={{
+                      background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))',
+                    }}>
+                      {pack.policy_count} policies
+                    </span>
+                  </div>
+                  <p className="text-xs mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>{pack.summary}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {pack.compliance.map(c => (
+                      <span key={c} className="text-[10px] px-1.5 py-0.5 rounded font-mono" style={{
+                        background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))',
+                      }}>
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => onInstall(pack.slug)}
+                  disabled={isInstalling}
+                  className="flex-shrink-0 px-4 py-2 rounded-md text-xs font-medium whitespace-nowrap disabled:opacity-50 transition-opacity"
+                  style={{
+                    background: wasJustInstalled ? 'transparent' : 'hsl(var(--primary))',
+                    color: wasJustInstalled ? 'hsl(var(--status-ok))' : 'hsl(var(--primary-foreground))',
+                    border: wasJustInstalled ? '1px solid hsl(var(--status-ok) / 0.4)' : 'none',
+                  }}
+                >
+                  {isInstalling ? 'Installing…'
+                    : wasJustInstalled ? (
+                      <span className="inline-flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {installResult.created} added{installResult.skipped > 0 && `, ${installResult.skipped} existed`}
+                      </span>
+                    )
+                    : 'Install'}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
