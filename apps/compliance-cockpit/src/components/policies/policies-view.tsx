@@ -9,11 +9,12 @@ const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(var(--foreground))'
 
+// Risk badge — flat surface, only the text color carries the risk hue.
 const RISK_STYLE: Record<string, { bg: string; color: string; border: string }> = {
-  LOW:      { bg: 'hsl(150 10% 95%)', color: 'hsl(150 14% 36%)', border: 'hsl(150 10% 82%)' },
-  MEDIUM:   { bg: 'hsl(var(--secondary))',  color: 'hsl(220 10% 36%)',  border: 'hsl(220 14% 88%)' },
-  HIGH:     { bg: 'hsl(25 12% 95%)',  color: 'hsl(25 18% 40%)',  border: 'hsl(25 12% 82%)' },
-  CRITICAL: { bg: 'hsl(0 10% 95%)',   color: 'hsl(0 14% 42%)',   border: 'hsl(0 10% 82%)' },
+  LOW:      { bg: 'hsl(var(--secondary))', color: 'hsl(var(--status-ok))',     border: 'hsl(var(--border))' },
+  MEDIUM:   { bg: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', border: 'hsl(var(--border))' },
+  HIGH:     { bg: 'hsl(var(--secondary))', color: 'hsl(var(--status-attn))',   border: 'hsl(var(--border))' },
+  CRITICAL: { bg: 'hsl(var(--secondary))', color: 'hsl(var(--status-drift))',  border: 'hsl(var(--border))' },
 }
 
 const TOOL_APPLIES: Record<string, string> = {
@@ -396,10 +397,10 @@ export function PoliciesView() {
               <div
                 key={policy.id}
                 style={{
-                  border: `1px solid ${policy.enabled ? BORDER : 'hsl(36 12% 90%)'}`,
-                  background: policy.enabled ? '#ffffff' : 'hsl(var(--secondary))',
+                  border: `1px solid ${BORDER}`,
+                  background: 'hsl(var(--card))',
                   borderRadius: '10px',
-                  opacity: policy.enabled ? 1 : 0.7,
+                  opacity: policy.enabled ? 1 : 0.6,
                 }}
               >
                 {/* Row */}
