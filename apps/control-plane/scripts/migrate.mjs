@@ -4,6 +4,9 @@
  * order to DATABASE_URL, tracking applied versions in a
  * `_control_plane_migrations` table.
  *
+ * Reads .env.local then .env from the parent directory so dev can just
+ * `npm run migrate` without exporting vars.
+ *
  * Usage: node scripts/migrate.mjs
  */
 
@@ -14,9 +17,27 @@ import { fileURLToPath } from 'node:url'
 const here = path.dirname(fileURLToPath(import.meta.url))
 const migrationsDir = path.join(here, '..', 'migrations')
 
+/** Tiny .env loader — just KEY=VALUE per line, # comments, no quoting. */
+async function loadEnv(file) {
+  try {
+    const text = await fs.readFile(file, 'utf8')
+    for (const raw of text.split('\n')) {
+      const line = raw.trim()
+      if (!line || line.startsWith('#')) continue
+      const eq = line.indexOf('=')
+      if (eq < 0) continue
+      const k = line.slice(0, eq).trim()
+      const v = line.slice(eq + 1).trim().replace(/^['"]|['"]$/g, '')
+      if (!(k in process.env)) process.env[k] = v
+    }
+  } catch { /* file missing is fine */ }
+}
+await loadEnv(path.join(here, '..', '.env.local'))
+await loadEnv(path.join(here, '..', '.env'))
+
 const url = process.env.DATABASE_URL
 if (!url) {
-  console.error('DATABASE_URL is required')
+  console.error('DATABASE_URL is required (set in .env.local or env)')
   process.exit(1)
 }
 
