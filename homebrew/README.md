@@ -20,15 +20,60 @@ What you get:
 | `aegis-mcp-proxy` | MCP server proxy for Claude Desktop |
 | `aegis-http-proxy` | HTTP proxy for OpenAI-compatible SDKs |
 
-## Releasing a new version
+## First-time tap setup (one-time)
 
-1. Tag + release in this repo (e.g. `v1.1.0`).
-2. The release CI emits `agentguard-cli-1.1.0.tar.gz` containing
-   `dist/`, `package.json`, and `package-lock.json` for `npm install --production`.
-3. CI computes the SHA-256 and opens a PR against `homebrew-aegis`
-   updating `version` + `sha256` in `Formula/aegis.rb`.
-4. Merge that PR — `brew install aegis` immediately picks up the new
-   version.
+The release workflow automates everything *after* this. Do it once:
+
+1. **Create the tap repo.** It must be named `homebrew-aegis` and
+   live under the same user/org that owns AEGIS:
+
+   ```bash
+   gh repo create Justin0504/homebrew-aegis \
+     --public \
+     --description "Homebrew tap for AEGIS" \
+     --add-readme
+   ```
+
+2. **Add a release-bot PAT to AEGIS repo secrets.** Generate a
+   fine-grained PAT scoped only to `Justin0504/homebrew-aegis` with
+   `Contents: write` + `Pull requests: write`:
+
+   ```
+   GitHub → Settings → Developer settings → Personal access tokens
+       → Fine-grained tokens → Generate new token
+   ```
+
+   Then on the AEGIS repo: Settings → Secrets and variables → Actions →
+   `New repository secret`:
+
+   ```
+   Name:   HOMEBREW_TAP_PAT
+   Value:  <the PAT>
+   ```
+
+3. **Push your first formula.** Tag a release in AEGIS; the
+   `build-cli-tarball` + `update-homebrew-tap` workflow jobs run
+   automatically and PR the formula into the tap repo.
+
+## Releasing a new version (automated)
+
+```bash
+# In the AEGIS repo:
+git tag v1.1.0
+git push --tags
+```
+
+That triggers:
+
+1. **`build-cli-tarball`** in `.github/workflows/release.yml`
+   builds `packages/cli/dist`, tars it as
+   `agentguard-cli-1.1.0.tar.gz`, computes SHA-256, and attaches it
+   to the GitHub release.
+2. **`update-homebrew-tap`** copies `homebrew/aegis.rb` to
+   `Formula/aegis.rb` in the tap repo, injects the new version + SHA,
+   opens a PR.
+3. Merge the PR → `brew install aegis` picks up the new version
+   on next `brew update`.
 
 ## Testing the formula locally
 
