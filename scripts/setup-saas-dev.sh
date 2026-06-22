@@ -73,7 +73,10 @@ EOF
 ok "Wrote $CP_DIR/.env.local"
 
 step "3. Install + migrate"
-( cd "$CP_DIR" && npm install --no-audit --no-fund && npm run migrate )
+# Install at workspace ROOT so the monorepo lockfile stays in sync
+# (CI runs \`npm ci\` at root; a child-only install drifts the lockfile).
+( cd "$REPO_ROOT" && npm install --no-audit --no-fund )
+( cd "$CP_DIR" && npm run migrate )
 
 step "4. Done"
 dim "Control plane:"
