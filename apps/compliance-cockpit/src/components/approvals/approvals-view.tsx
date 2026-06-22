@@ -62,13 +62,13 @@ export function ApprovalsView() {
       </div>
 
       {/* Blocking mode — real-time pending checks (PRIMARY) */}
-      <div style={{ border: `2px solid hsl(220 14% 86%)`, borderRadius: '12px', padding: '20px 24px', background: 'hsl(0 0% 100%)' }}>
+      <div className="rounded-xl border p-5" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
         <div className="flex items-center gap-2 mb-4">
-          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'hsl(0 0% 0%)', boxShadow: '0 0 0 3px hsl(0 0% 0% / 0.2)' }} />
-          <span className="text-sm font-bold" style={{ color: 'hsl(30 14% 22%)' }}>
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'hsl(var(--foreground))' }} />
+          <span className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
             Awaiting Your Decision
           </span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: 'hsl(0 0% 92%)', color: 'hsl(0 0% 25%)' }}>
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide" style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))' }}>
             Blocking mode
           </span>
           <span className="text-[11px] ml-auto" style={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -82,23 +82,23 @@ export function ApprovalsView() {
       <div>
         <p className="text-sm font-semibold mb-3" style={{ color: TEXT }}>Trace Audit Log</p>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm" style={{ borderColor: 'hsl(220 14% 88%)', background: 'hsl(220 14% 97%)' }}>
-            <Clock className="h-3.5 w-3.5" style={{ color: 'hsl(220 10% 46%)' }} />
-            <span style={{ color: 'hsl(220 10% 36%)' }}><b>{pending.length}</b> unreviewed</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
+            <Clock className="h-3.5 w-3.5" style={{ color: 'hsl(var(--muted-foreground))' }} />
+            <span style={{ color: 'hsl(var(--foreground))' }}><b>{pending.length}</b> unreviewed</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm" style={{ borderColor: 'hsl(150 10% 82%)', background: 'hsl(150 10% 97%)' }}>
-            <CheckCircle className="h-3.5 w-3.5" style={{ color: 'hsl(150 18% 40%)' }} />
-            <span style={{ color: 'hsl(150 18% 34%)' }}><b>{approved.length}</b> approved</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
+            <CheckCircle className="h-3.5 w-3.5" style={{ color: 'hsl(var(--status-ok))' }} />
+            <span style={{ color: 'hsl(var(--foreground))' }}><b>{approved.length}</b> approved</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm" style={{ borderColor: 'hsl(0 10% 85%)', background: 'hsl(0 10% 97%)' }}>
-            <XCircle className="h-3.5 w-3.5" style={{ color: 'hsl(0 18% 50%)' }} />
-            <span style={{ color: 'hsl(0 14% 44%)' }}><b>{rejected.length}</b> rejected</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm" style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--card))' }}>
+            <XCircle className="h-3.5 w-3.5" style={{ color: 'hsl(var(--status-drift))' }} />
+            <span style={{ color: 'hsl(var(--foreground))' }}><b>{rejected.length}</b> rejected</span>
           </div>
         </div>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex items-center gap-1 p-1 rounded-lg w-fit" style={{ background: 'hsl(220 14% 92%)' }}>
+      <div className="flex items-center gap-1 p-1 rounded-lg w-fit" style={{ background: 'hsl(var(--secondary))' }}>
         {([
           { key: 'pending',  label: 'Pending',  count: pending.length  },
           { key: 'APPROVED', label: 'Approved', count: approved.length },
@@ -169,8 +169,8 @@ export function ApprovalsView() {
                 key={trace.trace_id}
                 className="rounded-lg border p-4"
                 style={{
-                  borderColor: isPending ? 'hsl(220 14% 88%)' : isApproved ? 'hsl(150 10% 82%)' : 'hsl(0 10% 85%)',
-                  background: isPending ? 'hsl(220 14% 98%)' : isApproved ? 'hsl(150 10% 97%)' : 'hsl(0 10% 98%)',
+                  borderColor: 'hsl(var(--border))',
+                  background: 'hsl(var(--card))',
                 }}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -189,9 +189,10 @@ export function ApprovalsView() {
                         <span className="text-sm font-semibold" style={{ color: TEXT }}>
                           {friendlyAgent(trace.agent_id)}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded font-medium uppercase tracking-wide" style={{
-                          background: isPending ? 'hsl(220 14% 90%)' : isApproved ? 'hsl(150 10% 90%)' : 'hsl(0 10% 90%)',
-                          color:      isPending ? 'hsl(220 10% 42%)' : isApproved ? 'hsl(150 18% 36%)' : 'hsl(0 14% 44%)',
+                        <span className="text-[10px] px-1.5 py-0.5 rounded font-medium uppercase tracking-wide border" style={{
+                          background: 'transparent',
+                          borderColor: 'hsl(var(--border))',
+                          color: isPending ? 'hsl(var(--status-attn))' : isApproved ? 'hsl(var(--status-ok))' : 'hsl(var(--status-drift))',
                         }}>
                           {isPending ? 'Pending' : status}
                         </span>

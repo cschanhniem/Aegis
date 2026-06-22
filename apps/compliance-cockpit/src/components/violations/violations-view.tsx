@@ -12,11 +12,14 @@ const MUTED  = 'hsl(var(--muted-foreground))'
 const BORDER = 'hsl(var(--border))'
 
 const RISK_LEVELS = ['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const
+// OpenAI-platform style: every row uses the same neutral --card surface
+// with the same hairline border. Risk severity reads ONLY through the
+// small text-color of the label, never through the row background.
 const RISK_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  CRITICAL: { bg: 'hsl(0 10% 97%)',  border: 'hsl(0 12% 82%)',  text: 'hsl(0 14% 42%)' },
-  HIGH:     { bg: 'hsl(0 8% 97%)',   border: 'hsl(0 10% 85%)',  text: 'hsl(0 12% 46%)' },
-  MEDIUM:   { bg: 'hsl(220 14% 97%)', border: 'hsl(0 0% 85%)', text: 'hsl(220 10% 42%)' },
-  LOW:      { bg: 'hsl(36 10% 97%)', border: BORDER,             text: MUTED },
+  CRITICAL: { bg: 'hsl(var(--card))', border: BORDER, text: 'hsl(var(--status-drift))' },
+  HIGH:     { bg: 'hsl(var(--card))', border: BORDER, text: 'hsl(var(--status-drift))' },
+  MEDIUM:   { bg: 'hsl(var(--card))', border: BORDER, text: 'hsl(var(--status-attn))' },
+  LOW:      { bg: 'hsl(var(--card))', border: BORDER, text: MUTED },
 }
 
 export function ViolationsView() {
