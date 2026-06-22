@@ -12,7 +12,7 @@ import {
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(var(--foreground))'
-const BG     = '#fff'
+const BG     = 'hsl(var(--card))'
 const CODE_BG = 'hsl(220 14% 96%)'
 const CODE_BORDER = 'hsl(220 14% 88%)'
 const MONO = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace'

@@ -7,7 +7,7 @@ import { ShieldCheck, ShieldAlert, Layers, X, Loader2, ExternalLink } from 'luci
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
 const TEXT   = 'hsl(var(--foreground))'
-const BG     = '#fff'
+const BG     = 'hsl(var(--card))'
 
 // Colour ramp for coverage fraction. Warm light theme — pick from the
 // existing palette so the page sits next to the rest of Cockpit.

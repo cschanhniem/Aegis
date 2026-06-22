@@ -446,7 +446,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
                   style={{
                     borderColor: pendingScore === 1 ? 'hsl(150 18% 44%)' : BORDER,
                     color: pendingScore === 1 ? 'hsl(150 18% 40%)' : MUTED,
-                    background: pendingScore === 1 ? 'hsl(150 18% 44% / 0.08)' : '#fff',
+                    background: pendingScore === 1 ? 'hsl(150 18% 44% / 0.08)' : 'hsl(var(--card))',
                   }}
                 >
                   <ThumbsUp className="h-3.5 w-3.5" /> Good
@@ -458,7 +458,7 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
                   style={{
                     borderColor: pendingScore === -1 ? 'hsl(0 18% 50%)' : BORDER,
                     color: pendingScore === -1 ? 'hsl(0 14% 46%)' : MUTED,
-                    background: pendingScore === -1 ? 'hsl(0 18% 50% / 0.08)' : '#fff',
+                    background: pendingScore === -1 ? 'hsl(0 18% 50% / 0.08)' : 'hsl(var(--card))',
                   }}
                 >
                   <ThumbsDown className="h-3.5 w-3.5" /> Bad

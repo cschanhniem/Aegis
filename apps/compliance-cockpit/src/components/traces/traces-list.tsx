@@ -160,7 +160,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
             style={{
               borderColor: activeFilters > 0 ? 'hsl(var(--primary))' : BORDER,
               color: activeFilters > 0 ? 'hsl(0 0% 0%)' : MUTED,
-              background: activeFilters > 0 ? 'hsl(0 0% 0% / 0.05)' : '#fff',
+              background: activeFilters > 0 ? 'hsl(0 0% 0% / 0.05)' : 'hsl(var(--card))',
             }}
           >
             Filters {activeFilters > 0 && <span className="font-bold">{activeFilters}</span>}
@@ -250,7 +250,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
               className="rounded-lg border p-3 cursor-pointer transition-colors"
               style={{
                 borderColor: isActive ? 'hsl(0 0% 0% / 0.35)' : BORDER,
-                background: isActive ? 'hsl(0 0% 0% / 0.04)' : '#fff',
+                background: isActive ? 'hsl(0 0% 0% / 0.04)' : 'hsl(var(--card))',
                 animation: isNew ? 'trace-slide-in 0.4s ease-out, trace-glow 1.2s ease-out' : undefined,
               }}
             >

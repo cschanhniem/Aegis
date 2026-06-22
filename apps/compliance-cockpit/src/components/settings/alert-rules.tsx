@@ -64,7 +64,7 @@ export function AlertRules() {
         <div
           key={rule.id}
           className="rounded-lg border p-4 space-y-3"
-          style={{ borderColor: 'hsl(var(--border))', background: rule.enabled ? '#fff' : 'hsl(0 0% 97%)' }}
+          style={{ borderColor: 'hsl(var(--border))', background: rule.enabled ? 'hsl(var(--card))' : 'hsl(var(--secondary))' }}
         >
           {/* Row 1: name + severity + enable/delete */}
           <div className="flex items-center gap-2">
@@ -227,7 +227,7 @@ export function AlertRules() {
           className="flex items-center gap-1.5 text-sm px-4 py-1.5 rounded-md font-medium transition-colors ml-auto"
           style={{
             background: saved ? 'hsl(150 14% 45% / 0.68)' : 'hsl(0 0% 0% / 0.65)',
-            color: '#fff',
+            color: 'hsl(var(--card))',
           }}
         >
           {saved ? 'Saved ✓' : 'Save Rules'}

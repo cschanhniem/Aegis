@@ -132,7 +132,7 @@ export function AgentCompare({ traces }: AgentCompareProps) {
                 style={{
                   borderColor: selectedIds.includes(s.agentId) ? GOLD : BORDER,
                   color:       selectedIds.includes(s.agentId) ? GOLD : MUTED,
-                  background:  selectedIds.includes(s.agentId) ? 'hsl(0 0% 0% / 0.05)' : '#fff',
+                  background:  selectedIds.includes(s.agentId) ? 'hsl(0 0% 0% / 0.05)' : 'hsl(var(--card))',
                 }}
               >
                 {s.agentId.substring(0, 8)}… <span style={{ color: MUTED }}>({s.traceCount})</span>
