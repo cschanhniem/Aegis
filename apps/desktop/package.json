@@ -1,6 +1,6 @@
 {
   "name": "@agentguard/desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "AEGIS desktop app — Tauri shell over the Cockpit + embedded gateway",
   "scripts": {

@@ -1,6 +1,6 @@
 [package]
 name = "aegis-desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "AEGIS — runtime safety layer for AI agents"
 authors = ["Aojie Yuan <aojieyua@usc.edu>"]
 license = "MIT"
