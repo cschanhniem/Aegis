@@ -1,0 +1,338 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import BlogCover from '@/components/BlogCover.astro';
+
+// Generate one static page per blog entry at build time.
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.slug },
+    props:  { post },
+  }));
+}
+
+interface Props { post: CollectionEntry<'blog'>; }
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+// ── Author info ─────────────────────────────────────────────────────
+const AUTHORS = {
+  justin: {
+    name: 'Justin Yuan',
+    title: 'Open-source maintainer, AEGIS · USC',
+    url:   'https://github.com/Justin0504',
+  },
+  team: {
+    name: 'AEGIS team',
+    title: 'Engineering team',
+    url:   'https://aegistraces.com',
+  },
+} as const;
+const author = AUTHORS[post.data.author];
+
+// ── JSON-LD structured data ─────────────────────────────────────────
+// This is the single most important block for LLM crawlers. Google,
+// Perplexity, ChatGPT all extract Article schema and use it to decide
+// citation-worthiness. Keep every field accurate.
+const url      = `https://aegistraces.com/blog/${post.slug}/`;
+const datePub  = post.data.publishedAt.toISOString();
+const dateMod  = (post.data.updatedAt ?? post.data.publishedAt).toISOString();
+const wordCount = post.body.split(/\s+/).filter(Boolean).length;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type':    'TechArticle',
+  '@id':      url,
+  url,
+  mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+  headline:    post.data.title,
+  description: post.data.description,
+  wordCount,
+  datePublished: datePub,
+  dateModified:  dateMod,
+  inLanguage: 'en-US',
+  author: {
+    '@type': 'Person',
+    name:    author.name,
+    url:     author.url,
+  },
+  publisher: {
+    '@type': 'Organization',
+    name:    'AEGIS',
+    url:     'https://aegistraces.com',
+    logo: {
+      '@type': 'ImageObject',
+      url:     'https://aegistraces.com/aegis-logo.png',
+    },
+  },
+  // Specifically tells LLMs "this article answers this question"
+  // — load-bearing for GEO. Schema.org `mainEntity.Question` would
+  // be more semantic but Article-as-FAQ doesn't validate; stick with
+  // `about` and `keywords` which DO validate.
+  about: {
+    '@type': 'Question',
+    name:    post.data.answersQuery,
+  },
+  keywords: post.data.tags.join(', '),
+};
+
+// ── Related posts (same cluster, excl. current) ─────────────────────
+const related = (await getCollection('blog'))
+  .filter(p => !p.data.draft && p.data.cluster === post.data.cluster && p.slug !== post.slug)
+  .slice(0, 3);
+---
+
+<Layout title={`${post.data.title} — AEGIS`} description={post.data.description}>
+  <Header current="blog" />
+
+  {/* JSON-LD must be inline in <head>; Astro lets us put it anywhere
+      and it ends up in the rendered HTML. Crawlers parse this. */}
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+
+  <main class="post">
+    <article class="container container-narrow">
+      {/* Header */}
+      <header class="post-head">
+        <p class="cluster"><a href="/blog">Blog</a> · {post.data.cluster.replace('-', ' ')}</p>
+        <h1>{post.data.title}</h1>
+        <p class="answers-q"><strong>Answers:</strong> {post.data.answersQuery}</p>
+
+        <div class="meta">
+          <span class="meta-author">{author.name}</span>
+          <span class="meta-sep">·</span>
+          <time datetime={datePub}>
+            {post.data.publishedAt.toLocaleDateString('en-US', {
+              year: 'numeric', month: 'short', day: 'numeric',
+            })}
+          </time>
+          <span class="meta-sep">·</span>
+          <span class="meta-words">{Math.round(wordCount / 200)} min read</span>
+        </div>
+
+        {post.data.headlineStat && (
+          <p class="headline-stat">{post.data.headlineStat}</p>
+        )}
+      </header>
+
+      {/* Hero cover image — same SVG component as the blog index card */}
+      <div class="post-cover">
+        <BlogCover cluster={post.data.cluster} seed={post.slug} size="hero" />
+      </div>
+
+      {/* The markdown content */}
+      <div class="content">
+        <Content />
+      </div>
+
+      {/* Footer block */}
+      <footer class="post-foot">
+        <div class="cta">
+          <a class="btn-secondary" href="/install">Install AEGIS</a>
+          <a class="btn-secondary" href="/blog">All posts</a>
+          <a class="btn-secondary" href="https://github.com/Justin0504/Aegis" rel="noopener" target="_blank">Star on GitHub</a>
+        </div>
+
+        {related.length > 0 && (
+          <section class="related">
+            <h2>Related</h2>
+            <ul>
+              {related.map(p => (
+                <li>
+                  <a href={`/blog/${p.slug}/`}>
+                    <strong>{p.data.title}</strong>
+                    <span>{p.data.description}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </footer>
+    </article>
+  </main>
+
+  <Footer />
+
+  <style>
+    .post { padding: 4rem 0 5rem; }
+    .post-head { padding-bottom: 2.5rem; border-bottom: 1px solid var(--hairline); }
+    .cluster {
+      font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--muted); margin: 0 0 1rem;
+    }
+    .cluster a { color: var(--text); text-decoration: none; }
+    .cluster a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .post-head h1 {
+      font-family: var(--font-serif);
+      font-size: 2.4rem;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      margin: 0 0 1rem;
+    }
+    .answers-q {
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.5;
+      max-width: 70ch;
+      margin: 0 0 1.4rem;
+    }
+    .answers-q strong { color: var(--text); }
+    .meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      align-items: center;
+    }
+    .meta-sep { opacity: 0.5; }
+    .meta-author { color: var(--text); font-weight: 500; }
+    .headline-stat {
+      margin-top: 1.6rem;
+      padding: 0.85rem 1.1rem;
+      background: var(--surface-2);
+      border-left: 3px solid var(--text);
+      font-family: ui-monospace, monospace;
+      font-size: 0.92rem;
+      color: var(--text);
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+    }
+
+    .post-cover {
+      margin: 2.5rem 0 1rem;
+    }
+
+    /* ── The actual prose styles ────────────────────────── */
+    .content { padding: 2.5rem 0; }
+    .content :global(h2) {
+      font-family: var(--font-serif);
+      font-size: 1.65rem;
+      letter-spacing: -0.01em;
+      margin: 2.6rem 0 1rem;
+      line-height: 1.25;
+    }
+    .content :global(h3) {
+      font-size: 1.18rem;
+      font-weight: 600;
+      margin: 1.8rem 0 0.7rem;
+    }
+    .content :global(p) {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text);
+      margin: 0 0 1.2rem;
+      max-width: 72ch;
+    }
+    .content :global(p code),
+    .content :global(li code) {
+      background: var(--surface-2);
+      padding: 0.08rem 0.35rem;
+      border-radius: 3px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.92em;
+    }
+    .content :global(ul), .content :global(ol) {
+      margin: 0 0 1.4rem;
+      padding-left: 1.4rem;
+      max-width: 70ch;
+    }
+    .content :global(li) {
+      font-size: 1.02rem;
+      line-height: 1.65;
+      margin: 0.35rem 0;
+    }
+    .content :global(table) {
+      border-collapse: collapse;
+      margin: 1.4rem 0;
+      width: 100%;
+      max-width: 100%;
+      font-size: 0.92rem;
+    }
+    .content :global(th), .content :global(td) {
+      padding: 0.55rem 0.7rem;
+      border-bottom: 1px solid var(--hairline);
+      text-align: left;
+    }
+    .content :global(th) {
+      font-weight: 600;
+      background: var(--surface-2);
+      letter-spacing: 0.02em;
+    }
+    .content :global(pre) {
+      background: #1a1816;
+      color: #d8d3c0;
+      padding: 1.1rem 1.2rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.4rem 0;
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+    .content :global(pre code) {
+      background: transparent;
+      padding: 0;
+      font-family: ui-monospace, monospace;
+    }
+    .content :global(blockquote) {
+      margin: 1.6rem 0;
+      padding: 0.4rem 0 0.4rem 1.2rem;
+      border-left: 3px solid var(--text);
+      color: var(--text);
+      font-style: italic;
+      max-width: 70ch;
+    }
+    .content :global(blockquote em),
+    .content :global(blockquote strong) {
+      font-style: normal;
+    }
+    .content :global(hr) {
+      border: 0;
+      border-top: 1px solid var(--hairline);
+      margin: 2rem 0;
+    }
+    .content :global(a) {
+      color: var(--text);
+      text-decoration: underline;
+      text-decoration-color: var(--hairline);
+      text-underline-offset: 3px;
+    }
+    .content :global(a:hover) { text-decoration-color: var(--accent); }
+
+    /* ── Footer ─────────────────────────────────────────── */
+    .post-foot {
+      border-top: 1px solid var(--hairline);
+      padding-top: 2rem;
+      margin-top: 1rem;
+    }
+    .cta {
+      display: flex;
+      gap: 0.7rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+    }
+    .related h2 {
+      font-family: var(--font-serif);
+      font-size: 1.3rem;
+      margin: 0 0 1rem;
+    }
+    .related ul { list-style: none; padding: 0; margin: 0; }
+    .related li { border-top: 1px solid var(--hairline); }
+    .related li:last-child { border-bottom: 1px solid var(--hairline); }
+    .related a {
+      display: block;
+      padding: 1.1rem 0;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .related strong { font-size: 1.02rem; font-weight: 500; }
+    .related span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 0.25rem;
+      line-height: 1.5;
+    }
+  </style>
+</Layout>

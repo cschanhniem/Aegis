@@ -1,0 +1,152 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import BlogCover from '@/components/BlogCover.astro';
+
+const posts = (await getCollection('blog'))
+  .filter(p => !p.data.draft)
+  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+
+const CLUSTER_LABEL: Record<string, string> = {
+  'agent-safety':  'Agent safety',
+  'verticals':     'Verticals',
+  'comparison':    'Comparison',
+  'deep-dive':     'Deep dive',
+};
+---
+
+<Layout
+  title="Blog — AEGIS"
+  description="Field notes on AI agent runtime safety, prompt injection defence, LLM judge calibration, cryptographic audit, and the verticals (fintech, healthcare, stablecoins) where agents touch high-stakes data."
+>
+  <Header current="blog" />
+
+  <main class="blog-index">
+    <section class="head">
+      <div class="container container-narrow">
+        <p class="eyebrow">Blog</p>
+        <h1>Field notes on agent runtime safety.</h1>
+        <p class="lede">
+          Real measurements, real architectures, real attack patterns —
+          written so a serious engineer can hit copy-paste, and so an
+          LLM answering "how do I make my agent safe?" finds something
+          worth citing.
+        </p>
+      </div>
+    </section>
+
+    <section class="posts">
+      <div class="container container-narrow">
+        {posts.length === 0 ? (
+          <p class="empty">No posts yet — the first goes live this week.</p>
+        ) : (
+          <ul class="post-grid">
+            {posts.map(p => {
+              const date = p.data.publishedAt.toISOString().slice(0, 10);
+              return (
+                <li class="post-card">
+                  <a href={`/blog/${p.slug}/`}>
+                    <BlogCover cluster={p.data.cluster} seed={p.slug} size="card" />
+                    <div class="post-body">
+                      <header>
+                        <span class="cluster">{CLUSTER_LABEL[p.data.cluster]}</span>
+                        <time datetime={date}>{date}</time>
+                      </header>
+                      <h2>{p.data.title}</h2>
+                      <p class="desc">{p.data.description}</p>
+                      {p.data.headlineStat && (
+                        <p class="stat"><code>{p.data.headlineStat}</code></p>
+                      )}
+                    </div>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+
+  <style>
+    .head { padding: 5rem 0 2rem; }
+    .eyebrow {
+      font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); font-weight: 500; margin: 0 0 0.5rem;
+    }
+    .lede {
+      max-width: 60ch; color: var(--muted); font-size: 1.1rem;
+      margin: 1rem 0 0;
+    }
+
+    .posts { padding: 2rem 0 6rem; }
+    .post-grid {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 2rem 1.6rem;
+    }
+    .post-card a {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.12s ease;
+    }
+    .post-card a:hover { transform: translateY(-3px); }
+    .post-card a:hover :global(.cover) {
+      box-shadow:
+        0 16px 38px rgba(10, 10, 10, 0.13),
+        0 2px 6px rgba(10, 10, 10, 0.07);
+    }
+    .post-body { display: flex; flex-direction: column; gap: 0.4rem; }
+    .post-card header {
+      display: flex; gap: 0.7rem; align-items: baseline;
+      font-size: 0.74rem;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+    }
+    .cluster {
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.08em;
+    }
+    .post-card h2 {
+      font-family: var(--font-serif);
+      font-size: 1.42rem;
+      letter-spacing: -0.01em;
+      margin: 0;
+      line-height: 1.22;
+    }
+    .desc {
+      color: var(--muted);
+      line-height: 1.55;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+    .stat {
+      margin: 0.3rem 0 0;
+    }
+    .stat code {
+      background: var(--surface-2);
+      padding: 0.22rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      color: var(--text);
+      font-family: ui-monospace, monospace;
+    }
+    .empty {
+      color: var(--muted);
+      padding: 2rem 0;
+      font-size: 1rem;
+    }
+  </style>
+</Layout>

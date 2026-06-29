@@ -1,6 +1,6 @@
 ---
 interface Props {
-  current?: 'home' | 'pricing' | 'docs' | 'security' | 'blog';
+  current?: 'home' | 'pricing' | 'docs' | 'security' | 'blog' | 'demo';
 }
 const { current } = Astro.props;
 ---
@@ -13,6 +13,7 @@ const { current } = Astro.props;
     <nav class="primary">
       <a href="/demo"     class:list={[{ active: current === 'demo' }]}>Demo</a>
       <a href="/pricing"  class:list={[{ active: current === 'pricing' }]}>Pricing</a>
+      <a href="/blog"     class:list={[{ active: current === 'blog' }]}>Blog</a>
       <a href="/docs"     class:list={[{ active: current === 'docs' }]}>Docs</a>
       <a href="/security" class:list={[{ active: current === 'security' }]}>Security</a>
       <a href="https://github.com/Justin0504/Aegis" target="_blank" rel="noopener">GitHub</a>

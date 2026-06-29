@@ -1,0 +1,168 @@
+/* Print-optimised stylesheet for the AEGIS handbook PDF.
+ * Mirrors the cream / espresso palette of the marketing site.
+ * Tuned for WeasyPrint. */
+
+@page {
+  size: A4;
+  margin: 2.5cm 2cm 2.5cm 2cm;
+  @bottom-center {
+    content: counter(page);
+    font-family: Charter, Georgia, serif;
+    font-size: 9pt;
+    color: #6b5e4e;
+  }
+  @top-left {
+    content: "AEGIS Agent Runtime Safety Handbook";
+    font-family: Charter, Georgia, serif;
+    font-size: 9pt;
+    color: #6b5e4e;
+  }
+  @top-right {
+    content: "aegistraces.com";
+    font-family: Charter, Georgia, serif;
+    font-size: 9pt;
+    color: #6b5e4e;
+  }
+}
+
+@page:first {
+  @top-left  { content: ""; }
+  @top-right { content: ""; }
+  @bottom-center { content: ""; }
+}
+
+html, body {
+  font-family: Charter, Georgia, "Times New Roman", serif;
+  font-size: 11pt;
+  line-height: 1.55;
+  color: #1a1816;
+  background: #fbf7ed;
+}
+
+h1, h2, h3, h4 {
+  font-family: Charter, Georgia, serif;
+  font-weight: 600;
+  color: #1a1816;
+  page-break-after: avoid;
+}
+
+h1 {
+  font-size: 26pt;
+  margin: 1.2em 0 0.5em;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  page-break-before: always;
+  border-bottom: 1px solid #d4c8b0;
+  padding-bottom: 0.3em;
+}
+
+h1:first-of-type { page-break-before: avoid; }
+
+h2 { font-size: 15pt; margin: 1.6em 0 0.4em; }
+h3 { font-size: 12pt; margin: 1.3em 0 0.3em; }
+
+p { margin: 0 0 0.85em; text-align: justify; hyphens: auto; }
+
+a, a:link, a:visited {
+  color: #0a4d6e;
+  text-decoration: underline;
+  text-decoration-thickness: 0.5pt;
+}
+
+code {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.86em;
+  background: #efe5cf;
+  padding: 0.05em 0.32em;
+  border-radius: 2pt;
+  color: #2d2620;
+}
+
+pre {
+  background: #1a1816;
+  color: #e0d6c0;
+  padding: 0.85em 1em;
+  border-radius: 4pt;
+  font-size: 9pt;
+  line-height: 1.45;
+  page-break-inside: avoid;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+pre code { background: transparent; color: inherit; padding: 0; }
+
+blockquote {
+  margin: 1em 0;
+  padding: 0.3em 0.9em;
+  border-left: 2pt solid #1a1816;
+  color: #2d2620;
+  font-style: italic;
+  page-break-inside: avoid;
+}
+
+blockquote em, blockquote strong { font-style: normal; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0;
+  font-size: 10pt;
+  page-break-inside: avoid;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.42em 0.6em;
+  border-bottom: 0.5pt solid #d4c8b0;
+}
+
+th { background: #efe5cf; font-weight: 600; }
+
+ul, ol { margin: 0 0 0.9em; padding-left: 1.3em; }
+li { margin: 0.18em 0; }
+
+hr { border: 0; border-top: 0.5pt solid #d4c8b0; margin: 1.4em 0; }
+
+nav#TOC { page-break-after: always; font-size: 11pt; }
+nav#TOC h1 { border-bottom: none; page-break-before: avoid; margin-top: 0; }
+nav#TOC ul { list-style: none; padding-left: 0; }
+nav#TOC > ul > li { margin: 0.7em 0; font-weight: 600; }
+nav#TOC > ul > li > ul { padding-left: 1.2em; font-weight: 400; font-size: 0.95em; }
+nav#TOC a { color: #1a1816; text-decoration: none; }
+
+header#title-block-header {
+  text-align: center;
+  margin-top: 7cm;
+  margin-bottom: 5cm;
+}
+header#title-block-header h1.title {
+  font-size: 30pt;
+  border-bottom: none;
+  margin-bottom: 0.2em;
+  page-break-before: avoid;
+  line-height: 1.2;
+}
+header#title-block-header p.subtitle {
+  font-size: 13pt;
+  color: #6b5e4e;
+  font-style: italic;
+  margin: 0;
+}
+header#title-block-header .author {
+  margin-top: 2.5cm;
+  font-size: 12pt;
+}
+header#title-block-header .date {
+  font-size: 10.5pt;
+  color: #6b5e4e;
+}
+header#title-block-header .abstract {
+  margin: 2.5cm auto 0;
+  max-width: 38em;
+  font-size: 11pt;
+  text-align: left;
+  font-style: italic;
+  color: #2d2620;
+}
+header#title-block-header .abstract-title { display: none; }

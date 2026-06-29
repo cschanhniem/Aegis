@@ -1,10 +1,14 @@
 // Sitemap for SEO. Auto-emits every page under src/pages/*.astro with
-// lastmod = build time. Re-built on every Cloudflare Pages deploy.
+// lastmod = build time. Blog posts are pulled dynamically from the
+// content collection so we don't have to hand-maintain the list.
+// Re-built on every Cloudflare Pages deploy.
 import type { APIRoute } from 'astro';
+import { getCollection } from 'astro:content';
 
 const SITE = 'https://aegistraces.com';
 
 const pages = [
+  { path: '/blog',                   priority: '0.9', changefreq: 'daily'   },
   { path: '/',                       priority: '1.0', changefreq: 'weekly'  },
   { path: '/pricing',                priority: '0.9', changefreq: 'monthly' },
   { path: '/download',               priority: '0.9', changefreq: 'weekly'  },
@@ -28,11 +32,30 @@ const pages = [
   { path: '/dpa',                    priority: '0.4', changefreq: 'yearly'  },
 ];
 
-export const GET: APIRoute = () => {
+export const GET: APIRoute = async () => {
   const now = new Date().toISOString().split('T')[0];
-  const urls = pages.map(p => `  <url>
+
+  // Pull blog posts at build time so every published post gets its
+  // own sitemap entry with its real lastmod date (LLM crawlers care
+  // about freshness here).
+  const posts = (await getCollection('blog'))
+    .filter(p => !p.data.draft)
+    .map(p => ({
+      path: `/blog/${p.slug}/`,
+      priority:   '0.8',
+      changefreq: 'monthly',
+      lastmod:    (p.data.updatedAt ?? p.data.publishedAt)
+                    .toISOString().split('T')[0],
+    }));
+
+  const allPages = [
+    ...pages.map(p => ({ ...p, lastmod: now })),
+    ...posts,
+  ];
+
+  const urls = allPages.map(p => `  <url>
     <loc>${SITE}${p.path}</loc>
-    <lastmod>${now}</lastmod>
+    <lastmod>${p.lastmod}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
   </url>`).join('\n');
