@@ -3,8 +3,10 @@ import Layout from '@/layouts/Layout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import DecisionLog from '@/components/DecisionLog.astro';
+import HeroAnimation from '@/components/HeroAnimation.astro';
 import CockpitMockup from '@/components/CockpitMockup.astro';
-import LogoWall from '@/components/LogoWall.astro';
+import CompatibleStacks from '@/components/CompatibleStacks.astro';
+import Testimonials from '@/components/Testimonials.astro';
 import Screenshot from '@/components/Screenshot.astro';
 import Icon from '@/components/Icon.astro';
 
@@ -28,83 +30,304 @@ const USE_PLACEHOLDERS = false;
             <p class="lede">
               Every tool call — classified, gated, audited. Zero code change.
             </p>
-            <div class="hero-cta">
-              <a href="/signup" class="btn">Start free</a>
-              <a href="/download" class="btn-secondary">Download</a>
+            <div class="hero-cta dual">
+              <a href="/download" class="btn-dual">
+                <span class="btn-dual-eyebrow">Self-host</span>
+                <span class="btn-dual-label">Download</span>
+                <span class="btn-dual-fine">Free · MIT · Docker / Helm</span>
+              </a>
+              <a href="https://app.aegistraces.com/signup" class="btn-dual primary">
+                <span class="btn-dual-eyebrow">Hosted</span>
+                <span class="btn-dual-label">Sign up free</span>
+                <span class="btn-dual-fine">We run it · 1k checks/mo · no card</span>
+              </a>
             </div>
             <p class="hero-trust">
-              MIT licensed · self-host or hosted · no credit card
+              Same code either way. <a href="/tour">Watch the 90-second tour →</a>
+              &nbsp;·&nbsp; <a href="/pricing">Compare the two paths</a>
             </p>
           </div>
           <div class="hero-visual">
-            <DecisionLog />
+            <HeroAnimation />
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ── LOGO WALL ─────────────────────────────────────────────── -->
-    <LogoWall />
+    <!-- ── COMPATIBLE STACKS (real logos only, two columns) ──────── -->
+    <CompatibleStacks />
 
-    <!-- ── COCKPIT PREVIEW ───────────────────────────────────────── -->
+    <!-- ── COCKPIT PREVIEW (hero shot, full width) ────────────────── -->
     <section class="cockpit-preview">
       <div class="container">
         <p class="section-eyebrow">What you see</p>
         <h2>Every tool call, in one view.</h2>
-        {USE_PLACEHOLDERS ? (
-          <Screenshot
-            src="/screenshots/traces-overview.png"
-            alt="Cockpit — traces overview with allow / pending / block decisions"
-            url="cockpit.aegis.dev / acme · traces"
-            placeholder
-            caption="Drop a real PNG to replace this placeholder — see /public/screenshots/README.md"
+        <p class="preview-sub">
+          One dashboard surfaces every agent decision, every block, every
+          anomaly — across every workflow you ship.
+        </p>
+        <div class="preview-frame">
+          <img
+            src="/screenshots/overview.png"
+            alt="Cockpit — overview dashboard with 24h activity curve, branded agent feed, and recent traces"
+            class="preview-shot"
+            loading="eager"
           />
-        ) : (
-          <Screenshot
-            src="/screenshots/traces-overview.png"
-            alt="Cockpit — traces overview with allow / pending / block decisions"
-            url="cockpit.aegis.dev / acme · traces"
-          />
-        )}
+        </div>
         <noscript><CockpitMockup /></noscript>
       </div>
     </section>
 
-    <!-- ── PRODUCT HIGHLIGHTS ─────────────────────────────────────── -->
-    <section class="highlights">
+    <!-- ── BENTO: WHAT AEGIS DOES ─────────────────────────────────── -->
+    <!-- Bear-inspired: each feature gets a card with text on the      -->
+    <!-- left and a rich UI mock on the right, sitting on a soft       -->
+    <!-- painted-canvas backdrop made from layered radial gradients.   -->
+    <section class="bento">
       <div class="container">
-        <p class="section-eyebrow">End-to-end</p>
-        <h2>From repo scan to runtime block — one platform.</h2>
+        <p class="section-eyebrow">What it does</p>
+        <h2>From pre-deploy scan → runtime block → forensic audit.</h2>
 
-        <div class="hl-grid">
-          <a class="hl" href="/features/scanner">
-            <Icon name="scan-search" size={28} class="hl-icon" />
-            <h3>Scan</h3>
-            <p>Tree-sitter AST across Python / JS / TS. Workflow graph extracted from LangGraph, CrewAI, AutoGen, Mastra.</p>
-            <span class="hl-cta">Scanner →</span>
-          </a>
+        <!-- ─── BENTO 1 — Pre-deploy scan ───────────────────────── -->
+        <article class="bento-card">
+          <div class="bento-text">
+            <p class="bento-eyebrow">Pre-deploy scan</p>
+            <h3>Read your repo before it ships.</h3>
+            <p class="bento-desc">
+              Tree-sitter AST across Python / JS / TS. Every tool, every
+              credential, mapped — and a starter policy proposed.
+            </p>
+          </div>
+          <div class="bento-visual canvas-1">
+            <div class="scan-mock">
+              <div class="scan-head">
+                <span class="scan-dot r"></span>
+                <span class="scan-dot y"></span>
+                <span class="scan-dot g"></span>
+                <span class="scan-title">aegis scan ./acme-agent</span>
+              </div>
+              <ul class="scan-steps">
+                <li class="done"><span class="scan-bullet">✓</span> Analyzed <strong>24 files</strong> (Python + TS) <span class="scan-time">1.4s</span></li>
+                <li class="done"><span class="scan-bullet">✓</span> Detected framework <strong>LangGraph 0.2.4</strong> <span class="scan-time">0.3s</span></li>
+                <li class="done"><span class="scan-bullet">✓</span> Found <strong>7 tools</strong> · 3 HIGH-risk <span class="scan-time">0.6s</span></li>
+                <li class="done"><span class="scan-bullet">✓</span> Mapped workflow · <strong>3 agents</strong>, 12 edges <span class="scan-time">0.4s</span></li>
+                <li class="active"><span class="scan-bullet">●</span> Proposing starter policy bundle… <span class="scan-time">0.8s</span></li>
+              </ul>
+              <div class="scan-graph" aria-hidden="true">
+                <div class="wf">
+                  <p class="wf-label">Discovered workflow</p>
+                  <div class="wf-grid">
+                    <!-- Agent column -->
+                    <div class="wf-agents">
+                      <div class="wf-agent">
+                        <span class="wf-agent-dot" style="background: #6366F1"></span>
+                        <div class="wf-agent-meta">
+                          <strong>Customer&nbsp;Support</strong>
+                          <span>2 tools</span>
+                        </div>
+                      </div>
+                      <div class="wf-agent">
+                        <span class="wf-agent-dot" style="background: #0EA5E9"></span>
+                        <div class="wf-agent-meta">
+                          <strong>Coding&nbsp;Assistant</strong>
+                          <span>3 tools</span>
+                        </div>
+                      </div>
+                      <div class="wf-agent">
+                        <span class="wf-agent-dot" style="background: #F59E0B"></span>
+                        <div class="wf-agent-meta">
+                          <strong>Data&nbsp;Pipeline</strong>
+                          <span>2 tools</span>
+                        </div>
+                      </div>
+                    </div>
 
-          <a class="hl" href="/features/policy-generator">
-            <Icon name="wand-sparkles" size={28} class="hl-icon" />
-            <h3>Generate</h3>
-            <p>One paragraph + your tool inventory. Grammar-constrained policy bundle out, AJV-self-tested.</p>
-            <span class="hl-cta">Generator →</span>
-          </a>
+                    <!-- Connector SVG (clean curves, faded) -->
+                    <svg class="wf-connectors" viewBox="0 0 60 180" preserveAspectRatio="none" aria-hidden="true">
+                      <g stroke="rgba(10,10,10,0.18)" stroke-width="1.4" fill="none" stroke-linecap="round">
+                        <path d="M0 22  C 30 22, 30 16,  60 16"/>
+                        <path d="M0 22  C 30 22, 30 38,  60 38"/>
+                        <path d="M0 90  C 30 90, 30 60,  60 60"/>
+                        <path d="M0 90  C 30 90, 30 82,  60 82"/>
+                        <path d="M0 90  C 30 90, 30 104, 60 104"/>
+                        <path d="M0 158 C 30 158, 30 126, 60 126"/>
+                        <path d="M0 158 C 30 158, 30 148, 60 148"/>
+                      </g>
+                    </svg>
 
-          <a class="hl" href="/features/predeploy">
-            <Icon name="shield-check" size={28} class="hl-icon" />
-            <h3>Gate</h3>
-            <p>CI fails on secret leaks, unsafe tool config, policy gaps, PI corpus regression. SARIF output.</p>
-            <span class="hl-cta">Pre-deploy →</span>
-          </a>
+                    <!-- Tool column — branded badges with real Simple Icons SVGs -->
+                    <div class="wf-tools">
+                      <div class="wf-tool">
+                        <span class="wf-tool-icon" style="background:#EA4335"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/></svg></span>
+                        <span class="wf-tool-label">Gmail</span><span class="wf-risk med"></span>
+                      </div>
+                      <div class="wf-tool">
+                        <span class="wf-tool-icon" style="background:#5E6AD2"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M.403 13.795a12.07 12.07 0 0 0 9.802 9.803L.403 13.795zM.013 9.198l14.788 14.79a12.075 12.075 0 0 0 4.151-1.502L1.514 5.046A12.073 12.073 0 0 0 .013 9.198zm2.6-6.082L20.882 21.385a12.123 12.123 0 0 0 2.503-3.087L5.7.61a12.124 12.124 0 0 0-3.087 2.504zM7.8.193A12 12 0 0 1 12 0c6.627 0 12 5.373 12 12a12 12 0 0 1-.193 2.2L7.8.192Z"/></svg></span>
+                        <span class="wf-tool-label">Linear</span><span class="wf-risk low"></span>
+                      </div>
+                      <div class="wf-tool">
+                        <span class="wf-tool-icon" style="background:#10A37F"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646z"/></svg></span>
+                        <span class="wf-tool-label">OpenAI</span><span class="wf-risk med"></span>
+                      </div>
+                      <div class="wf-tool">
+                        <span class="wf-tool-icon" style="background:#000000"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M24 22.525H0l12-21.05 12 21.05z"/></svg></span>
+                        <span class="wf-tool-label">Vercel</span><span class="wf-risk high"></span>
+                      </div>
+                      <div class="wf-tool">
+                        <span class="wf-tool-icon" style="background:#181717"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></span>
+                        <span class="wf-tool-label">GitHub</span><span class="wf-risk high"></span>
+                      </div>
+                      <div class="wf-tool">
+                        <span class="wf-tool-icon" style="background:#635BFF"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M13.479 9.883c-1.626-.604-2.512-1.067-2.512-1.803 0-.622.511-.978 1.422-.978 1.667 0 3.379.642 4.558 1.22l.666-4.111c-.935-.446-2.847-1.177-5.49-1.177-1.87 0-3.425.489-4.536 1.401-1.155.954-1.757 2.334-1.757 4 0 3.023 1.847 4.315 4.842 5.401 1.936.69 2.59 1.18 2.59 1.928 0 .735-.62 1.158-1.766 1.158-1.46 0-3.864-.71-5.444-1.624l-.677 4.16c1.358.768 3.867 1.535 6.475 1.535 1.978 0 3.624-.467 4.74-1.345 1.244-.98 1.889-2.42 1.889-4.275 0-3.087-1.857-4.371-4.943-5.481l-.057-.009z"/></svg></span>
+                        <span class="wf-tool-label">Stripe</span><span class="wf-risk high"></span>
+                      </div>
+                      <div class="wf-tool">
+                        <span class="wf-tool-icon" style="background:#632CA6"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M21.42.79l-5.65 8.34-2.66-1.32 1.18-5.06L9.65 4.43 8.83 2.32l3.18-.95-.49-2.1 5.21 1.31 1.27 1.05L21.42.79zM7.84 19.59l-1.5-3.45-2.96 3.4 4.46.05zm-3.18 1.74l-2.05 1.5 1.45 1.05 4.51-1.5-1.32-2.55-2.59 1.5zm17.78-7.13l-1.41-3.39-2.36 3.74 3.77-.35zm-5.42-.83l-1.95 4.16-2.31-2.83 4.26-1.33zm-.31-3.62l-2.6.27-3.55-1.84.42-2.41 5.73 3.98zm-7.27 6.71l-1.84-3.4-2.13 4.13 3.97-.73z"/></svg></span>
+                        <span class="wf-tool-label">Datadog</span><span class="wf-risk low"></span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="wf-legend">
+                    <span class="wf-leg"><span class="wf-risk high"></span> HIGH-risk</span>
+                    <span class="wf-leg"><span class="wf-risk med"></span> MEDIUM</span>
+                    <span class="wf-leg"><span class="wf-risk low"></span> LOW</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
 
-          <a class="hl" href="/features/customize">
-            <Icon name="sliders" size={28} class="hl-icon" />
-            <h3>Customize</h3>
-            <p>YAML rules, TypeScript detectors, JSON DSL policies, tuned risk weights — extend without forking.</p>
-            <span class="hl-cta">Customize →</span>
-          </a>
-        </div>
+        <!-- ─── BENTO 2 — NL policy ─────────────────────────────── -->
+        <article class="bento-card">
+          <div class="bento-text">
+            <p class="bento-eyebrow">Plain English → Policy</p>
+            <h3>Describe what to block. We write the rule.</h3>
+            <p class="bento-desc">
+              One sentence in, grammar-constrained DSL out. Auditable,
+              reversible, version-controlled.
+            </p>
+          </div>
+          <div class="bento-visual canvas-2">
+            <div class="policy-mock">
+              <p class="policy-label">Describe the rule</p>
+              <p class="policy-nl">
+                Block emails to personal addresses during checkout flow.
+                Allow <span class="policy-tag">ops@acme.io</span> but
+                flag anything to gmail, outlook, or icloud.
+              </p>
+              <p class="policy-arrow">↓ ✨ Generate</p>
+              <pre class="policy-yaml"><span class="yk">rule:</span> <span class="yv">"block-personal-email-in-checkout"</span>
+<span class="yk">when:</span>
+  - tool.name == <span class="yv">"send_email"</span>
+  - context.workflow == <span class="yv">"checkout"</span>
+<span class="yk">recipient:</span>
+  <span class="yk">deny:</span> [<span class="yv">"@gmail.com"</span>, <span class="yv">"@outlook.com"</span>]
+  <span class="yk">allow:</span> [<span class="yv">"@acme.io"</span>]
+<span class="yk">action:</span> <span class="yv">BLOCK</span></pre>
+            </div>
+          </div>
+        </article>
+
+        <!-- ─── BENTO 3 — Real-time blocking ──────────────────────── -->
+        <article class="bento-card">
+          <div class="bento-text">
+            <p class="bento-eyebrow">Runtime block</p>
+            <h3>Every tool call, classified in &lt; 50ms.</h3>
+            <p class="bento-desc">
+              Allow, escalate, block — every tool call decided before it
+              leaves your network. Sub-50 ms inline.
+            </p>
+          </div>
+          <div class="bento-visual canvas-3">
+            <img
+              src="/screenshots/activity.png"
+              alt="Cockpit — real-time agent activity feed"
+              class="bento-shot"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </article>
+
+        <!-- ─── BENTO 4 — Forensic audit ──────────────────────────── -->
+        <article class="bento-card">
+          <div class="bento-text">
+            <p class="bento-eyebrow">Forensic audit</p>
+            <h3>Violations grouped by policy, by risk.</h3>
+            <p class="bento-desc">
+              Every block in a Merkle-chained log. Filter by risk,
+              group by policy, export to your auditor.
+            </p>
+          </div>
+          <div class="bento-visual canvas-4">
+            <img
+              src="/screenshots/violation.png"
+              alt="Cockpit — violations grouped by policy with risk levels"
+              class="bento-shot"
+              loading="lazy"
+            />
+          </div>
+        </article>
+
+        <!-- ─── BENTO 5 — Agent registry ──────────────────────────── -->
+        <article class="bento-card">
+          <div class="bento-text">
+            <p class="bento-eyebrow">Agent registry</p>
+            <h3>Know which agents are alive — and who owns them.</h3>
+            <p class="bento-desc">
+              Status, owner, scope, key rotation — one place to suspend
+              a misbehaving agent or grant a new scope.
+            </p>
+          </div>
+          <div class="bento-visual canvas-5">
+            <img
+              src="/screenshots/agents.png"
+              alt="Cockpit — agent registry with status, owner, scope, last-seen brand"
+              class="bento-shot"
+              loading="lazy"
+            />
+          </div>
+        </article>
+
+        <!-- ─── BENTO 6 — Coverage ────────────────────────────────── -->
+        <article class="bento-card">
+          <div class="bento-text">
+            <p class="bento-eyebrow">Coverage</p>
+            <h3>Know what's protected — and what's still bare.</h3>
+            <p class="bento-desc">
+              Per-agent coverage report — which tools are policy-gated,
+              which categories only audit. No mystery gaps.
+            </p>
+          </div>
+          <div class="bento-visual canvas-6">
+            <img
+              src="/screenshots/coverage.png"
+              alt="Cockpit — policy coverage report by agent and tool category"
+              class="bento-shot"
+              loading="lazy"
+            />
+          </div>
+        </article>
+
+        <!-- ─── BENTO 7 — Memory & cross-agent ──────────────────────── -->
+        <article class="bento-card">
+          <div class="bento-text">
+            <p class="bento-eyebrow">Beyond the call</p>
+            <h3>Tainted memory. Cross-agent leaks. PII without a prompt.</h3>
+            <p class="bento-desc">
+              Tainted recall, undeclared agent-to-agent leaks, PII that
+              appears without ever being in the prompt. A distinct layer.
+            </p>
+          </div>
+          <div class="bento-visual canvas-7">
+            <img
+              src="/screenshots/memory.png"
+              alt="Cockpit — Memory & Cross-Agent layer with tainted recall, agent crossings, and pre-instruction PII"
+              class="bento-shot"
+              loading="lazy"
+            />
+          </div>
+        </article>
       </div>
     </section>
 
@@ -124,7 +347,7 @@ client = openai.OpenAI(
           </div>
           <div class="snippet">
             <div class="snippet-label">After (env only)</div>
-            <pre><code><span class="env-key">OPENAI_BASE_URL</span>=<span class="env-val">https://gateway.aegis.dev/openai/v1</span>
+            <pre><code><span class="env-key">OPENAI_BASE_URL</span>=<span class="env-val">https://gateway.aegistraces.com/openai/v1</span>
 <span class="env-key">AEGIS_API_KEY</span>=<span class="env-val">aeg_xxx</span>
 
 <span class="comment"># code unchanged</span></code></pre>
@@ -160,13 +383,24 @@ client = openai.OpenAI(
       </div>
     </section>
 
+    <!-- ── TESTIMONIALS ──────────────────────────────────────────── -->
+    <Testimonials />
+
     <!-- ── CTA STRIP ─────────────────────────────────────────────── -->
     <section class="cta-strip">
       <div class="container">
         <h2>Block your first hallucinated tool call this afternoon.</h2>
-        <div class="cta-buttons">
-          <a href="/signup" class="btn">Start free</a>
-          <a href="/download" class="btn-secondary">Download</a>
+        <div class="cta-buttons dual">
+          <a href="/download" class="btn-dual">
+            <span class="btn-dual-eyebrow">Self-host</span>
+            <span class="btn-dual-label">Download</span>
+            <span class="btn-dual-fine">Free · MIT · Docker / Helm</span>
+          </a>
+          <a href="https://app.aegistraces.com/signup" class="btn-dual primary">
+            <span class="btn-dual-eyebrow">Hosted</span>
+            <span class="btn-dual-label">Sign up free</span>
+            <span class="btn-dual-fine">We run it · 1k checks/mo · no card</span>
+          </a>
         </div>
       </div>
     </section>
@@ -205,6 +439,52 @@ client = openai.OpenAI(
     }
     .hero-cta { display: flex; gap: 0.6rem; flex-wrap: wrap; }
     .hero-trust { color: var(--muted); font-size: 0.82rem; margin: 1rem 0 0; }
+    .hero-trust a { color: var(--text); text-decoration: underline; text-decoration-color: var(--hairline); text-underline-offset: 3px; }
+    .hero-trust a:hover { text-decoration-color: var(--accent); }
+
+    /* Dual-path CTA — equal weight, eyebrow + label + fine-print */
+    .hero-cta.dual, .cta-buttons.dual {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      max-width: 540px;
+    }
+    .btn-dual {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.15rem;
+      padding: 0.9rem 1.1rem;
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text);
+      text-decoration: none;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.05s ease;
+    }
+    .btn-dual:hover { border-color: rgba(10, 10, 10, 0.28); background: var(--surface-2); }
+    .btn-dual:active { transform: translateY(1px); }
+    .btn-dual.primary { background: var(--surface-2); border-color: rgba(10, 10, 10, 0.18); }
+    .btn-dual.primary:hover { border-color: rgba(10, 10, 10, 0.32); background: #e6dec5; }
+    .btn-dual-eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.62;
+    }
+    .btn-dual-label {
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+    }
+    .btn-dual-fine {
+      font-size: 0.78rem;
+      opacity: 0.62;
+      margin-top: 0.1rem;
+    }
+    @media (max-width: 560px) {
+      .hero-cta.dual, .cta-buttons.dual { grid-template-columns: 1fr; }
+    }
 
     @media (max-width: 880px) {
       .hero-grid { grid-template-columns: 1fr; gap: 2rem; }
@@ -229,32 +509,519 @@ client = openai.OpenAI(
     }
 
     /* ── Cockpit preview ──────────────────────────────────────────── */
-    .cockpit-preview { padding: 3rem 0; border-top: 1px solid var(--hairline); background: var(--surface); }
-
-    /* ── Highlights ────────────────────────────────────────────── */
-    .highlights { padding: 4rem 0; border-top: 1px solid var(--hairline); }
-    .hl-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
+    .cockpit-preview {
+      padding: 4rem 0 5rem;
+      border-top: 1px solid var(--hairline);
+      background: var(--surface);
     }
-    .hl {
+    .cockpit-preview > .container > .section-eyebrow { margin-bottom: 0.5rem; }
+    .cockpit-preview > .container > h2 { margin-bottom: 0.6rem; }
+    .preview-sub {
+      color: var(--muted);
+      font-size: 1.04rem;
+      max-width: 60ch;
+      margin: 0 0 2.2rem;
+    }
+    .preview-frame {
+      position: relative;
+      border-radius: 18px;
+      padding: 1.2rem;
+      background:
+        radial-gradient(70% 80% at 20% 20%, hsl(155 22% 80%) 0%, transparent 70%),
+        radial-gradient(50% 70% at 80% 30%, hsl( 45 35% 86%) 0%, transparent 70%),
+        radial-gradient(60% 70% at 60% 90%, hsl(195 25% 78%) 0%, transparent 70%),
+        hsl(45 30% 86%);
+      overflow: hidden;
+    }
+    .preview-frame::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.07 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+      opacity: 0.7;
+      mix-blend-mode: multiply;
+      border-radius: 18px;
+    }
+    .preview-shot {
+      position: relative;
+      z-index: 1;
       display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 24px 60px rgba(10, 10, 10, 0.18), 0 4px 10px rgba(10, 10, 10, 0.08);
+    }
+
+    /* ── Bento — painted-canvas feature cards ─────────────────────── */
+    .bento { padding: 5rem 0 1rem; border-top: 1px solid var(--hairline); }
+    .bento > .container > .section-eyebrow { margin-bottom: 0.4rem; }
+    .bento > .container > h2 { max-width: 26ch; margin-bottom: 2rem; }
+    .bento-card {
+      display: grid;
+      grid-template-columns: 1fr 2.4fr;     /* visual ~70% — image is hero */
+      gap: 0;
+      align-items: stretch;
       background: var(--surface);
       border: 1px solid var(--hairline);
-      border-radius: 12px;
-      padding: 1.4rem 1.2rem 1.2rem;
-      text-decoration: none;
-      color: var(--text);
-      transition: border-color 0.15s, transform 0.05s;
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 1.4rem;
+      min-height: 420px;
     }
-    .hl:hover { border-color: var(--accent); }
-    .hl:active { transform: translateY(1px); }
-    .hl-icon { width: 32px; height: 32px; color: var(--accent); margin-bottom: 0.6rem; }
-    .hl h3 { font-family: var(--font-serif); font-size: 1.2rem; margin: 0 0 0.4rem; }
-    .hl p { color: var(--muted); font-size: 0.9rem; margin: 0 0 0.8rem; line-height: 1.5; }
-    .hl-cta { font-weight: 500; font-size: 0.86rem; color: var(--accent); }
+    .bento-text {
+      padding: 2.4rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+    .bento-eyebrow {
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0;
+      font-weight: 500;
+    }
+    .bento-text h3 {
+      font-family: var(--font-serif);
+      font-size: 2.25rem;        /* was 1.85 */
+      line-height: 1.15;
+      margin: 0;
+      letter-spacing: -0.012em;
+    }
+    .bento-desc {
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.55;
+      margin: 0;
+      max-width: 32ch;
+    }
+    .bento-visual {
+      position: relative;
+      padding: 0.4rem;           /* nearly flush — image fills the area */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: var(--bg);     /* default: clean cream, no painted canvas */
+    }
+    /* Animated cards (Bento 1 + 2) keep their custom mock backdrop;
+       screenshot cards (3–7) override .bento-visual to nothing. */
+    .canvas-3, .canvas-4, .canvas-5, .canvas-6, .canvas-7 {
+      background: var(--bg);
+    }
+    .canvas-3::after, .canvas-4::after, .canvas-5::after,
+    .canvas-6::after, .canvas-7::after { display: none; }
+    /* Four "painted canvas" gradient backdrops — soft impressionist
+       palette pulled from the cream / sage / dusk / rose families.
+       Each is a stack of 4 large radial gradients + a noise filter
+       hint to fake brush texture. */
+    .canvas-1 {
+      background:
+        radial-gradient(60% 80% at 20% 30%, hsl(155 22% 80%) 0%, transparent 70%),
+        radial-gradient(50% 70% at 80% 20%, hsl( 45 35% 85%) 0%, transparent 70%),
+        radial-gradient(70% 70% at 60% 90%, hsl(195 25% 78%) 0%, transparent 70%),
+        radial-gradient(40% 50% at 10% 90%, hsl(  6 30% 80%) 0%, transparent 70%),
+        hsl(45 30% 86%);
+    }
+    .canvas-2 {
+      background:
+        radial-gradient(60% 80% at 30% 80%, hsl(220 25% 80%) 0%, transparent 70%),
+        radial-gradient(50% 60% at 80% 30%, hsl( 30 40% 86%) 0%, transparent 70%),
+        radial-gradient(70% 60% at 15% 20%, hsl(170 22% 80%) 0%, transparent 70%),
+        radial-gradient(40% 50% at 85% 85%, hsl(  0 30% 82%) 0%, transparent 70%),
+        hsl(40 28% 87%);
+    }
+    .canvas-3 {
+      background:
+        radial-gradient(70% 70% at 20% 30%, hsl(  6 35% 80%) 0%, transparent 70%),
+        radial-gradient(60% 60% at 80% 20%, hsl( 45 40% 85%) 0%, transparent 70%),
+        radial-gradient(60% 60% at 70% 90%, hsl(150 25% 80%) 0%, transparent 70%),
+        radial-gradient(40% 50% at 10% 90%, hsl(280 20% 82%) 0%, transparent 70%),
+        hsl(35 30% 86%);
+    }
+    .canvas-4 {
+      background:
+        radial-gradient(60% 80% at 30% 30%, hsl(195 30% 78%) 0%, transparent 70%),
+        radial-gradient(50% 60% at 80% 70%, hsl(280 20% 82%) 0%, transparent 70%),
+        radial-gradient(70% 60% at 70% 20%, hsl(155 22% 80%) 0%, transparent 70%),
+        radial-gradient(40% 50% at 15% 85%, hsl( 45 35% 85%) 0%, transparent 70%),
+        hsl(220 22% 86%);
+    }
+    .canvas-5 {
+      background:
+        radial-gradient(65% 80% at 20% 70%, hsl( 30 40% 86%) 0%, transparent 70%),
+        radial-gradient(55% 60% at 80% 30%, hsl(150 22% 80%) 0%, transparent 70%),
+        radial-gradient(60% 60% at 70% 90%, hsl(  6 30% 80%) 0%, transparent 70%),
+        radial-gradient(40% 50% at 15% 15%, hsl(220 22% 82%) 0%, transparent 70%),
+        hsl(40 26% 87%);
+    }
+    .canvas-6 {
+      background:
+        radial-gradient(60% 75% at 30% 25%, hsl(155 25% 78%) 0%, transparent 70%),
+        radial-gradient(50% 60% at 75% 75%, hsl( 45 38% 85%) 0%, transparent 70%),
+        radial-gradient(70% 60% at 70% 20%, hsl(280 18% 82%) 0%, transparent 70%),
+        radial-gradient(40% 50% at 10% 80%, hsl(195 25% 80%) 0%, transparent 70%),
+        hsl(150 18% 86%);
+    }
+    .canvas-7 {
+      background:
+        radial-gradient(60% 80% at 25% 30%, hsl(280 26% 80%) 0%, transparent 70%),
+        radial-gradient(55% 65% at 75% 25%, hsl(  6 35% 82%) 0%, transparent 70%),
+        radial-gradient(70% 65% at 65% 85%, hsl( 45 38% 86%) 0%, transparent 70%),
+        radial-gradient(40% 50% at 10% 90%, hsl(195 28% 80%) 0%, transparent 70%),
+        hsl(45 25% 87%);
+    }
+    /* Memory & cross-agent mock — stacked event cards on the canvas */
+    .mx-mock {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 540px;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 1rem 1.1rem 0.9rem;
+      box-shadow: 0 16px 40px rgba(10, 10, 10, 0.14), 0 2px 6px rgba(10, 10, 10, 0.06);
+    }
+    .mx-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 0.65rem;
+      font-weight: 500;
+    }
+    .mx-event {
+      border-left: 3px solid;
+      padding: 0.6rem 0.75rem;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 0.55rem;
+      background: hsl(45 22% 97%);
+    }
+    .mx-event:last-of-type { margin-bottom: 0.8rem; }
+    .mx-crit { border-left-color: #DC2626; }
+    .mx-high { border-left-color: #EA580C; }
+    .mx-med  { border-left-color: #D97706; }
+    .mx-low  { border-left-color: #10B981; }
+    .mx-sev {
+      display: inline-block;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      padding: 0.08rem 0.4rem;
+      border-radius: 3px;
+      margin-right: 0.45rem;
+      vertical-align: 1px;
+    }
+    .mx-crit .mx-sev { background: hsl(0  60% 95%); color: #B91C1C; }
+    .mx-high .mx-sev { background: hsl(20 60% 95%); color: #C2410C; }
+    .mx-kind {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .mx-body {
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--text);
+      margin: 0.35rem 0 0;
+    }
+    .mx-body code {
+      background: hsl(45 25% 90%);
+      padding: 0.04rem 0.3rem;
+      border-radius: 3px;
+      font-size: 0.78rem;
+      color: hsl(220 18% 25%);
+    }
+    .mx-body em {
+      background: hsl(0 70% 92%);
+      font-style: normal;
+      padding: 0.04rem 0.3rem;
+      border-radius: 3px;
+      color: #991B1B;
+    }
+    .mx-foot {
+      display: flex;
+      gap: 0.7rem;
+      padding-top: 0.55rem;
+      border-top: 1px dashed var(--hairline);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      align-items: center;
+    }
+    .mx-foot-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      margin-right: 0.2rem;
+      vertical-align: 1px;
+    }
+    .mx-foot-crit { background: #DC2626; }
+    .mx-foot-high { background: #EA580C; }
+    .mx-foot-med  { background: #D97706; }
+    .mx-foot-low  { background: #10B981; }
+    /* Subtle brush-stroke noise overlay */
+    .bento-visual::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.08 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+      opacity: 0.7;
+      mix-blend-mode: multiply;
+    }
+    /* Floating mock card — white panel sitting on the canvas */
+    .scan-mock, .policy-mock {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg);
+      border-radius: 12px;
+      box-shadow: 0 12px 36px rgba(10, 10, 10, 0.10), 0 2px 6px rgba(10, 10, 10, 0.06);
+      overflow: hidden;
+    }
+    /* Scan terminal-style header */
+    .scan-head {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.55rem 0.8rem;
+      background: hsl(45 22% 95%);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .scan-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .scan-dot.r { background: #ff5f57; }
+    .scan-dot.y { background: #febc2e; }
+    .scan-dot.g { background: #28c840; }
+    .scan-title {
+      margin-left: 0.5rem;
+      font-family: ui-monospace, monospace;
+      font-size: 0.74rem;
+      color: var(--muted);
+    }
+    .scan-steps {
+      list-style: none;
+      padding: 1rem 1.1rem 0.4rem;
+      margin: 0;
+    }
+    .scan-steps li {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.32rem 0;
+      font-size: 0.86rem;
+      color: var(--text);
+    }
+    .scan-steps li.done .scan-bullet { color: hsl(150 36% 38%); }
+    .scan-steps li.active .scan-bullet { color: var(--accent); animation: scan-pulse 1.3s ease-in-out infinite; }
+    @keyframes scan-pulse { 50% { opacity: 0.35; } }
+    .scan-bullet {
+      flex-shrink: 0;
+      width: 16px;
+      text-align: center;
+      font-weight: 700;
+    }
+    .scan-steps li strong { font-weight: 600; }
+    .scan-time {
+      margin-left: auto;
+      font-family: ui-monospace, monospace;
+      font-size: 0.74rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .scan-graph {
+      padding: 0.9rem 1.1rem 1.1rem;
+      border-top: 1px solid var(--hairline);
+      margin-top: 0.6rem;
+      background: hsl(45 22% 97%);
+    }
+    .wf-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 0.7rem;
+      font-weight: 500;
+    }
+    .wf-grid {
+      display: grid;
+      grid-template-columns: 1fr 60px 1fr;
+      gap: 0;
+      align-items: stretch;
+    }
+    /* Agent column */
+    .wf-agents {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      justify-content: space-between;
+    }
+    .wf-agent {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 8px;
+      padding: 0.5rem 0.65rem;
+    }
+    .wf-agent-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+    }
+    .wf-agent-meta {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+      min-width: 0;
+    }
+    .wf-agent-meta strong {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .wf-agent-meta span {
+      font-size: 0.66rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    /* Connector spans full vertical, painted as SVG curves */
+    .wf-connectors {
+      width: 60px;
+      height: 100%;
+    }
+    /* Tool column */
+    .wf-tools {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      justify-content: space-between;
+    }
+    .wf-tool {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.28rem 0.5rem 0.28rem 0.28rem;
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 999px;
+    }
+    .wf-tool-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    }
+    .wf-tool-icon svg {
+      width: 11px;
+      height: 11px;
+      display: block;
+    }
+    .wf-tool-label {
+      font-size: 0.72rem;
+      color: var(--text);
+      font-weight: 500;
+      flex: 1;
+    }
+    .wf-risk {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .wf-risk.high { background: #DC2626; }
+    .wf-risk.med  { background: #F59E0B; }
+    .wf-risk.low  { background: #10B981; }
+    .wf-legend {
+      display: flex;
+      gap: 0.9rem;
+      margin-top: 0.7rem;
+      padding-top: 0.5rem;
+      border-top: 1px dashed var(--hairline);
+    }
+    .wf-leg {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    /* Policy mock */
+    .policy-mock { padding: 1.2rem 1.3rem; max-width: 460px; }
+    .policy-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 0.5rem;
+    }
+    .policy-nl {
+      background: hsl(45 22% 95%);
+      border: 1px solid var(--hairline);
+      border-radius: 8px;
+      padding: 0.7rem 0.85rem;
+      margin: 0 0 0.7rem;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .policy-tag {
+      background: hsl(150 22% 90%);
+      color: hsl(150 28% 28%);
+      padding: 0.05rem 0.4rem;
+      border-radius: 4px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.82rem;
+    }
+    .policy-arrow {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin: 0.4rem 0 0.6rem;
+    }
+    .policy-yaml {
+      background: #1a1816;
+      color: #d8d3c0;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      margin: 0;
+      font-family: ui-monospace, monospace;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      overflow-x: auto;
+    }
+    .policy-yaml .yk { color: #8b9eba; }
+    .policy-yaml .yv { color: #d9c179; }
+    /* Image cards — actual cockpit screenshots */
+    .bento-shot {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      max-height: 460px;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow:
+        0 18px 44px rgba(10, 10, 10, 0.10),
+        0 2px 6px rgba(10, 10, 10, 0.04);
+      display: block;
+    }
+    @media (max-width: 880px) {
+      .bento-card { grid-template-columns: 1fr; }
+      .bento-text { padding: 2rem 1.6rem; }
+      .bento-visual { padding: 1.6rem; min-height: 320px; }
+    }
 
     /* ── Zero code ──────────────────────────────────────────────── */
     .zero-code { padding: 4rem 0; border-top: 1px solid var(--hairline); background: var(--surface); }

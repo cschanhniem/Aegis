@@ -26,18 +26,18 @@ import Footer from '@/components/Footer.astro';
       <div class="container container-narrow">
 
         <h2>Base URL</h2>
-        <pre><code>https://gateway.aegis.dev    # hosted
+        <pre><code>https://gateway.aegistraces.com    # hosted
 http://localhost:8080         # self-host / desktop</code></pre>
 
         <h2>Authentication</h2>
         <pre><code>{`# Org API key — for /api/v1/*
-curl -H "X-AEGIS-API-Key: aeg_xxx" https://gateway.aegis.dev/api/v1/check
+curl -H "X-AEGIS-API-Key: aeg_xxx" https://gateway.aegistraces.com/api/v1/check
 
 # Agent JWT — preferred for SDK-side identity
-curl -H "X-AEGIS-Agent-Token: eyJhbG..." https://gateway.aegis.dev/api/v1/check
+curl -H "X-AEGIS-Agent-Token: eyJhbG..." https://gateway.aegistraces.com/api/v1/check
 
 # SCIM bearer — for IdP user provisioning at /scim/v2/*
-curl -H "Authorization: Bearer scim_xxx" https://gateway.aegis.dev/scim/v2/Users`}</code></pre>
+curl -H "Authorization: Bearer scim_xxx" https://gateway.aegistraces.com/scim/v2/Users`}</code></pre>
 
         <h2>Core endpoints</h2>
 

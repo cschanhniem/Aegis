@@ -10,6 +10,7 @@ import { TimeTravel } from './time-travel'
 import { useAlerts } from '@/hooks/useAlerts'
 import { AgentCompare } from './agent-compare'
 import { FileDown } from 'lucide-react'
+import { USE_MOCK, mockTraces } from '@/lib/mock-traces'
 
 export function TracesView() {
   const [selectedTrace, setSelectedTrace] = useState<string | null>(null)
@@ -52,6 +53,7 @@ export function TracesView() {
   }
 
   const { data: traces } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['traces', selectedAgent],
     queryFn: async () => {
       const params = new URLSearchParams()
@@ -64,7 +66,12 @@ export function TracesView() {
     },
   })
 
-  useAlerts(traces?.traces || [])
+  // Mock-mode swap — same shape, deterministic for demos / screenshots.
+  const effectiveTraces = USE_MOCK
+    ? { traces: selectedAgent ? mockTraces().filter((t: any) => t.agent_id === selectedAgent) : mockTraces() }
+    : traces
+
+  useAlerts(effectiveTraces?.traces || [])
 
   return (
     <div className="space-y-6">
@@ -75,8 +82,8 @@ export function TracesView() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => handleExportCsv(traces?.traces || [])}
-            disabled={!traces?.traces?.length}
+            onClick={() => handleExportCsv(effectiveTraces?.traces || [])}
+            disabled={!effectiveTraces?.traces?.length}
             className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg border font-medium transition-colors disabled:opacity-40"
             style={{ borderColor: 'hsl(0 0% 85%)', color: 'hsl(0 0% 25%)', background: 'hsl(var(--card))' }}
           >
@@ -84,8 +91,8 @@ export function TracesView() {
             Export CSV
           </button>
           <button
-            onClick={() => handleExport(traces?.traces || [])}
-            disabled={exporting || !traces?.traces?.length}
+            onClick={() => handleExport(effectiveTraces?.traces || [])}
+            disabled={exporting || !effectiveTraces?.traces?.length}
             className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg border font-medium transition-colors disabled:opacity-40"
             style={{ borderColor: 'hsl(0 0% 85%)', color: 'hsl(0 0% 25%)', background: 'hsl(var(--card))' }}
           >
@@ -107,7 +114,7 @@ export function TracesView() {
           <div className="grid gap-4 md:grid-cols-12">
             <div className="col-span-5">
               <TracesList
-                traces={traces?.traces || []}
+                traces={effectiveTraces?.traces || []}
                 selectedTrace={selectedTrace}
                 onSelectTrace={setSelectedTrace}
                 onSelectAgent={setSelectedAgent}
@@ -127,19 +134,19 @@ export function TracesView() {
         <TabsContent value="graph" className="space-y-4">
           <DecisionGraph
             agentId={selectedAgent}
-            traces={traces?.traces || []}
+            traces={effectiveTraces?.traces || []}
           />
         </TabsContent>
 
         <TabsContent value="timetravel" className="space-y-4">
           <TimeTravel
-            traces={traces?.traces || []}
+            traces={effectiveTraces?.traces || []}
             selectedAgent={selectedAgent}
           />
         </TabsContent>
 
         <TabsContent value="compare" className="space-y-4">
-          <AgentCompare traces={traces?.traces || []} />
+          <AgentCompare traces={effectiveTraces?.traces || []} />
         </TabsContent>
       </Tabs>
     </div>

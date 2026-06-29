@@ -43,6 +43,14 @@
   "plugins": {
     "shell": {
       "open": true
+    },
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/Justin0504/Aegis/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "pubkey": "AEGIS_UPDATER_PUBKEY_PLACEHOLDER"
     }
   },
   "bundle": {

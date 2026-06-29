@@ -6,6 +6,9 @@ import {
   UserRound, Plus, Shield, ShieldAlert, ShieldOff, KeyRound,
   Copy, Check, X, Trash2, Loader2, AlertCircle,
 } from 'lucide-react'
+import { USE_MOCK, mockAgents } from '@/lib/mock-traces'
+import { ToolIcon } from '@/lib/tool-icons'
+import { EmailAvatar } from '@/lib/avatar'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -76,7 +79,8 @@ export function AgentsView() {
   const [secretCopied, setSecretCopied] = useState(false)
   const [selected, setSelected] = useState<Agent | null>(null)
 
-  const { data: agents = [], isLoading } = useQuery({
+  const { data: liveAgents = [], isLoading } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['agents', filter],
     queryFn: async () => {
       const url = filter === 'all'
@@ -89,6 +93,12 @@ export function AgentsView() {
     },
     refetchInterval: 15000,
   })
+
+  const agents = USE_MOCK
+    ? (mockAgents().filter(a =>
+        filter === 'all' ? true : a.status === filter
+      ) as unknown as Agent[])
+    : liveAgents
 
   async function submitRegister(e: React.FormEvent) {
     e.preventDefault()
@@ -219,7 +229,7 @@ export function AgentsView() {
                 No agents yet. Register your first one or wait for the SDK to call in.
               </td></tr>
             )}
-            {agents.map(a => (
+            {agents.map((a: any) => (
               <tr
                 key={a.id}
                 className="border-t cursor-pointer hover:bg-[hsl(var(--accent))]"
@@ -228,19 +238,35 @@ export function AgentsView() {
               >
                 <td className="px-4 py-2.5"><StatusBadge s={a.status} /></td>
                 <td className="px-4 py-2.5">
-                  <div className="font-medium">{a.name ?? <span style={{ color: MUTED }}>(unnamed)</span>}</div>
-                  <div className="text-[10px] font-mono" style={{ color: MUTED }}>{a.id.slice(0, 18)}…</div>
-                </td>
-                <td className="px-4 py-2.5 text-xs" style={{ color: MUTED }}>{a.owner_email ?? '—'}</td>
-                <td className="px-4 py-2.5 text-xs" style={{ color: MUTED }}>
-                  {a.declared_tools?.length ? `${a.declared_tools.length} tool(s)` : <em>any</em>}
+                  <div className="flex items-center gap-2">
+                    {/* Brand of where the agent runs (Vercel/AWS/GitHub…) */}
+                    {a.last_seen_brand && <ToolIcon name={a.last_seen_brand} size={20} />}
+                    <div>
+                      <div className="font-medium">{a.name ?? <span style={{ color: MUTED }}>(unnamed)</span>}</div>
+                      <div className="text-[10px] font-mono" style={{ color: MUTED }}>{a.id.slice(0, 24)}</div>
+                    </div>
+                  </div>
                 </td>
                 <td className="px-4 py-2.5 text-xs">
-                  {a.has_secret
-                    ? <span style={{ color: 'hsl(150 18% 40%)' }}>✓</span>
+                  {a.owner_email
+                    ? <span className="inline-flex items-center gap-2" style={{ color: MUTED }}>
+                        <EmailAvatar email={a.owner_email} size={20} />
+                        <span>{a.owner ? `${a.owner} · ${a.owner_email}` : a.owner_email}</span>
+                      </span>
                     : <span style={{ color: MUTED }}>—</span>}
                 </td>
-                <td className="px-4 py-2.5 text-xs" style={{ color: MUTED }}>{fmtTs(a.last_seen_at)}</td>
+                <td className="px-4 py-2.5 text-xs" style={{ color: MUTED }}>
+                  {a.scope
+                    ? <span className="px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide" style={{
+                        background: a.scope === 'restricted' ? 'hsl(0 55% 95%)' : 'hsl(150 30% 95%)',
+                        color:      a.scope === 'restricted' ? 'hsl(0 55% 38%)' : 'hsl(150 30% 35%)',
+                      }}>{a.scope}</span>
+                    : a.declared_tools?.length ? `${a.declared_tools.length} tool(s)` : <em>any</em>}
+                </td>
+                <td className="px-4 py-2.5 text-xs font-mono" style={{ color: MUTED }}>
+                  {a.secret ?? (a.has_secret ? <span style={{ color: 'hsl(150 18% 40%)' }}>✓</span> : '—')}
+                </td>
+                <td className="px-4 py-2.5 text-xs" style={{ color: MUTED }}>{fmtTs(a.last_seen ?? a.last_seen_at)}</td>
                 <td className="px-4 py-2.5 text-right">
                   <button
                     onClick={(e) => { e.stopPropagation(); setSelected(a) }}

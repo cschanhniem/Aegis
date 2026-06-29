@@ -5,11 +5,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Cross-environment date format. We avoid `dateStyle`/`timeStyle`
+ * shortcuts because Node's ICU and the browser's ICU disagree on the
+ * exact separator (Node: "Jun 23, 2026, 12:29 PM"; Chrome: "Jun 23,
+ * 2026 at 12:29 PM"). Same Date → different string → React hydration
+ * error on SSR. Explicit fields produce the same output everywhere.
+ */
 export function formatDate(date: string | Date) {
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(date))
+  const d = new Date(date)
+  const month = d.toLocaleString('en-US', { month: 'short' })
+  const day   = d.getDate()
+  const year  = d.getFullYear()
+  let hour    = d.getHours()
+  const min   = d.getMinutes().toString().padStart(2, '0')
+  const ampm  = hour >= 12 ? 'PM' : 'AM'
+  hour = hour % 12 || 12
+  return `${month} ${day}, ${year} at ${hour}:${min} ${ampm}`
 }
 
 export function getRiskLevelColor(level: string) {

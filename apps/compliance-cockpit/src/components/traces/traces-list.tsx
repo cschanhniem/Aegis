@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
 import { traceSummary } from '@/lib/trace-summary'
+import { describeActivity } from '@/lib/activity-description'
 import { friendlyAgent, friendlyDecision, friendlyRisk, friendlyPolicy } from '@/lib/friendly-names'
 import { ToolIcon } from '@/lib/tool-icons'
 import { Search, X, ChevronDown, Clock } from 'lucide-react'
@@ -230,7 +231,11 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
           </div>
         )}
         {filtered.map(trace => {
-          const summary  = traceSummary(trace)
+          // Prefer describeActivity (brand-aware, recipient-aware). Falls
+          // back to legacy traceSummary when describeActivity returns empty.
+          const rich     = describeActivity(trace)
+          const summary  = rich.text || traceSummary(trace)
+          const iconName = rich.iconKey || trace.tool_call?.tool_name
           const hasError = !!trace.observation?.error
           const dur      = trace.observation?.duration_ms
           const isActive = selectedTrace === trace.trace_id
@@ -257,7 +262,7 @@ export function TracesList({ traces, selectedTrace, onSelectTrace, onSelectAgent
               <div className="flex items-start gap-3">
                 {/* Leading: tool icon + status dot */}
                 <div className="flex flex-col items-center gap-1 pt-0.5 flex-shrink-0">
-                  <ToolIcon name={trace.tool_call?.tool_name} size={22} />
+                  <ToolIcon name={iconName} size={22} />
                   <span
                     className="w-1.5 h-1.5 rounded-full"
                     style={{ background: dotColor }}

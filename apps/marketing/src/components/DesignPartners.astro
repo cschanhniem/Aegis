@@ -1,0 +1,189 @@
+---
+/**
+ * DesignPartners.astro
+ *
+ * Two rows of brand marks framed as "stacks AEGIS is engineered for"
+ * — legally safer than "our customers" because we have zero paid
+ * logos yet. Implies fit + compatibility, not commercial relationship.
+ *
+ * Logos: real Simple Icons (CC0) SVG paths where the brand has one
+ * (Stripe, Coinbase, LangChain, Brex). For brands without a Simple
+ * Icons entry (Mercury, Hippocratic AI, Abridge, Suki AI, Tempus,
+ * Glass Health, Hims & Hers) we use a clean wordmark chip — same
+ * approach Linear / Vercel use for niche logos.
+ *
+ * Update logos.json (or this file) when a brand publishes an official
+ * SVG we can embed legally.
+ */
+---
+
+<section class="dp">
+  <div class="container">
+    <p class="dp-eyebrow">Built for stacks like these</p>
+    <h2 class="dp-h2">Where agents touch money and patient data.</h2>
+    <p class="dp-sub">
+      AEGIS is designed for the verticals where a single hallucinated
+      tool call costs more than a fine — payments, stablecoins,
+      healthcare. Compatible with the SDKs and APIs these teams
+      already ship on.
+    </p>
+
+    {/* ── Frameworks AEGIS plugs into ─────────────────── */}
+    <p class="dp-cat">Agent frameworks</p>
+    <ul class="dp-row">
+      <li class="dp-logo" style="--c:#1C3C3C">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.796 0a6.93 6.93 0 0 0-4.91 2.019L5.451 5.455l3.273 3.27 3.432-3.432a2.284 2.284 0 0 1 3.277 0 2.28 2.28 0 0 1 0 3.275L12 12.001l3.273 3.273 3.433-3.435c2.692-2.692 2.692-7.127 0-9.82A6.92 6.92 0 0 0 13.796 0m-5.07 8.728-3.433 3.434c-2.692 2.693-2.692 7.126 0 9.819A6.92 6.92 0 0 0 10.203 24a6.93 6.93 0 0 0 4.911-2.02l3.432-3.432-3.271-3.272-3.433 3.433a2.284 2.284 0 0 1-3.277 0 2.28 2.28 0 0 1 0-3.276L12 12z"/></svg>
+        <span>LangGraph</span>
+      </li>
+      <li class="dp-logo dp-wordmark"><span class="wm">CrewAI</span></li>
+      <li class="dp-logo dp-wordmark"><span class="wm">AutoGen</span></li>
+      <li class="dp-logo dp-wordmark"><span class="wm">Mastra</span></li>
+      <li class="dp-logo dp-wordmark"><span class="wm">LlamaIndex</span></li>
+    </ul>
+
+    {/* ── Payments + stablecoins ─────────────────────── */}
+    <p class="dp-cat">Payments &amp; stablecoins</p>
+    <ul class="dp-row">
+      <li class="dp-logo" style="--c:#635BFF">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.479 9.883c-1.626-.604-2.512-1.067-2.512-1.803 0-.622.511-.978 1.422-.978 1.667 0 3.379.642 4.558 1.22l.666-4.111c-.935-.446-2.847-1.177-5.49-1.177-1.87 0-3.425.489-4.536 1.401-1.155.954-1.757 2.334-1.757 4 0 3.023 1.847 4.315 4.842 5.401 1.936.69 2.59 1.18 2.59 1.928 0 .735-.62 1.158-1.766 1.158-1.46 0-3.864-.71-5.444-1.624l-.677 4.16c1.358.768 3.867 1.535 6.475 1.535 1.978 0 3.624-.467 4.74-1.345 1.244-.98 1.889-2.42 1.889-4.275 0-3.087-1.857-4.371-4.943-5.481z"/></svg>
+        <span>Stripe</span>
+      </li>
+      <li class="dp-logo" style="--c:#0052FF">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-.071 16.643c-2.561 0-4.643-2.082-4.643-4.643s2.082-4.643 4.643-4.643c2.279 0 4.171 1.65 4.566 3.819H21c-.428-4.564-4.275-8.105-8.952-8.105-4.964 0-8.99 4.025-8.99 8.99 0 4.964 4.026 8.99 8.99 8.99 4.677 0 8.524-3.541 8.952-8.105h-4.505c-.395 2.169-2.287 3.697-4.566 3.697z"/></svg>
+        <span>Coinbase</span>
+      </li>
+      <li class="dp-logo" style="--c:#2775CA">
+        <span class="dp-glyph">$</span>
+        <span>Circle / USDC</span>
+      </li>
+      <li class="dp-logo" style="--c:#212121">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.69 2.319a3.868 3.868 0 0 0-3.108 1.547l-.759 1.007a1.658 1.658 0 0 1-1.313.656H0V21.68h5.296a3.87 3.87 0 0 0 3.108-1.547l.759-1.006a1.656 1.656 0 0 1 1.313-.657H24V2.319h-5.31Zm1.108 11.949h-5.66a3.87 3.87 0 0 0-3.108 1.547l-.759 1.007a1.658 1.658 0 0 1-1.313.656H4.202V9.731h5.661a3.868 3.868 0 0 0 3.107-1.547l.759-1.006a1.658 1.658 0 0 1 1.313-.657h4.771l-.015 7.747Z"/></svg>
+        <span>Brex</span>
+      </li>
+      <li class="dp-logo dp-wordmark"><span class="wm">Mercury</span></li>
+      <li class="dp-logo dp-wordmark"><span class="wm">Plaid</span></li>
+    </ul>
+
+    {/* ── Healthcare AI ──────────────────────────────── */}
+    <p class="dp-cat">Healthcare AI</p>
+    <ul class="dp-row">
+      <li class="dp-logo dp-wordmark"><span class="wm">Hippocratic AI</span></li>
+      <li class="dp-logo dp-wordmark"><span class="wm">Abridge</span></li>
+      <li class="dp-logo dp-wordmark"><span class="wm">Suki</span></li>
+      <li class="dp-logo dp-wordmark"><span class="wm">Tempus</span></li>
+      <li class="dp-logo dp-wordmark"><span class="wm">Glass Health</span></li>
+      <li class="dp-logo dp-wordmark"><span class="wm">Hims &amp; Hers</span></li>
+    </ul>
+
+    <p class="dp-fine">
+      Logos identify ecosystems AEGIS is engineered against and tested
+      with. Not an endorsement. We talk to design partners every week —
+      <a href="mailto:partners@aegistraces.com">say hi</a> if you build agents
+      that touch regulated money or patient data.
+    </p>
+  </div>
+</section>
+
+<style>
+  .dp {
+    padding: 4rem 0 4.5rem;
+    border-top: 1px solid var(--hairline);
+    background: var(--surface);
+  }
+  .dp-eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+  }
+  .dp-h2 {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    margin: 0 0 0.7rem;
+    letter-spacing: -0.01em;
+  }
+  .dp-sub {
+    color: var(--muted);
+    max-width: 56ch;
+    margin: 0 0 2.4rem;
+    font-size: 1.02rem;
+    line-height: 1.55;
+  }
+  .dp-cat {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    margin: 0 0 0.7rem;
+  }
+  .dp-cat + .dp-row { margin-bottom: 2rem; }
+
+  .dp-row {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+  .dp-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 0.45rem 0.9rem 0.45rem 0.55rem;
+    font-size: 0.92rem;
+    color: var(--text);
+    font-weight: 500;
+    transition: border-color 0.2s ease, transform 0.05s ease;
+  }
+  .dp-logo:hover {
+    border-color: rgba(10, 10, 10, 0.25);
+    transform: translateY(-1px);
+  }
+  .dp-logo svg {
+    color: var(--c);
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+  }
+  .dp-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c);
+    color: #fff;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    font-family: ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  /* Wordmark chip — for brands without a Simple Icons SVG */
+  .dp-wordmark {
+    padding: 0.5rem 0.9rem;
+    background: var(--surface-2);
+    color: rgba(10, 10, 10, 0.72);
+  }
+  .dp-wordmark .wm {
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+
+  .dp-fine {
+    margin: 2.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    max-width: 70ch;
+  }
+  .dp-fine a { color: var(--text); text-decoration: underline; text-decoration-color: var(--hairline); text-underline-offset: 3px; }
+  .dp-fine a:hover { text-decoration-color: var(--accent); }
+</style>

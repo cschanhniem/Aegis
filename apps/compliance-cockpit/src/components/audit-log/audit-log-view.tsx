@@ -6,6 +6,7 @@ import { gw } from '@/lib/gateway'
 import { FileText, Download, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react'
 import { IntegrityWidget } from './integrity-widget'
 import { EvidencePackWidget } from './evidence-pack-widget'
+import { USE_MOCK, mockAuditEntries } from '@/lib/mock-traces'
 
 const BORDER  = 'hsl(var(--border))'
 const TEXT    = 'hsl(var(--foreground))'
@@ -149,6 +150,7 @@ export function AuditLogView() {
   }, [action, resourceType, resourceId, searchQ, from, to, offset])
 
   const { data, isLoading, error } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['audit-log', queryParams],
     queryFn: async () => {
       const res = await gw(`admin/audit-log?${queryParams}`)
@@ -158,8 +160,20 @@ export function AuditLogView() {
     refetchInterval: 30_000,
   })
 
-  const entries = data?.entries ?? []
-  const total = data?.total ?? 0
+  // Client-side filter for mock (cheap; we have ≤15 rows)
+  const mockEntries = USE_MOCK ? mockAuditEntries().filter((e: any) => {
+    if (action && e.action !== action) return false
+    if (resourceType && e.resource_type !== resourceType) return false
+    if (resourceId && e.resource_id !== resourceId) return false
+    if (searchQ) {
+      const hay = `${e.action} ${e.resource_id ?? ''} ${e.user_email} ${JSON.stringify(e.details)}`.toLowerCase()
+      if (!hay.includes(searchQ.toLowerCase())) return false
+    }
+    return true
+  }) : null
+
+  const entries = USE_MOCK ? (mockEntries as any[]) : (data?.entries ?? [])
+  const total = USE_MOCK ? (mockEntries?.length ?? 0) : (data?.total ?? 0)
 
   function exportCsv() {
     const headers = [

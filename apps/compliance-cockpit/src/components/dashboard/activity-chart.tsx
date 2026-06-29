@@ -5,6 +5,7 @@ import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
+import { USE_MOCK, mockHourlyBuckets } from '@/lib/mock-traces'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -22,12 +23,15 @@ interface HourBucket {
 
 /** Fetch raw traces and bucket them into 24 hourly bins. */
 function useActivity24h(): { data: HourBucket[]; isLoading: boolean } {
+  // Hooks must run unconditionally — call always, ignore result in mock mode.
   const q = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['dashboard', 'activity-24h'],
     queryFn: async () => {
-      // Larger limit so we get enough coverage over 24h. The gateway
-      // returns newest-first; we bucket client-side.
-      const res = await fetch('/api/gateway/traces?limit=2000')
+      // Larger limit so we get enough coverage over 24h. Gateway caps
+      // at 1000 per page — going higher returns an empty list, so we
+      // stay at the cap. (At ~120 traces/hr a 24h window fits.)
+      const res = await fetch('/api/gateway/traces?limit=1000')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       return (data.traces || []) as any[]
@@ -35,6 +39,9 @@ function useActivity24h(): { data: HourBucket[]; isLoading: boolean } {
     refetchInterval: 30_000,
     staleTime: 25_000,
   })
+
+  // Mock mode short-circuit — deterministic shape, no backend needed.
+  if (USE_MOCK) return { data: mockHourlyBuckets(), isLoading: false }
 
   // Build 24 buckets, indexed from oldest (23h ago) to newest (now).
   const buckets: HourBucket[] = []

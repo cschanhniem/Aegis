@@ -4,7 +4,7 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import PhotoBand from '@/components/PhotoBand.astro';
 
-// Until docs.aegis.dev (Mintlify / Docusaurus) launches, /docs is a
+// Until docs.aegistraces.com (Mintlify / Docusaurus) launches, /docs is a
 // single curated landing page that gives the same five answers any
 // dev needs in the first 10 minutes: install, integrate, test,
 // observe, escalate.
@@ -14,7 +14,7 @@ const installPaths = [
     id: 'saas',
     title: 'Hosted SaaS (zero code change)',
     blurb: 'Point your existing OpenAI / Anthropic / Mistral / Gemini SDK at the gateway URL. No code edits.',
-    snippet: `export OPENAI_BASE_URL=https://gateway.aegis.dev/openai/v1
+    snippet: `export OPENAI_BASE_URL=https://gateway.aegistraces.com/openai/v1
 export AEGIS_API_KEY=aeg_xxx
 # upstream OpenAI key forwarded unchanged
 # your code stays untouched`,
@@ -84,7 +84,7 @@ const concepts = [
 ];
 
 // Internal-first reference list. Each link points to a real page on
-// aegis.dev rather than bouncing readers off to GitHub. The repo +
+// aegistraces.com rather than bouncing readers off to GitHub. The repo +
 // changelog + roadmap stay on GitHub because that's where they live;
 // everything substantive is rendered into the site itself.
 const quickRefs = [
@@ -123,7 +123,7 @@ const quickRefs = [
         <p class="eyebrow">Documentation</p>
         <h1>Five minutes to your first protected call.</h1>
         <p class="lede">
-          A full docs portal at <code>docs.aegis.dev</code> launches
+          A full docs portal at <code>docs.aegistraces.com</code> launches
           with v1.0 (Mintlify-hosted). Until then, this page is the
           curated index — pick an install path, learn six concepts, jump
           to the deep references on GitHub.
@@ -215,7 +215,7 @@ const quickRefs = [
         </p>
         <div class="contact-actions">
           <a class="btn" href="https://github.com/Justin0504/Aegis/discussions" target="_blank" rel="noopener">Ask on GitHub</a>
-          <a class="btn-secondary" href="mailto:support@aegis.dev">support@aegis.dev</a>
+          <a class="btn-secondary" href="mailto:support@aegistraces.com">support@aegistraces.com</a>
         </div>
       </div>
     </section>

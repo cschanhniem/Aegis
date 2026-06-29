@@ -8,7 +8,7 @@
     "start":   "astro dev --port 4321",
     "build":   "astro build",
     "preview": "astro preview --host",
-    "deploy":  "astro build && wrangler pages deploy dist --project-name=aegis-marketing --commit-dirty=true"
+    "deploy":  "astro build && CI=false TERM=xterm-256color wrangler pages deploy dist --project-name=aegis-marketing --commit-dirty=true"
   },
   "dependencies": {
     "astro": "^4.16.0"

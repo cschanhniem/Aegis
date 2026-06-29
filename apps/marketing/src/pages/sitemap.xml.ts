@@ -2,7 +2,7 @@
 // lastmod = build time. Re-built on every Cloudflare Pages deploy.
 import type { APIRoute } from 'astro';
 
-const SITE = 'https://aegis.dev';
+const SITE = 'https://aegistraces.com';
 
 const pages = [
   { path: '/',                       priority: '1.0', changefreq: 'weekly'  },

@@ -22,6 +22,7 @@ import { CostPanel } from './cost-panel'
 import { SessionsPanel } from './sessions-panel'
 import { ActivityChart, useSparklineSeries } from './activity-chart'
 import { Sparkline } from '@/components/ui/sparkline'
+import { USE_MOCK, mockTotalActions, mockPendingChecks, mockViolations, mockAgents } from '@/lib/mock-traces'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -270,7 +271,8 @@ function EmptyState() {
 }
 
 export function DashboardOverview() {
-  const { data: stats } = useQuery({
+  const { data: liveStats } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const response = await fetch('/api/gateway/stats')
@@ -279,6 +281,15 @@ export function DashboardOverview() {
     },
     refetchInterval: 10_000,
   })
+  // Derive from the same mock pools the other panels use, so all numbers
+  // on the page line up (24h chart total = "Actions" stat, etc).
+  const mockStats = USE_MOCK ? {
+    totalTraces:   mockTotalActions(),
+    activeAgents:  mockAgents().filter(a => a.status === 'active').length,
+    pendingChecks: mockPendingChecks().length,
+    violations24h: mockViolations().length,
+  } : null
+  const stats = USE_MOCK ? mockStats : liveStats
 
   const trendLabel = (value: number | undefined) => {
     if (value === undefined || value === null) return null

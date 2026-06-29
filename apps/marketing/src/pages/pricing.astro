@@ -12,7 +12,7 @@ const tiers = [
     price: '$0',
     period: 'forever',
     blurb: 'For solo developers and OSS projects. Self-host, or use our hosted cloud — same gateway either way.',
-    cta:   { label: 'Start free', href: 'https://app.aegis.dev/signup' },
+    cta:   { label: 'Start free', href: 'https://app.aegistraces.com/signup' },
     featured: false,
     quotas: [
       '1 organization, 5 agents',
@@ -34,7 +34,7 @@ const tiers = [
     period: '/month',
     annualPrice: '$190 / yr (save 17%)',
     blurb: 'For startups and small product teams ready to gate production agents.',
-    cta:   { label: 'Upgrade to Pro', href: 'https://app.aegis.dev/billing?plan=pro' },
+    cta:   { label: 'Upgrade to Pro', href: 'https://app.aegistraces.com/billing?plan=pro' },
     featured: true,
     quotas: [
       '5 organizations, 100 agents',
@@ -58,7 +58,7 @@ const tiers = [
     period: '/month',
     annualPrice: '$990 / yr (save 17%)',
     blurb: 'For mid-market teams ready to bring AEGIS into compliance reviews.',
-    cta:   { label: 'Upgrade to Team', href: 'https://app.aegis.dev/billing?plan=team' },
+    cta:   { label: 'Upgrade to Team', href: 'https://app.aegistraces.com/billing?plan=team' },
     featured: false,
     quotas: [
       'Unlimited orgs / agents',
@@ -81,7 +81,7 @@ const tiers = [
     price: 'Custom',
     period: '',
     blurb: 'For regulated industries — self-hosted, BYOC, or on-prem with airgap.',
-    cta:   { label: 'Contact sales', href: 'mailto:sales@aegis.dev' },
+    cta:   { label: 'Contact sales', href: 'mailto:sales@aegistraces.com' },
     featured: false,
     quotas: [
       'Unlimited everything',
@@ -111,16 +111,70 @@ const tiers = [
     <section class="head">
       <div class="container container-narrow">
         <p class="eyebrow">Pricing</p>
-        <h1>Pay for usage, not seats.</h1>
+        <h1>Pay for operations, not the code.</h1>
         <p class="lede">
-          Every plan includes the same detector chain and audit
-          guarantees. You scale by request volume + IdP requirements,
-          not by how many engineers touch the cockpit.
+          AEGIS is MIT-licensed. The same gateway, cockpit, and detectors
+          power self-host and hosted. You pay only when you want us to
+          run Postgres, sign the SOC&nbsp;2 report, and answer the pager.
         </p>
       </div>
     </section>
 
+    <section class="paths">
+      <div class="container">
+        <div class="path-grid">
+          <article class="path">
+            <header>
+              <span class="path-tag">Path 1</span>
+              <h2>Self-host</h2>
+              <div class="path-price"><span class="amount">$0</span><span class="period">MIT, forever</span></div>
+            </header>
+            <p class="path-blurb">
+              Run AEGIS on your own infra — Docker, Helm, or a single
+              binary. Same code as our hosted SaaS, no feature lock.
+            </p>
+            <ul class="path-points">
+              <li>All detectors, packs, and SDKs</li>
+              <li>Full audit / compliance bundles</li>
+              <li>Community Slack support</li>
+              <li>You operate Postgres, TLS, backups</li>
+            </ul>
+            <div class="path-cta">
+              <a class="btn-secondary" href="https://github.com/Justin0504/Aegis">Download from GitHub</a>
+              <code>curl -fsSL aegistraces.com/install.sh | bash</code>
+            </div>
+          </article>
+
+          <article class="path featured">
+            <header>
+              <span class="path-tag">Path 2</span>
+              <h2>Hosted SaaS</h2>
+              <div class="path-price"><span class="amount">$0–Custom</span><span class="period">we run it</span></div>
+            </header>
+            <p class="path-blurb">
+              We run the gateway in our cloud. You point your agents at
+              it and stop thinking about uptime, backups, or upgrades.
+            </p>
+            <ul class="path-points">
+              <li>Free tier — 1k checks / mo, no card</li>
+              <li>Managed Postgres, hourly PITR</li>
+              <li>SLA-backed support on Pro+</li>
+              <li>SOC&nbsp;2 evidence pack on Enterprise</li>
+            </ul>
+            <div class="path-cta">
+              <a class="btn" href="https://app.aegistraces.com/signup">Sign up free</a>
+              <span class="path-fine">Pick a tier below.</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section class="tiers">
+      <div class="container container-narrow tier-eyebrow">
+        <p class="eyebrow">Hosted tiers</p>
+        <p class="tier-sub">All four tiers run the same MIT-licensed code. You're paying for operations, support, and compliance artifacts — not features the OSS doesn't have.</p>
+      </div>
       <div class="container">
         <div class="tier-grid">
           {tiers.map(t => (
@@ -189,7 +243,7 @@ const tiers = [
           <p>Yes — 50% off Pro and Team for the first 12 months for
             YC-backed companies, USC / MIT / Berkeley labs, and any
             org with &lt; 10 employees + &lt; $1M ARR. Email
-            <a href="mailto:sales@aegis.dev">sales@aegis.dev</a>.</p>
+            <a href="mailto:sales@aegistraces.com">sales@aegistraces.com</a>.</p>
         </details>
 
         <details>
@@ -221,6 +275,88 @@ const tiers = [
       font-size: 1.1rem;
       margin: 1rem 0 0;
     }
+
+    /* Two-path strip */
+    .paths { padding: 1rem 0 2rem; }
+    .path-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    .path {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      padding: 1.8rem 1.6rem;
+    }
+    .path.featured {
+      border: 1px solid var(--accent);
+      background: var(--surface-2);
+    }
+    .path header { display: flex; flex-direction: column; gap: 0.3rem; }
+    .path-tag {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .path h2 {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      margin: 0;
+    }
+    .path-price {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-top: 0.2rem;
+    }
+    .path-price .amount { font-size: 1.7rem; font-weight: 600; }
+    .path-price .period { color: var(--muted); font-size: 0.9rem; }
+    .path-blurb { color: var(--muted); margin: 0; font-size: 0.97rem; line-height: 1.55; }
+    .path-points {
+      list-style: none;
+      padding: 0.6rem 0;
+      margin: 0;
+      border-top: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .path-points li {
+      font-size: 0.92rem;
+      padding: 0.22rem 0;
+      color: var(--text);
+    }
+    .path-points li::before {
+      content: "✓ ";
+      color: var(--accent-positive);
+      font-weight: 700;
+      margin-right: 0.2rem;
+    }
+    .path-cta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: auto;
+    }
+    .path-cta code {
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 6px;
+      padding: 0.5rem 0.7rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      overflow-x: auto;
+    }
+    .path-fine { color: var(--muted); font-size: 0.85rem; text-align: center; }
+    @media (max-width: 760px) {
+      .path-grid { grid-template-columns: 1fr; }
+    }
+
+    .tier-eyebrow { margin-bottom: 1.2rem; }
+    .tier-sub { color: var(--muted); margin: 0.4rem 0 0; font-size: 0.95rem; }
 
     .tiers { padding: 1rem 0 4rem; }
     .tier-grid {

@@ -1,0 +1,566 @@
+---
+// Interactive product tour — 90s state-machine demo of the
+// scan → NL-policy → blocking flow. No video file required.
+//
+// Mirrors docs/DEMO-VIDEO-SCRIPT.md beat-for-beat so it can be
+// replaced with the actual MP4 once recorded, with zero copy changes.
+import Layout from '@/layouts/Layout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+
+<Layout
+  title="AEGIS — 90-second tour"
+  description="Watch AEGIS scan a repo, generate a policy from plain English, and block a leaked email in real time."
+>
+  <Header current="tour" />
+
+  <main>
+    <section class="tour-hero">
+      <div class="container container-narrow">
+        <p class="eyebrow">90-second tour</p>
+        <h1>Scan a repo. Write a policy in plain English. Watch it block.</h1>
+      </div>
+    </section>
+
+    <section class="tour-stage">
+      <div class="container">
+        <div class="stage" id="stage" aria-live="polite">
+          <!-- progress bar -->
+          <div class="progress"><div class="progress-fill" id="progress-fill"></div></div>
+
+          <!-- ─── BEAT 0 — cold open (8s) ─────────────────────────── -->
+          <div class="beat active" data-beat="0">
+            <div class="open">
+              <p class="open-line" id="open-line-1">Your AI agent can call any tool.</p>
+              <p class="open-line" id="open-line-2">Are you sure that's a good idea?</p>
+            </div>
+          </div>
+
+          <!-- ─── BEAT 1 — scan (14s) ─────────────────────────────── -->
+          <div class="beat" data-beat="1">
+            <div class="terminal">
+              <div class="terminal-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="term-title">~/my-agent-repo — aegis scan</span></div>
+              <pre class="terminal-body" id="scan-body"></pre>
+            </div>
+            <p class="caption">Static scan — no code change, no SDK install.</p>
+          </div>
+
+          <!-- ─── BEAT 2 — NL policy (20s) ────────────────────────── -->
+          <div class="beat" data-beat="2">
+            <div class="modal">
+              <div class="modal-head">
+                <span class="modal-title">New policy</span>
+                <span class="modal-x">×</span>
+              </div>
+              <label class="modal-label">Describe what you want to block, in plain English</label>
+              <div class="modal-input" id="nl-input"></div>
+              <button class="modal-btn" id="generate-btn">✨ Generate</button>
+              <div class="modal-output" id="dsl-output">
+                <pre id="dsl-pre"></pre>
+              </div>
+            </div>
+            <p class="caption">Plain English → enforceable policy. No DSL to learn.</p>
+          </div>
+
+          <!-- ─── BEAT 3 — blocking (28s) ─────────────────────────── -->
+          <div class="beat" data-beat="3">
+            <div class="cockpit">
+              <div class="cockpit-head">
+                <span class="cockpit-title">Activity · last 24h</span>
+                <span class="cockpit-meta">680 actions · 11 blocked</span>
+              </div>
+              <svg class="cockpit-curve" viewBox="0 0 600 80" preserveAspectRatio="none">
+                <path id="curve-path"
+                  d="M0,70 C40,68 80,40 120,35 C160,30 200,22 240,18 C280,15 320,28 360,30 C400,32 440,55 480,62 C520,68 560,72 600,70"
+                  fill="none" stroke="var(--text)" stroke-width="1.6"/>
+              </svg>
+              <ul class="activity" id="activity">
+                <li><span class="ico ico-search">🔍</span><span class="atext">Searched Google for "kubernetes pod restart loop"</span><span class="adur">480ms</span><span class="aok">✓</span></li>
+                <li><span class="ico ico-openai">⚡</span><span class="atext">POSTed api.openai.com</span><span class="adur">310ms</span><span class="aok">✓</span></li>
+                <li><span class="ico ico-db">🗄</span><span class="atext">Queried users</span><span class="adur">45ms</span><span class="aok">✓</span></li>
+              </ul>
+              <div class="trace-detail" id="trace-detail">
+                <div class="detail-head">
+                  <span class="detail-title">Security Triage · sent email</span>
+                  <span class="badge-block">BLOCKED</span>
+                </div>
+                <div class="detail-row"><span class="detail-k">What it tried</span><span class="detail-v">→ alice.chen@gmail.com · "Q3 retro notes"</span></div>
+                <div class="detail-row"><span class="detail-k">Decision</span><span class="detail-v">block-personal-email-in-checkout</span></div>
+                <div class="detail-row"><span class="detail-k">Integrity</span><span class="detail-v ok">✓ Verified · #0a16</span></div>
+              </div>
+            </div>
+            <p class="caption">Same gateway. Real-time. Cryptographically audited.</p>
+          </div>
+
+          <!-- ─── BEAT 4 — vertical packs (12s) ───────────────────── -->
+          <div class="beat" data-beat="4">
+            <div class="packs">
+              <div class="pack" data-pack="payments"><h4>Payments</h4><p>PCI-DSS · 5 policies</p><span class="pack-install">Install →</span></div>
+              <div class="pack featured" data-pack="healthcare"><h4>Healthcare</h4><p>HIPAA · 5 policies</p><span class="pack-install" id="pack-install">Installing…</span><ul class="pack-list" id="pack-list"><li>PHI redaction</li><li>Minimum-necessary</li><li>TLS-only egress</li><li>Bulk export limit</li><li>Treatment modify</li></ul></div>
+              <div class="pack" data-pack="finance"><h4>Finance</h4><p>BSA/AML/SOX · 5 policies</p><span class="pack-install">Install →</span></div>
+              <div class="pack" data-pack="saas"><h4>SaaS</h4><p>GDPR/CCPA · 5 policies</p><span class="pack-install">Install →</span></div>
+            </div>
+            <p class="caption">Pre-built for the verticals you ship to.</p>
+          </div>
+
+          <!-- ─── BEAT 5 — close (8s) ─────────────────────────────── -->
+          <div class="beat" data-beat="5">
+            <div class="close">
+              <h2 class="close-name">AEGIS</h2>
+              <p class="close-tag">Runtime safety for AI agents.</p>
+              <div class="close-cta">
+                <a href="/download" class="btn-dual">
+                  <span class="btn-dual-eyebrow">Self-host</span>
+                  <span class="btn-dual-label">Download</span>
+                  <span class="btn-dual-fine">Free · MIT</span>
+                </a>
+                <a href="https://app.aegistraces.com/signup" class="btn-dual primary">
+                  <span class="btn-dual-eyebrow">Hosted</span>
+                  <span class="btn-dual-label">Sign up free</span>
+                  <span class="btn-dual-fine">1k checks/mo · no card</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- controls -->
+          <div class="controls">
+            <button class="ctrl" id="ctrl-toggle" aria-label="pause/play">⏸</button>
+            <div class="dots" id="dots">
+              <button class="dot-btn active" data-jump="0"></button>
+              <button class="dot-btn" data-jump="1"></button>
+              <button class="dot-btn" data-jump="2"></button>
+              <button class="dot-btn" data-jump="3"></button>
+              <button class="dot-btn" data-jump="4"></button>
+              <button class="dot-btn" data-jump="5"></button>
+            </div>
+            <button class="ctrl" id="ctrl-replay" aria-label="replay">↻</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+
+  <script is:inline>
+    // ── 90-second state machine ──────────────────────────────────────
+    // Beat budgets in ms (mirrors docs/DEMO-VIDEO-SCRIPT.md)
+    const BEATS = [8000, 14000, 20000, 28000, 12000, 8000];
+    const TOTAL = BEATS.reduce((a, b) => a + b, 0);
+
+    const stage     = document.getElementById('stage');
+    const beats     = stage.querySelectorAll('.beat');
+    const progress  = document.getElementById('progress-fill');
+    const dots      = document.querySelectorAll('.dot-btn');
+    const toggleBtn = document.getElementById('ctrl-toggle');
+    const replayBtn = document.getElementById('ctrl-replay');
+
+    let current  = 0;
+    let beatStart = performance.now();
+    let paused   = false;
+    let pausedAt = 0;        // ms into the current beat when paused
+    let rafId    = null;
+
+    function showBeat(i) {
+      beats.forEach(b => b.classList.toggle('active', Number(b.dataset.beat) === i));
+      dots.forEach(d => d.classList.toggle('active', Number(d.dataset.jump) === i));
+      current = i;
+      beatStart = performance.now() - 0;
+      pausedAt = 0;
+      runBeatAnimation(i);
+    }
+
+    function tick(now) {
+      if (paused) return;
+      const elapsedInBeat = now - beatStart;
+      const elapsedTotal  = BEATS.slice(0, current).reduce((a, b) => a + b, 0) + elapsedInBeat;
+      progress.style.width = `${Math.min(100, (elapsedTotal / TOTAL) * 100)}%`;
+      if (elapsedInBeat >= BEATS[current]) {
+        if (current < BEATS.length - 1) showBeat(current + 1);
+        else { paused = true; toggleBtn.textContent = '↻'; return; }
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function startTick() {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(tick);
+    }
+
+    // ── Per-beat animations ──────────────────────────────────────────
+    let typingTimer = null;
+    function typewriter(el, text, speedMs = 28, done) {
+      clearInterval(typingTimer);
+      el.textContent = '';
+      let i = 0;
+      typingTimer = setInterval(() => {
+        if (paused) return;
+        el.textContent += text[i++];
+        if (i >= text.length) { clearInterval(typingTimer); done && done(); }
+      }, speedMs);
+    }
+
+    function runBeatAnimation(i) {
+      // Reset transient state per beat so jumping back replays
+      if (i === 0) {
+        document.getElementById('open-line-1').classList.add('show');
+        setTimeout(() => document.getElementById('open-line-2').classList.add('show'), 2200);
+      }
+      if (i === 1) {
+        const lines = [
+          '$ aegis scan ./my-agent-repo',
+          '→ Analyzing 24 files…',
+          '→ Detected agent framework: LangGraph',
+          '→ Found 7 tools: send_email, web_search, http_post, db_query,',
+          '                 shell, file_write, stripe_charge',
+          '→ Workflow graph: 3 agents (Customer Support, Data Pipeline,',
+          '                              Security Triage)',
+          '→ Risk: 2 HIGH (shell, stripe_charge), 3 MEDIUM, 2 LOW',
+          '✓ Scan complete in 1.4s',
+        ];
+        const body = document.getElementById('scan-body');
+        body.textContent = '';
+        let li = 0;
+        const stamp = () => {
+          if (li >= lines.length) return;
+          body.textContent += (li === 0 ? '' : '\n') + lines[li++];
+          if (li < lines.length) setTimeout(stamp, 600 + Math.random() * 500);
+        };
+        stamp();
+      }
+      if (i === 2) {
+        const NL = 'Block emails to personal addresses during checkout flow. Allow ops@acme.io but flag anything to gmail, outlook, or icloud.';
+        const DSL =
+`rule: "block-personal-email-in-checkout"
+when:
+  - tool.name == "send_email"
+  - context.workflow == "checkout"
+recipient:
+  deny: ["@gmail.com", "@outlook.com", "@icloud.com"]
+  allow: ["@acme.io"]
+action: BLOCK`;
+        document.getElementById('dsl-output').classList.remove('shown');
+        document.getElementById('generate-btn').classList.remove('loading');
+        typewriter(document.getElementById('nl-input'), NL, 22, () => {
+          setTimeout(() => {
+            document.getElementById('generate-btn').classList.add('loading');
+            setTimeout(() => {
+              document.getElementById('dsl-output').classList.add('shown');
+              document.getElementById('dsl-pre').textContent = DSL;
+            }, 1400);
+          }, 600);
+        });
+      }
+      if (i === 3) {
+        const ul = document.getElementById('activity');
+        const detail = document.getElementById('trace-detail');
+        detail.classList.remove('shown');
+        // Remove any previously-inserted blocked row so replay is clean
+        ul.querySelectorAll('.blocked-row').forEach(n => n.remove());
+        setTimeout(() => {
+          const li = document.createElement('li');
+          li.className = 'blocked-row';
+          li.innerHTML = '<span class="ico ico-gmail">📧</span><span class="atext">Emailed alice.chen@gmail.com</span><span class="adur">220ms</span><span class="ablk">🛡 BLOCKED</span>';
+          ul.insertBefore(li, ul.firstChild);
+          setTimeout(() => detail.classList.add('shown'), 1800);
+        }, 1000);
+      }
+      if (i === 4) {
+        const card = document.querySelector('[data-pack="healthcare"]');
+        card.classList.remove('installed');
+        document.getElementById('pack-install').textContent = 'Installing…';
+        setTimeout(() => {
+          card.classList.add('installed');
+          document.getElementById('pack-install').textContent = '✓ Installed';
+        }, 2400);
+      }
+    }
+
+    // ── Controls ─────────────────────────────────────────────────────
+    toggleBtn.addEventListener('click', () => {
+      if (current === BEATS.length - 1 && paused && progress.offsetWidth >= stage.offsetWidth * 0.99) {
+        // ended → replay
+        showBeat(0); paused = false; toggleBtn.textContent = '⏸'; startTick(); return;
+      }
+      paused = !paused;
+      toggleBtn.textContent = paused ? '▶' : '⏸';
+      if (!paused) { beatStart = performance.now() - pausedAt; startTick(); }
+      else pausedAt = performance.now() - beatStart;
+    });
+
+    replayBtn.addEventListener('click', () => {
+      showBeat(0); paused = false; toggleBtn.textContent = '⏸'; startTick();
+    });
+
+    dots.forEach(d => d.addEventListener('click', () => {
+      showBeat(Number(d.dataset.jump));
+      paused = false; toggleBtn.textContent = '⏸'; startTick();
+    }));
+
+    // Pause on hover to let viewers read
+    stage.addEventListener('mouseenter', () => {
+      if (paused) return;
+      pausedAt = performance.now() - beatStart;
+      paused = true; toggleBtn.textContent = '▶';
+    });
+    stage.addEventListener('mouseleave', () => {
+      if (!paused) return;
+      paused = false; toggleBtn.textContent = '⏸';
+      beatStart = performance.now() - pausedAt;
+      startTick();
+    });
+
+    showBeat(0);
+    startTick();
+  </script>
+
+  <style>
+    .tour-hero { padding: 4rem 0 1.5rem; }
+    .eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin: 0 0 0.5rem; }
+    .tour-hero h1 { max-width: 22ch; }
+
+    .tour-stage { padding: 0 0 5rem; }
+    .stage {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      height: 540px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    @media (max-width: 720px) {
+      .stage { height: 480px; }
+    }
+
+    .progress {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--hairline); z-index: 10;
+    }
+    .progress-fill {
+      height: 100%; background: var(--accent); width: 0%;
+      transition: width 80ms linear;
+    }
+
+    .beat {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 3rem 2rem 5rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.45s ease;
+    }
+    .beat.active { opacity: 1; pointer-events: auto; }
+    .caption {
+      position: absolute; bottom: 4.5rem; left: 0; right: 0;
+      text-align: center; color: var(--muted); font-size: 0.88rem; margin: 0;
+    }
+
+    /* ── Beat 0 — open ── */
+    .open { text-align: center; }
+    .open-line {
+      font-family: var(--font-serif);
+      font-size: 2.4rem;
+      font-style: italic;
+      margin: 0.6rem 0;
+      opacity: 0;
+      transition: opacity 0.9s ease;
+    }
+    .open-line.show { opacity: 1; }
+    .open-line:nth-child(2) { color: var(--accent); }
+
+    /* ── Beat 1 — terminal ── */
+    .terminal {
+      width: 100%; max-width: 720px;
+      background: #0e0e0f; border-radius: 10px; overflow: hidden;
+      box-shadow: 0 8px 24px hsl(0 0% 0% / 0.12);
+    }
+    .terminal-bar {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.6rem 0.8rem; background: #1a1a1c; border-bottom: 1px solid #2a2a2c;
+    }
+    .terminal-bar .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .terminal-bar .dot.r { background: #ff5f57; }
+    .terminal-bar .dot.y { background: #febc2e; }
+    .terminal-bar .dot.g { background: #28c840; }
+    .term-title { margin-left: 0.7rem; font-size: 0.75rem; color: #8a8a8d; }
+    .terminal-body {
+      margin: 0; padding: 1rem 1.2rem;
+      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: 0.86rem;
+      color: #d8d8db;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      min-height: 240px;
+    }
+
+    /* ── Beat 2 — NL policy modal ── */
+    .modal {
+      width: 100%; max-width: 560px;
+      background: var(--bg); border: 1px solid var(--hairline);
+      border-radius: 10px; padding: 1.1rem 1.2rem;
+    }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-weight: 600; }
+    .modal-x { color: var(--muted); cursor: default; }
+    .modal-label { display: block; color: var(--muted); font-size: 0.82rem; margin: 0.8rem 0 0.3rem; }
+    .modal-input {
+      min-height: 60px; padding: 0.6rem 0.7rem;
+      border: 1px solid var(--hairline); border-radius: 6px;
+      font-size: 0.92rem; line-height: 1.5; background: var(--surface);
+      white-space: pre-wrap;
+    }
+    .modal-btn {
+      margin-top: 0.7rem; padding: 0.5rem 0.9rem;
+      background: var(--text); color: var(--bg); border: none; border-radius: 6px;
+      font-size: 0.86rem; cursor: pointer;
+    }
+    .modal-btn.loading::after { content: ' …'; }
+    .modal-output {
+      max-height: 0; overflow: hidden; transition: max-height 0.5s ease;
+      margin-top: 0.7rem;
+    }
+    .modal-output.shown { max-height: 240px; }
+    .modal-output pre {
+      background: #0e0e0f; color: #d8d8db; padding: 0.8rem 1rem;
+      border-radius: 6px; margin: 0; overflow-x: auto;
+      font-family: ui-monospace, monospace; font-size: 0.78rem; line-height: 1.55;
+    }
+
+    /* ── Beat 3 — cockpit + blocking ── */
+    .cockpit {
+      width: 100%; max-width: 760px;
+      background: var(--bg); border: 1px solid var(--hairline);
+      border-radius: 10px; padding: 1rem 1.2rem;
+    }
+    .cockpit-head { display: flex; justify-content: space-between; font-size: 0.85rem; }
+    .cockpit-title { font-weight: 600; }
+    .cockpit-meta { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .cockpit-curve { width: 100%; height: 60px; margin: 0.4rem 0 0.7rem; opacity: 0.85; }
+
+    .activity { list-style: none; padding: 0; margin: 0; }
+    .activity li {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.45rem 0.6rem; border-radius: 6px;
+      background: var(--surface); margin-bottom: 0.25rem;
+      font-size: 0.84rem;
+    }
+    .activity .ico { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; font-size: 12px; }
+    .activity .ico-search { background: #4285F4; color: #fff; }
+    .activity .ico-openai { background: #10A37F; color: #fff; }
+    .activity .ico-db     { background: #336791; color: #fff; }
+    .activity .ico-gmail  { background: #EA4335; color: #fff; }
+    .activity .atext { flex: 1; }
+    .activity .adur  { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.78rem; }
+    .activity .aok   { color: hsl(150 30% 40%); }
+    .activity .ablk  {
+      color: hsl(0 55% 42%); font-weight: 600;
+      background: hsl(0 55% 42% / 0.08); padding: 0.1rem 0.4rem; border-radius: 4px;
+    }
+    .blocked-row {
+      animation: slideInRed 0.5s ease;
+      border: 1px solid hsl(0 55% 42% / 0.25);
+    }
+    @keyframes slideInRed {
+      0%   { transform: translateY(-8px); opacity: 0; background: hsl(0 55% 42% / 0.18); }
+      60%  { background: hsl(0 55% 42% / 0.12); }
+      100% { transform: translateY(0); opacity: 1; background: var(--surface); }
+    }
+
+    .trace-detail {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.5s ease, padding 0.5s ease, margin 0.5s ease;
+      padding: 0 0.9rem; background: var(--surface); border-radius: 6px;
+      border: 1px solid var(--hairline);
+      font-size: 0.82rem;
+    }
+    .trace-detail.shown {
+      max-height: 240px; padding: 0.8rem 0.9rem; margin-top: 0.6rem;
+    }
+    .detail-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+    .detail-title { font-weight: 600; }
+    .badge-block {
+      color: hsl(0 55% 42%); background: hsl(0 55% 42% / 0.1);
+      padding: 0.12rem 0.5rem; border-radius: 4px; font-size: 0.74rem; font-weight: 600;
+    }
+    .detail-row { display: flex; gap: 0.7rem; padding: 0.2rem 0; }
+    .detail-k { color: var(--muted); width: 100px; flex-shrink: 0; }
+    .detail-v.ok { color: hsl(150 30% 38%); }
+
+    /* ── Beat 4 — packs ── */
+    .packs {
+      width: 100%; max-width: 720px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem;
+    }
+    .pack {
+      background: var(--bg); border: 1px solid var(--hairline);
+      border-radius: 10px; padding: 1rem; position: relative;
+      transition: border-color 0.25s ease, transform 0.25s ease;
+    }
+    .pack h4 { margin: 0 0 0.2rem; font-family: var(--font-serif); }
+    .pack p { margin: 0; color: var(--muted); font-size: 0.84rem; }
+    .pack-install {
+      position: absolute; top: 1rem; right: 1rem;
+      font-size: 0.78rem; color: var(--accent);
+    }
+    .pack.featured { border-color: var(--accent); transform: scale(1.02); }
+    .pack-list {
+      list-style: none; padding: 0;
+      margin: 0.7rem 0 0; max-height: 0; overflow: hidden;
+      transition: max-height 0.6s ease;
+    }
+    .pack.installed .pack-list { max-height: 200px; }
+    .pack-list li {
+      padding: 0.18rem 0; font-size: 0.8rem; color: var(--text);
+      animation: fadeUp 0.4s ease backwards;
+    }
+    .pack.installed .pack-list li:nth-child(1) { animation-delay: 0.0s; }
+    .pack.installed .pack-list li:nth-child(2) { animation-delay: 0.1s; }
+    .pack.installed .pack-list li:nth-child(3) { animation-delay: 0.2s; }
+    .pack.installed .pack-list li:nth-child(4) { animation-delay: 0.3s; }
+    .pack.installed .pack-list li:nth-child(5) { animation-delay: 0.4s; }
+    .pack-list li::before { content: "✓ "; color: hsl(150 30% 38%); margin-right: 0.2rem; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Beat 5 — close ── */
+    .close { text-align: center; }
+    .close-name { font-family: var(--font-serif); font-size: 3rem; margin: 0; }
+    .close-tag  { color: var(--muted); margin: 0.5rem 0 1.6rem; font-size: 1.05rem; }
+    .close-cta  { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; max-width: 480px; margin: 0 auto; }
+    @media (max-width: 540px) { .close-cta { grid-template-columns: 1fr; } }
+
+    /* btn-dual reused from index — minimal redef for isolation */
+    .btn-dual { display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; padding: 0.9rem 1.1rem; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface); color: var(--text); text-decoration: none; transition: border-color 0.15s ease, background 0.15s ease; }
+    .btn-dual:hover { border-color: var(--text); }
+    .btn-dual.primary { background: var(--surface-2); border-color: rgba(10, 10, 10, 0.18); }
+    .btn-dual-eyebrow { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; }
+    .btn-dual-label { font-size: 1rem; font-weight: 600; }
+    .btn-dual-fine { font-size: 0.76rem; opacity: 0.6; }
+
+    /* ── Controls ── */
+    .controls {
+      position: absolute; bottom: 1rem; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: center; gap: 1rem;
+      z-index: 10;
+    }
+    .ctrl {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--hairline); background: var(--bg); color: var(--text);
+      font-size: 0.85rem; cursor: pointer; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .ctrl:hover { border-color: var(--text); }
+    .dots { display: flex; gap: 0.4rem; }
+    .dot-btn {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--hairline); border: none; cursor: pointer; padding: 0;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .dot-btn:hover { transform: scale(1.3); }
+    .dot-btn.active { background: var(--text); transform: scale(1.3); }
+  </style>
+</Layout>

@@ -1,188 +1,245 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 #
-# AEGIS One-Command Installer
+# AEGIS one-line installer  ·  https://aegistraces.com/install
 # ─────────────────────────────────────────────────────────────
-# Usage (from anywhere):
+#   curl -fsSL https://aegistraces.com/install | sh
 #
-#   curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh | bash
+# Downloads the right pre-built binary for your machine, installs it
+# to /usr/local/bin (or $HOME/.aegis/bin if unprivileged), and prints
+# what to do next.
 #
-# Or, with a custom install directory:
+# No git, no docker, no build toolchain required — the binary ships
+# the gateway, the cockpit, and an embedded runtime.
 #
-#   curl -fsSL https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh \
-#     | AEGIS_DIR=$HOME/aegis bash
+# Honours:
+#   AEGIS_VERSION   release tag to fetch (default: latest)
+#   AEGIS_PREFIX    install root         (default: /usr/local or $HOME/.aegis)
+#   AEGIS_CHANNEL   stable | beta        (default: stable)
+#   AEGIS_NO_PATH   set to 1 to skip PATH modification of shell rc
 #
-# Environment variables:
-#   AEGIS_DIR          target directory (default: ./aegis)
-#   AEGIS_BRANCH       git branch to clone (default: main)
-#   AEGIS_REPO         git URL (default: https://github.com/Justin0504/Aegis.git)
-#   AEGIS_SKIP_PULL    set to 1 to skip 'docker compose pull'
-#   AEGIS_NO_START     set to 1 to clone + write .env but NOT start docker
-#
-# This script:
-#   1. Validates required tools (git, docker, docker compose)
-#   2. Clones the repo into $AEGIS_DIR (or updates if it already exists)
-#   3. Creates .env from .env.example if missing
-#   4. Runs `docker compose up -d`
-#   5. Polls /health and prints the dashboard URL + bootstrap API key
+# Inspired by: bun.sh/install · ollama.com/install.sh · k3s.io · tailscale.com
 # ─────────────────────────────────────────────────────────────
-set -euo pipefail
+set -eu
 
-AEGIS_DIR="${AEGIS_DIR:-./aegis}"
-AEGIS_BRANCH="${AEGIS_BRANCH:-main}"
-AEGIS_REPO="${AEGIS_REPO:-https://github.com/Justin0504/Aegis.git}"
-AEGIS_SKIP_PULL="${AEGIS_SKIP_PULL:-0}"
-AEGIS_NO_START="${AEGIS_NO_START:-0}"
+# ── Brand ───────────────────────────────────────────────────────
+LOGO='
+   █████╗ ███████╗ ██████╗ ██╗███████╗
+  ██╔══██╗██╔════╝██╔════╝ ██║██╔════╝
+  ███████║█████╗  ██║  ███╗██║███████╗
+  ██╔══██║██╔══╝  ██║   ██║██║╚════██║
+  ██║  ██║███████╗╚██████╔╝██║███████║
+  ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝╚══════╝
+            runtime safety for AI agents'
 
-# ── Terminal colors (no-op if stdout is not a TTY) ────────────
+# ── Colors (only if attached to a TTY) ──────────────────────────
 if [ -t 1 ]; then
-  GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[0;33m'
-  DIM='\033[2m'; BOLD='\033[1m'; NC='\033[0m'
+  C_G=$'\033[0;32m'; C_R=$'\033[0;31m'; C_Y=$'\033[0;33m'
+  C_B=$'\033[1m';    C_D=$'\033[2m';    C_N=$'\033[0m'
 else
-  GREEN=''; RED=''; YELLOW=''; DIM=''; BOLD=''; NC=''
+  C_G='';C_R='';C_Y='';C_B='';C_D='';C_N=''
 fi
-info()  { printf "${GREEN}%s${NC}\n" "$*"; }
-warn()  { printf "${YELLOW}%s${NC}\n" "$*"; }
-err()   { printf "${RED}%s${NC}\n" "$*" >&2; }
-dim()   { printf "${DIM}%s${NC}\n" "$*"; }
-step()  { printf "\n${BOLD}▸ %s${NC}\n" "$*"; }
+say()  { printf "%s\n" "$*"; }
+ok()   { printf "${C_G}✓${C_N} %s\n" "$*"; }
+warn() { printf "${C_Y}!${C_N} %s\n" "$*" >&2; }
+err()  { printf "${C_R}✗${C_N} %s\n" "$*" >&2; exit 1; }
+step() { printf "\n${C_B}▸${C_N} ${C_B}%s${C_N}\n" "$*"; }
+dim()  { printf "${C_D}  %s${C_N}\n" "$*"; }
 
-# ── 1. Pre-flight ────────────────────────────────────────────
-step "Pre-flight checks"
+# ── Defaults ────────────────────────────────────────────────────
+AEGIS_VERSION="${AEGIS_VERSION:-latest}"
+AEGIS_CHANNEL="${AEGIS_CHANNEL:-stable}"
+AEGIS_NO_PATH="${AEGIS_NO_PATH:-0}"
+REPO="Justin0504/Aegis"
 
-OS="$(uname -s)"
-ARCH="$(uname -m)"
-case "$OS" in
-  Linux|Darwin) ;;
-  *) err "Unsupported OS: $OS (this installer supports Linux and macOS)"; exit 1;;
+# ── Banner ──────────────────────────────────────────────────────
+printf "${C_B}%s${C_N}\n" "$LOGO"
+printf "\n${C_D}  channel: %s · version: %s${C_N}\n\n" \
+  "$AEGIS_CHANNEL" "$AEGIS_VERSION"
+
+# ── 1. Detect platform ──────────────────────────────────────────
+step "Detecting platform"
+
+OS_RAW=$(uname -s)
+ARCH_RAW=$(uname -m)
+
+case "$OS_RAW" in
+  Linux)  OS=linux  ;;
+  Darwin) OS=darwin ;;
+  *) err "Unsupported OS: $OS_RAW (Linux and macOS only — Windows users: use WSL2 or download AEGIS_Setup.exe from the releases page)" ;;
 esac
-case "$ARCH" in
-  x86_64|amd64|arm64|aarch64) ;;
-  *) warn "Untested architecture: $ARCH (continuing anyway)";;
+
+case "$ARCH_RAW" in
+  x86_64|amd64)        ARCH=x86_64 ;;
+  arm64|aarch64)       ARCH=arm64  ;;
+  *) err "Unsupported architecture: $ARCH_RAW" ;;
 esac
-dim "  OS:   $OS"
-dim "  Arch: $ARCH"
 
-# macOS users almost always want the .dmg — it ships the gateway, the
-# Cockpit, and a Node runtime in one self-contained app. Surface that
-# path before walking them through git clone + Docker.
-if [ "$OS" = "Darwin" ] && [ -z "${AEGIS_FORCE_DOCKER:-}" ]; then
-  echo
-  warn "Detected macOS. The fastest install is the native .dmg:"
-  echo "  https://github.com/Justin0504/Aegis/releases/latest"
-  echo
-  echo "  - Apple Silicon (M1+): AEGIS_*_aarch64.dmg"
-  echo "  - Intel:                AEGIS_*_x64.dmg"
-  echo
-  dim "  Continuing with the Docker path below in 5s — Ctrl+C to abort"
-  dim "  (Skip this nudge by setting AEGIS_FORCE_DOCKER=1)"
-  sleep 5
-  echo
-fi
+TARGET="aegis-${OS}-${ARCH}"
+ok "Detected ${C_B}${OS}/${ARCH}${C_N}"
 
-for bin in git curl docker; do
-  if ! command -v "$bin" >/dev/null 2>&1; then
-    err "Required: $bin (not found in PATH)"
-    case "$bin" in
-      docker) echo "  Install Docker Desktop: https://docs.docker.com/get-docker/";;
-      git)    echo "  Install git via your package manager.";;
-      curl)   echo "  Install curl via your package manager.";;
-    esac
-    exit 1
-  fi
-done
+# ── 2. Pick install prefix ──────────────────────────────────────
+step "Picking install directory"
 
-# Detect docker compose v1 (docker-compose) vs v2 (docker compose)
-if docker compose version >/dev/null 2>&1; then
-  COMPOSE="docker compose"
-elif command -v docker-compose >/dev/null 2>&1; then
-  COMPOSE="docker-compose"
+if [ -n "${AEGIS_PREFIX:-}" ]; then
+  PREFIX="$AEGIS_PREFIX"
+elif [ -w /usr/local/bin ]; then
+  PREFIX=/usr/local
+elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+  PREFIX=/usr/local
+  USE_SUDO=1
 else
-  err "Docker Compose not found (neither 'docker compose' nor 'docker-compose')."
-  exit 1
+  PREFIX="$HOME/.aegis"
+  mkdir -p "$PREFIX/bin"
 fi
-dim "  Compose: $COMPOSE"
+BIN_DIR="$PREFIX/bin"
+CFG_DIR="$HOME/.aegis"
+mkdir -p "$CFG_DIR"
 
-# Docker daemon reachable? (only required if we are actually going to start)
-if [ "$AEGIS_NO_START" != "1" ]; then
-  if ! docker info >/dev/null 2>&1; then
-    err "Docker daemon is not reachable. Start Docker Desktop / dockerd and retry."
-    exit 1
+ok "Will install to ${C_B}${BIN_DIR}${C_N}"
+
+# ── 3. Resolve the download URL ─────────────────────────────────
+step "Resolving release"
+
+if [ "$AEGIS_VERSION" = "latest" ]; then
+  if [ "$AEGIS_CHANNEL" = "stable" ]; then
+    RELEASE_API="https://api.github.com/repos/${REPO}/releases/latest"
+  else
+    # Pre-release: walk /releases and pick the newest where prerelease=true
+    RELEASE_API="https://api.github.com/repos/${REPO}/releases?per_page=10"
   fi
-fi
 
-# ── 2. Clone or update ───────────────────────────────────────
-step "Fetching AEGIS into $AEGIS_DIR"
+  RESP=$(curl -fsSL "$RELEASE_API" 2>/dev/null || true)
+  if [ -z "$RESP" ]; then
+    warn "Could not reach GitHub. Falling back to docker installer."
+    exec curl -fsSL "https://raw.githubusercontent.com/${REPO}/main/scripts/install-docker.sh" | sh
+  fi
 
-if [ -d "$AEGIS_DIR/.git" ]; then
-  dim "  Existing checkout detected — pulling latest from $AEGIS_BRANCH"
-  git -C "$AEGIS_DIR" fetch --depth 1 origin "$AEGIS_BRANCH"
-  git -C "$AEGIS_DIR" checkout "$AEGIS_BRANCH"
-  git -C "$AEGIS_DIR" pull --ff-only origin "$AEGIS_BRANCH"
+  if [ "$AEGIS_CHANNEL" = "beta" ]; then
+    TAG=$(printf "%s" "$RESP" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+  else
+    TAG=$(printf "%s" "$RESP" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+  fi
+  [ -z "$TAG" ] && err "Could not parse release tag from GitHub API"
 else
-  git clone --depth 1 --branch "$AEGIS_BRANCH" "$AEGIS_REPO" "$AEGIS_DIR"
-fi
-cd "$AEGIS_DIR"
-
-# ── 3. .env bootstrap ────────────────────────────────────────
-if [ ! -f .env ] && [ -f .env.example ]; then
-  cp .env.example .env
-  dim "  Created .env from .env.example"
+  TAG="$AEGIS_VERSION"
 fi
 
-if [ "$AEGIS_NO_START" = "1" ]; then
-  info "Clone complete. Skipping docker startup (AEGIS_NO_START=1)."
-  echo "To start later: cd $AEGIS_DIR && $COMPOSE up -d"
-  exit 0
+ASSET="${TARGET}.tar.gz"
+URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET}"
+SHA="https://github.com/${REPO}/releases/download/${TAG}/${ASSET}.sha256"
+
+ok "Release ${C_B}${TAG}${C_N}"
+dim "  asset: $ASSET"
+
+# ── 4. Download + verify ────────────────────────────────────────
+step "Downloading"
+
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+
+if ! curl -fL --progress-bar -o "$TMP/$ASSET" "$URL"; then
+  err "Download failed. Verify your network and that the release exists:
+    $URL"
 fi
+ok "Downloaded $(du -h "$TMP/$ASSET" | awk '{print $1}')"
 
-# ── 4. Pull images + start ───────────────────────────────────
-step "Starting AEGIS"
-
-if [ "$AEGIS_SKIP_PULL" != "1" ]; then
-  $COMPOSE pull
-fi
-$COMPOSE up -d --build
-
-# ── 5. Wait for gateway ──────────────────────────────────────
-printf "Waiting for gateway"
-HEALTHY=0
-for _ in $(seq 1 30); do
-  if curl -sf http://localhost:8080/health >/dev/null 2>&1; then
-    HEALTHY=1; printf "\n"; break
+# SHA256 verify — strict, no skip
+if curl -fsSL "$SHA" -o "$TMP/$ASSET.sha256" 2>/dev/null; then
+  step "Verifying checksum"
+  EXPECTED=$(awk '{print $1}' "$TMP/$ASSET.sha256")
+  if command -v sha256sum >/dev/null 2>&1; then
+    ACTUAL=$(sha256sum "$TMP/$ASSET" | awk '{print $1}')
+  else
+    ACTUAL=$(shasum -a 256 "$TMP/$ASSET" | awk '{print $1}')
   fi
-  printf "."; sleep 2
-done
-
-if [ $HEALTHY -ne 1 ]; then
-  err "Gateway did not become healthy within 60s."
-  echo "Inspect logs: $COMPOSE logs gateway"
-  exit 1
+  if [ "$EXPECTED" != "$ACTUAL" ]; then
+    err "Checksum mismatch.
+    expected: $EXPECTED
+    actual:   $ACTUAL
+  Aborting — do NOT run a binary that fails verification."
+  fi
+  ok "Checksum verified"
+else
+  warn "No .sha256 file published for ${TAG} — skipping verification (not ideal)"
 fi
-info "Gateway is healthy."
 
-# ── 6. Bootstrap dashboard key ───────────────────────────────
-KEY=""
-KEY="$(curl -sf http://localhost:8080/api/v1/auth/key 2>/dev/null \
-  | sed -n 's/.*"api_key":"\([^"]*\)".*/\1/p' || true)"
+# ── 5. Extract + install ────────────────────────────────────────
+step "Installing"
 
-# ── 7. Done ──────────────────────────────────────────────────
-echo
-echo "═══════════════════════════════════════════════════════════════"
-info "  AEGIS is running."
-echo "═══════════════════════════════════════════════════════════════"
-echo
-echo "  Cockpit  : ${BOLD}http://localhost:3000${NC}"
-echo "  Gateway  : ${BOLD}http://localhost:8080${NC}"
-if [ -n "$KEY" ]; then
-  echo "  API Key  : ${BOLD}$KEY${NC}"
-  dim "  (paste into the Cockpit Settings tab on first load)"
+tar -xzf "$TMP/$ASSET" -C "$TMP"
+
+# The tarball layout is expected to be:
+#   aegis-<os>-<arch>/
+#     bin/aegis
+#     bin/aegis-gateway
+#     bin/aegis-cockpit
+#     LICENSE  README.md
+SRC="$TMP/$TARGET"
+[ -d "$SRC" ] || SRC="$TMP"   # fallback if tarball is flat
+[ -d "$SRC/bin" ] || err "Tarball layout unexpected. Open an issue: https://github.com/${REPO}/issues"
+
+if [ -n "${USE_SUDO:-}" ]; then
+  sudo install -m 0755 "$SRC/bin/aegis" "$BIN_DIR/aegis"
+  [ -f "$SRC/bin/aegis-gateway" ] && sudo install -m 0755 "$SRC/bin/aegis-gateway" "$BIN_DIR/aegis-gateway"
+  [ -f "$SRC/bin/aegis-cockpit" ] && sudo install -m 0755 "$SRC/bin/aegis-cockpit" "$BIN_DIR/aegis-cockpit"
+else
+  install -m 0755 "$SRC/bin/aegis" "$BIN_DIR/aegis"
+  [ -f "$SRC/bin/aegis-gateway" ] && install -m 0755 "$SRC/bin/aegis-gateway" "$BIN_DIR/aegis-gateway"
+  [ -f "$SRC/bin/aegis-cockpit" ] && install -m 0755 "$SRC/bin/aegis-cockpit" "$BIN_DIR/aegis-cockpit"
 fi
-echo
-echo "  Add the SDK to your agent (one line):"
-dim "    python -c \"import agentguard; agentguard.auto('http://localhost:8080', agent_id='my-agent')\""
-echo
-dim "  Stop:    cd $AEGIS_DIR && $COMPOSE down"
-dim "  Logs:    cd $AEGIS_DIR && $COMPOSE logs -f"
-dim "  Update:  cd $AEGIS_DIR && git pull && $COMPOSE up -d --build"
-echo
+ok "Binaries placed in $BIN_DIR"
+
+# ── 6. Ensure $BIN_DIR is on PATH ────────────────────────────────
+if [ "$AEGIS_NO_PATH" != "1" ] && ! printf "%s" "$PATH" | tr ':' '\n' | grep -qx "$BIN_DIR"; then
+  step "Updating shell PATH"
+
+  # Pick the most likely shell init file
+  RC=""
+  case "${SHELL:-}" in
+    */zsh)  RC="$HOME/.zshrc"  ;;
+    */bash) RC="$HOME/.bashrc" ;;
+    */fish) RC="$HOME/.config/fish/config.fish" ;;
+  esac
+
+  if [ -n "$RC" ]; then
+    # Don't duplicate
+    LINE='export PATH="'"$BIN_DIR"':$PATH"   # added by AEGIS installer'
+    [ -f "$RC" ] || touch "$RC"
+    if ! grep -Fxq "$LINE" "$RC"; then
+      printf '\n# AEGIS — runtime safety for AI agents (https://aegistraces.com)\n%s\n' "$LINE" >>"$RC"
+      ok "Added ${C_B}${BIN_DIR}${C_N} to PATH in ${C_B}$(basename "$RC")${C_N}"
+      dim "(restart your shell or run: source \"$RC\")"
+    fi
+  else
+    warn "Unknown shell — add this to your shell rc manually:
+    export PATH=\"$BIN_DIR:\$PATH\""
+  fi
+fi
+
+# ── 7. Self-test ────────────────────────────────────────────────
+step "Verifying install"
+
+if "$BIN_DIR/aegis" --version >/dev/null 2>&1; then
+  VERSION_OUT=$("$BIN_DIR/aegis" --version 2>/dev/null || echo "$TAG")
+  ok "Installed ${C_B}aegis ${VERSION_OUT}${C_N}"
+else
+  warn "Binary installed but \`aegis --version\` failed. Open an issue with platform details."
+fi
+
+# ── 8. Next steps ───────────────────────────────────────────────
+cat <<EOF
+
+${C_B}═════════════════════════════════════════════════════════════════${C_N}
+  ${C_G}AEGIS installed.${C_N} Three commands to know:
+
+  ${C_B}aegis login${C_N}              ${C_D}# pair this machine to your account${C_N}
+  ${C_B}aegis up${C_N}                 ${C_D}# start gateway + cockpit (http://localhost:8080)${C_N}
+  ${C_B}aegis scan ./your-repo${C_N}   ${C_D}# pre-deploy scan of your agent code${C_N}
+
+  Docs:        https://aegistraces.com/docs
+  Discord:     https://aegistraces.com/community
+  GitHub:      https://github.com/${REPO}
+${C_B}═════════════════════════════════════════════════════════════════${C_N}
+
+EOF

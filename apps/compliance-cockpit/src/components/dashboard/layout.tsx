@@ -8,7 +8,7 @@ import {
   LayoutDashboard, FileText, Shield, ScrollText, Sparkles,
   CheckCircle, AlertTriangle, Settings, FlaskConical,
   ShieldHalf, Compass, ClipboardList, UserRound, Layers, FileCheck2,
-  ScanLine, Menu, X, Wrench, ChevronDown,
+  ScanLine, Menu, X, Wrench, ChevronDown, Brain,
 } from 'lucide-react'
 import { useTraceStream } from '@/hooks/useTraceStream'
 import { BlockAlertToast } from '@/components/ui/block-alert-toast'
@@ -25,6 +25,7 @@ const navigation = [
   { name: 'Agents',      href: '/agents',     icon: UserRound       },
   { name: 'Policies',    href: '/policies',   icon: Shield          },
   { name: 'Coverage',    href: '/coverage',   icon: Layers          },
+  { name: 'Memory',      href: '/memory',     icon: Brain           },
   { name: 'Audit Log',   href: '/audit-log',  icon: ClipboardList   },
   { name: 'Compliance',  href: '/compliance', icon: FileCheck2      },
   { name: 'Settings',    href: '/settings',   icon: Settings        },
@@ -170,7 +171,11 @@ function SidebarContent({ pathname, connected, lastUpdate, notifPermission, requ
             {connected ? 'Live' : 'Connecting\u2026'}
           </span>
           {lastUpdate && (
-            <span className="text-[10px] ml-auto" style={{ color: MUTED, opacity: 0.7 }}>
+            <span
+              className="text-[10px] ml-auto"
+              style={{ color: MUTED, opacity: 0.7 }}
+              suppressHydrationWarning
+            >
               {lastUpdate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
           )}

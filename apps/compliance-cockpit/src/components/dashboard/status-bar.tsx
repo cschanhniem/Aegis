@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Shield, ShieldAlert, Link2 } from 'lucide-react'
 import { gw } from '@/lib/gateway'
+import { USE_MOCK, mockTotalActions, mockPendingChecks, mockViolations, mockAgents } from '@/lib/mock-traces'
 
 const BORDER  = 'hsl(var(--border))'
 const TEXT    = 'hsl(var(--foreground))'
@@ -32,6 +33,17 @@ export function StatusBar() {
   const [integrity, setIntegrity] = useState<IntegritySummary | null>(null)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      setStats({
+        totalTraces:   mockTotalActions(),
+        pendingChecks: mockPendingChecks().length,
+        violations24h: mockViolations().length,
+        activeAgents:  mockAgents().filter(a => a.status === 'active').length,
+        tracesTrend:   12,
+      })
+      setReachable(true)
+      return
+    }
     let cancelled = false
     const tick = async () => {
       try {
@@ -59,6 +71,11 @@ export function StatusBar() {
   // within a minute, long enough that a 50-agent deployment doesn't
   // burn CPU on every dashboard tick.
   useEffect(() => {
+    if (USE_MOCK) {
+      const totalAgents = mockAgents().length
+      setIntegrity({ total: totalAgents, ok: totalAgents, broken: 0 })
+      return
+    }
     let cancelled = false
     const tick = async () => {
       try {

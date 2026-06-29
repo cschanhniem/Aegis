@@ -16,7 +16,7 @@ import Footer from '@/components/Footer.astro';
         <p class="lede">
           The cockpit is at a tenant-scoped subdomain. If you signed up
           for early access, you got the URL by email — it looks like
-          <code>your-org.cockpit.aegis.dev</code>.
+          <code>your-org.cockpit.aegistraces.com</code>.
         </p>
 
         <div class="paths">
@@ -49,7 +49,7 @@ import Footer from '@/components/Footer.astro';
 
         <p class="muted small bottom">
           Stuck? Email
-          <a href="mailto:support@aegis.dev">support@aegis.dev</a>.
+          <a href="mailto:support@aegistraces.com">support@aegistraces.com</a>.
         </p>
       </div>
     </section>
@@ -57,7 +57,7 @@ import Footer from '@/components/Footer.astro';
   <Footer />
 
   <script is:inline>
-    // Tiny progressive enhancement — bounce to <org>.cockpit.aegis.dev.
+    // Tiny progressive enhancement — bounce to <org>.cockpit.aegistraces.com.
     document.addEventListener('DOMContentLoaded', () => {
       const form = document.getElementById('goto-cockpit');
       if (!form) return;
@@ -67,7 +67,7 @@ import Footer from '@/components/Footer.astro';
         if (!slug) return;
         const cleaned = String(slug).toLowerCase().replace(/[^a-z0-9\-]/g, '').replace(/^-+|-+$/g, '');
         if (!cleaned) return;
-        // Until app.aegis.dev is live, send to a friendly landing on /signup
+        // Until app.aegistraces.com is live, send to a friendly landing on /signup
         // so users know to expect an invite link rather than a 404.
         location.href = `/signup?org=${encodeURIComponent(cleaned)}`;
       });

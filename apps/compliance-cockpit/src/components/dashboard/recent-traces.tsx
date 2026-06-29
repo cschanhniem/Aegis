@@ -4,17 +4,20 @@ import { useQuery } from '@tanstack/react-query'
 import { formatDate, getStatusColor } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { traceSummary } from '@/lib/trace-summary'
+import { USE_MOCK, mockTraces } from '@/lib/mock-traces'
 
 export function RecentTraces() {
-  const { data: traces, isLoading } = useQuery({
+  const { data: liveTraces, isLoading } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['recent-traces'],
     queryFn: async () => {
       const response = await fetch('/api/gateway/traces?limit=5')
       if (!response.ok) throw new Error('Failed to fetch traces')
       return response.json()
     },
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 5000,
   })
+  const traces = USE_MOCK ? { traces: mockTraces().slice(0, 5) } : liveTraces
 
   if (isLoading) {
     return <div className="text-sm text-muted-foreground">Loading traces...</div>

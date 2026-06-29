@@ -1,0 +1,13 @@
+# Cloudflare Pages redirects — https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# Each line:  /from   /to-or-https-url   <status>
+# 302 = temporary (we keep the option to change the installer location later).
+
+# One-liner installer — `curl -fsSL aegistraces.com/install | sh`
+/install     https://raw.githubusercontent.com/Justin0504/Aegis/main/scripts/install.sh   302
+
+# Discoverable shorts
+/github      https://github.com/Justin0504/Aegis                                          302
+/releases    https://github.com/Justin0504/Aegis/releases/latest                           302
+/discord     https://github.com/Justin0504/Aegis/discussions                               302
+/paper       https://arxiv.org/abs/2606.04990                                              302

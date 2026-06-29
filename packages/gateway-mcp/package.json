@@ -10,7 +10,8 @@
     "start": "node dist/server.js",
     "pretest": "npm --workspace @agentguard/core-schema run build",
     "test": "jest",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "calibrate": "tsc && node scripts/calibrate.mjs"
   },
   "jest": {
     "preset": "ts-jest",

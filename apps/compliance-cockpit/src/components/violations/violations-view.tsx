@@ -6,6 +6,7 @@ import { useState, useMemo } from 'react'
 import { friendlyAgent } from '@/lib/friendly-names'
 import { traceSummary } from '@/lib/trace-summary'
 import { ToolIcon } from '@/lib/tool-icons'
+import { USE_MOCK, mockViolations } from '@/lib/mock-traces'
 
 const TEXT   = 'hsl(var(--foreground))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -27,6 +28,7 @@ export function ViolationsView() {
   const [groupByPolicy, setGroupByPolicy] = useState(true)
 
   const { data, isLoading } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['violations'],
     queryFn: async () => {
       const res = await fetch('/api/gateway/traces?limit=200')
@@ -37,18 +39,22 @@ export function ViolationsView() {
   })
 
   const violations = useMemo(() => {
-    const all = (data?.traces ?? []).filter(
-      (t: any) => t.safety_validation && !t.safety_validation.passed
-    )
+    const all = USE_MOCK
+      ? mockViolations()
+      : (data?.traces ?? []).filter(
+        (t: any) => t.safety_validation && !t.safety_validation.passed
+      )
     if (riskFilter === 'ALL') return all
     return all.filter((t: any) => (t.safety_validation?.risk_level || 'LOW') === riskFilter)
   }, [data, riskFilter])
 
   // Count per risk level for filter chips
   const riskCounts = useMemo(() => {
-    const all = (data?.traces ?? []).filter(
-      (t: any) => t.safety_validation && !t.safety_validation.passed
-    )
+    const all = USE_MOCK
+      ? mockViolations()
+      : (data?.traces ?? []).filter(
+        (t: any) => t.safety_validation && !t.safety_validation.passed
+      )
     const counts: Record<string, number> = { ALL: all.length, CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 }
     for (const t of all) counts[t.safety_validation?.risk_level || 'LOW'] = (counts[t.safety_validation?.risk_level || 'LOW'] || 0) + 1
     return counts

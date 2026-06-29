@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Shield, ShieldAlert, ShieldCheck, Plus, Trash2, ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X, FlaskConical, Layers, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { USE_MOCK, mockPolicies } from '@/lib/mock-traces'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -58,7 +59,8 @@ export function PoliciesView() {
   const [installingPack, setInstallingPack] = useState<string | null>(null)
   const [installResult, setInstallResult] = useState<{ pack: string; created: number; skipped: number } | null>(null)
 
-  const { data: policies = [], isLoading } = useQuery({
+  const { data: livePolicies = [], isLoading } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['policies'],
     queryFn: async () => {
       const res = await fetch('/api/gateway/policies')
@@ -67,6 +69,7 @@ export function PoliciesView() {
     },
     refetchInterval: 8000,
   })
+  const policies = USE_MOCK ? mockPolicies() : livePolicies
 
   async function togglePolicy(policy: any) {
     setTogglingId(policy.id)

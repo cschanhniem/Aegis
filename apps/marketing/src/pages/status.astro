@@ -7,9 +7,9 @@ import Footer from '@/components/Footer.astro';
 // the items below when an incident lands; bump the timestamp.
 const lastChecked = '2026-06-10';
 const components = [
-  { name: 'Marketing site (aegis.dev)',     state: 'operational', detail: 'Cloudflare Pages — multi-region edge' },
-  { name: 'Hosted gateway (gateway.aegis.dev)', state: 'launching', detail: 'Opening for early-access tenants; sign up via /signup' },
-  { name: 'Cockpit (cockpit.aegis.dev)',    state: 'launching', detail: 'Per-tenant subdomain, ships with each invite' },
+  { name: 'Marketing site (aegistraces.com)',     state: 'operational', detail: 'Cloudflare Pages — multi-region edge' },
+  { name: 'Hosted gateway (gateway.aegistraces.com)', state: 'launching', detail: 'Opening for early-access tenants; sign up via /signup' },
+  { name: 'Cockpit (cockpit.aegistraces.com)',    state: 'launching', detail: 'Per-tenant subdomain, ships with each invite' },
   { name: 'SDK packages (PyPI, npm)',       state: 'operational', detail: 'agentguard@latest, @agentguard/sdk@latest' },
   { name: 'Desktop bundle (macOS + Windows + Linux)', state: 'operational', detail: 'Latest release v0.1.0 — see /download' },
   { name: 'Transparency log',               state: 'operational', detail: 'Merkle root signing daily; witness cosignature on request' },
@@ -41,7 +41,7 @@ const incidents: Array<{
           Last checked: <strong>{lastChecked}</strong>. This page is
           updated manually until the Instatus integration lands (planned
           2026 Q3). For incident notifications today, subscribe via
-          <a href="mailto:status@aegis.dev?subject=subscribe">email</a>.
+          <a href="mailto:status@aegistraces.com?subject=subscribe">email</a>.
         </p>
       </div>
     </section>
@@ -71,7 +71,7 @@ const incidents: Array<{
             land here with a written post-mortem within 14 days. For
             real-time updates during an incident, follow
             <a href="https://github.com/Justin0504/Aegis/discussions" target="_blank" rel="noopener">GitHub Discussions</a>
-            or email <a href="mailto:status@aegis.dev">status@aegis.dev</a>.
+            or email <a href="mailto:status@aegistraces.com">status@aegistraces.com</a>.
           </p>
         )}
         {incidents.map(i => (

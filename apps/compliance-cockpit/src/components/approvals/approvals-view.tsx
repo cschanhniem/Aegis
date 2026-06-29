@@ -8,6 +8,7 @@ import { friendlyAgent } from '@/lib/friendly-names'
 import { traceSummary } from '@/lib/trace-summary'
 import { ToolIcon } from '@/lib/tool-icons'
 import { PendingChecks } from './pending-checks'
+import { USE_MOCK, mockTraces } from '@/lib/mock-traces'
 
 const BORDER  = 'hsl(var(--border))'
 const MUTED   = 'hsl(var(--muted-foreground))'
@@ -19,7 +20,8 @@ export function ApprovalsView() {
   const [filter, setFilter] = useState<'pending' | 'APPROVED' | 'REJECTED' | 'all'>('pending')
 
   // Always fetch all traces, filter client-side for accurate counts
-  const { data: allTraces = [], isLoading } = useQuery({
+  const { data: liveTraces = [], isLoading } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['approval-traces'],
     queryFn: async () => {
       const res = await fetch('/api/gateway/traces?limit=200')
@@ -29,6 +31,19 @@ export function ApprovalsView() {
     },
     refetchInterval: 5000,
   })
+
+  // Mock mode: sprinkle approval_status across the 15 classic traces
+  // so the Pending / Approved / Rejected tabs all have real-looking content.
+  const allTraces: any[] = USE_MOCK
+    ? mockTraces().map((t: any, i: number) => ({
+        ...t,
+        approval_status:
+          i % 5 === 0 ? 'APPROVED' :
+          i % 5 === 1 ? 'REJECTED' :
+          i % 5 === 2 ? null       :  // pending
+          'APPROVED',
+      }))
+    : liveTraces
 
   const pending  = allTraces.filter((t: any) => !t.approval_status)
   const approved = allTraces.filter((t: any) => t.approval_status === 'APPROVED')

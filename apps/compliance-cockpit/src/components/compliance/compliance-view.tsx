@@ -7,6 +7,7 @@ import {
   ChevronRight, ChevronDown, Hash, Stamp,
   CheckCircle2, CircleDashed, XCircle,
 } from 'lucide-react'
+import { USE_MOCK, mockComplianceBundle, mockComplianceControls } from '@/lib/mock-traces'
 
 // ── design tokens (dev-friendly: density + monospace bias) ──────────────
 const BORDER = 'hsl(var(--border))'
@@ -85,6 +86,7 @@ export function ComplianceView() {
   const [expanded, setExpanded] = useState<'evidence' | 'signature' | 'curl' | null>(null)
 
   const controlsQ = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['compliance', 'controls', framework],
     queryFn: async () => {
       const res = await fetch(`/api/gateway/compliance/controls/${framework}`)
@@ -94,6 +96,7 @@ export function ComplianceView() {
     },
     staleTime: 60_000,
   })
+  const controlsData = (USE_MOCK ? mockComplianceControls(framework) : controlsQ.data) as ControlDef[] | undefined
 
   const bundleM = useMutation({
     mutationFn: async (fw: Framework) => {
@@ -111,7 +114,7 @@ export function ComplianceView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [framework])
 
-  const bundle = bundleM.data
+  const bundle = USE_MOCK ? (mockComplianceBundle(framework) as Bundle) : bundleM.data
   const selected = useMemo(
     () => bundle?.controls.find(c => c.id === selectedId) ?? bundle?.controls[0],
     [bundle, selectedId],

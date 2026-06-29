@@ -1,6 +1,6 @@
 # AEGIS SaaS — hosted-product roadmap
 
-Honest scope doc for turning AEGIS into a hosted SaaS at `app.aegis.dev`.
+Honest scope doc for turning AEGIS into a hosted SaaS at `app.aegistraces.com`.
 None of this is built yet. This document exists so the work can be
 sequenced and outsourced cleanly.
 
@@ -19,8 +19,8 @@ the customer.
 
 A customer signs up, picks Pro / Team / Enterprise, and immediately gets:
 
-1. `https://<their-org>.aegis.dev` — their cockpit
-2. `https://gw.aegis.dev/v1` — shared gateway endpoint with their key
+1. `https://<their-org>.aegistraces.com` — their cockpit
+2. `https://gw.aegistraces.com/v1` — shared gateway endpoint with their key
 3. A real backing store with daily backups
 4. The same audit-log / transparency-log they could verify offline
 5. Stripe billing tied to usage (tool-call checks/month)
@@ -31,7 +31,7 @@ No infra setup on their side. No Docker. No K8s. No PVCs.
 
 ```
                                   ┌─────────────────────┐
-                                  │  app.aegis.dev      │  Marketing + onboarding
+                                  │  app.aegistraces.com      │  Marketing + onboarding
                                   │  (apps/marketing)   │  (already done ✓)
                                   └─────────────────────┘
                                             │ signup → Stripe checkout
@@ -96,7 +96,7 @@ No billing yet. Single region. Manual customer support.
 - [ ] **Tenant-scoped gateway routing**
   Gateway already accepts `X-Org-Id`; control plane needs to inject it
   from the bearer token. Add a Kong / Envoy or a small Cloudflare Worker
-  in front of `gw.aegis.dev` to do this.
+  in front of `gw.aegistraces.com` to do this.
 - [ ] **Managed Postgres**
   Supabase or Neon for dev. RDS/Cloud SQL when scaling. Apply RLS
   policies (`tenant_isolation`) on all six core tables: agents, traces,
@@ -105,10 +105,10 @@ No billing yet. Single region. Manual customer support.
   Litestream → S3 for SQLite (dev only). For Postgres: pgbackrest with
   6-hour PITR (matches HIPAA retention).
 - [ ] **Subdomain DNS provisioning**
-  Cloudflare API. On signup, create `<slug>.aegis.dev` CNAME → load
+  Cloudflare API. On signup, create `<slug>.aegistraces.com` CNAME → load
   balancer. Wildcard TLS already covers it.
 - [ ] **Status page**
-  status.aegis.dev (use Vercel + a UptimeRobot feed, or BetterStack).
+  status.aegistraces.com (use Vercel + a UptimeRobot feed, or BetterStack).
 
 ### Phase 2 — paid (~2 weeks, 1 engineer)
 Goal: take credit cards. Enforce quotas.
@@ -169,7 +169,7 @@ self-host again — important for trust.
 
 ### Where does cockpit run
 **Recommendation: cockpit is one Next.js deploy, multi-tenant** —
-shows `<org-slug>.aegis.dev/...`. Server-side it injects the tenant
+shows `<org-slug>.aegistraces.com/...`. Server-side it injects the tenant
 context. The cockpit code already has all the tenant-scoping; just
 needs the wrapper.
 
@@ -189,13 +189,13 @@ Free, which is the right call for the first 6 months.
 
 If you want to bias for speed:
 
-1. **Day 1-3**: Stand up `app.aegis.dev` on Vercel with NextAuth
+1. **Day 1-3**: Stand up `app.aegistraces.com` on Vercel with NextAuth
    + Postgres on Supabase. Sign up flow → creates tenant row + API key.
 2. **Day 4-7**: Deploy the gateway to Fly.io (uses the fly.toml we
    just shipped). Wire control plane to inject `X-Org-Id` from
    the bearer token via a Cloudflare Worker.
 3. **Day 8-12**: Stripe checkout for Pro. Free tier already works.
-4. **Day 13-14**: Status page + minimal docs at docs.aegis.dev.
+4. **Day 13-14**: Status page + minimal docs at docs.aegistraces.com.
 
 Two weeks. One engineer. ~$500/mo infra. First hosted customer
 possible on day 15.

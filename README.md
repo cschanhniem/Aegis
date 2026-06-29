@@ -27,15 +27,61 @@
 
 <br>
 
+<div align="center">
+
+## Download AEGIS
+
+<table>
+<tr>
+<td align="center" width="33%">
+
+### 🍎 macOS
+
+[<img src="https://img.shields.io/badge/Download_.dmg-Apple_Silicon-0a0a0a?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS">](https://github.com/Justin0504/Aegis/releases/latest)
+
+<sub>`AEGIS_0.1.0_aarch64.dmg` · 164 MB<br>macOS 11+ · Apple Silicon</sub>
+
+</td>
+<td align="center" width="33%">
+
+### 🪟 Windows
+
+<img src="https://img.shields.io/badge/Coming_in_0.2-Windows-6e6e6e?style=for-the-badge&logo=windows&logoColor=white" alt="Windows coming soon">
+
+<sub>`AEGIS_Setup.exe`<br>Windows 10+ · use WSL2 today</sub>
+
+</td>
+<td align="center" width="33%">
+
+### 🐧 Linux
+
+[<img src="https://img.shields.io/badge/curl_aegistraces.com/install-Linux-0a0a0a?style=for-the-badge&logo=linux&logoColor=white" alt="Install on Linux">](https://aegistraces.com/install)
+
+<sub>`.deb` · `.AppImage` · `.tar.gz`<br>Ubuntu 22.04+ · Debian 12+ · RHEL 9+</sub>
+
+</td>
+</tr>
+</table>
+
+**Or one line in any terminal:**
+
+```bash
+curl -fsSL https://aegistraces.com/install | sh
+```
+
+<sub>Detects your OS + arch, downloads the verified release, drops the binary in `/usr/local/bin`, ready to run. No git clone. No Docker. No `npm install`.</sub>
+
+</div>
+
+---
+
 > Your agent just called `DROP TABLE users` because the prompt said "clean up old records."
->
-> Your agent just exfiltrated 2GB because "the user asked for a report."
->
+> Your agent just exfiltrated 2 GB because "the user asked for a report."
 > Your agent just ran `rm -rf /` because the model hallucinated a tool name.
 >
-> **These are not hypotheticals.** Every agent framework lets AI decide which tools to call, with what arguments, at machine speed. There is no human in the loop. There is no undo button.
+> **Not hypotheticals.** Every agent framework lets AI decide which tools to call, with what arguments, at machine speed. There is no human in the loop. There is no undo.
 >
-> AEGIS is the missing layer: a **pre-execution firewall** that sits between your agent and its tools, classifies every call in real time, enforces policies, blocks violations, and creates a tamper-evident audit trail with hash chaining and optional signing support — all with **one line of code and zero changes to your agent.**
+> AEGIS is the missing layer: a **pre-execution firewall** that sits between your agent and its tools, classifies every call in real time, enforces policies, blocks violations, and writes a tamper-evident audit trail — with **one line of code and zero agent changes.**
 
 <br>
 
@@ -47,7 +93,7 @@
 
 ---
 
-## Demo
+## See it run
 
 <div align="center">
 
@@ -66,24 +112,6 @@ Watch it trace tool calls, block SQL injection, detect PII, and pause for human 
 
 ---
 
-## Download
-
-> **macOS · Apple Silicon (arm64)** —
-> [`AEGIS_0.1.0_aarch64.dmg`](https://github.com/Justin0504/Aegis/releases/latest)
-> · 164 MB · self-contained, no Docker, no `npm install`
-
-Drag `AEGIS.app` into Applications, launch from Spotlight, you're done.
-The first run opens a Welcome panel that detects unprotected Python/Node
-agents on your machine and gives you the one-line snippet to plug each
-into AEGIS.
-
-<sub>The .dmg is currently <strong>unsigned</strong> while we wait on an
-Apple Developer identity. Gatekeeper will warn on first launch — right-
-click <strong>AEGIS</strong> → <strong>Open</strong> → <strong>Open</strong>
-to bypass once. Intel x64, Windows, and Linux builds land in 0.2.x.</sub>
-
----
-
 ## Deploy in 30 seconds
 
 <p align="center">
@@ -93,14 +121,15 @@ to bypass once. Intel x64, Windows, and Linux builds land in 0.2.x.</sub>
   <a href="https://railway.app/new/template?template=https%3A%2F%2Fgithub.com%2FJustin0504%2FAegis">
     <img src="https://railway.app/button.svg" alt="Deploy on Railway" height="32"></a>
   &nbsp;
-  <a href="https://fly.io/launch?from=https://github.com/Justin0504/Aegis">
-    <img src="https://fly.io/static/images/launch/launch.svg" alt="Launch on Fly.io" height="32"></a>
-  &nbsp;
   <a href="https://cloud.digitalocean.com/apps/new?repo=https://github.com/Justin0504/Aegis/tree/main">
     <img src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to DO" height="32"></a>
 </p>
 
-<sub>Each button reads the platform-specific config we ship (<code>render.yaml</code>, <code>railway.json</code>, <code>fly.toml</code>, <code>.do/app.yaml</code>) and stands up a public gateway + cockpit on the host's free tier in ~30 seconds. No CLI needed.</sub>
+<p align="center">
+  <sub>Prefer Fly.io? <code>fly launch</code> from the repo root — <code>fly.toml</code> ships in-tree. Or use Helm: <code>helm install aegis ./charts/aegis</code>.</sub>
+</p>
+
+<sub>Each button reads the platform-specific config we ship (<code>render.yaml</code>, <code>railway.json</code>, <code>.do/app.yaml</code>) and stands up a public gateway + cockpit on the host's free tier in ~30 seconds. No CLI needed.</sub>
 
 ## Or run it locally (one command)
 

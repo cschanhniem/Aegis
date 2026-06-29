@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ShieldCheck, ShieldAlert, Layers, X, Loader2, ExternalLink } from 'lucide-react'
+import { USE_MOCK, mockCoverageSummary, mockOntology } from '@/lib/mock-traces'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -76,6 +77,7 @@ export function CoverageView() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
 
   const summaryQ = useQuery<CoverageSummary>({
+    enabled: !USE_MOCK,
     queryKey: ['coverage', 'summary'],
     queryFn: async () => {
       const res = await fetch('/api/gateway/ontology/coverage')
@@ -86,6 +88,7 @@ export function CoverageView() {
   })
 
   const ontologyQ = useQuery<OntologyDoc>({
+    enabled: !USE_MOCK,
     queryKey: ['ontology'],
     queryFn: async () => {
       const res = await fetch('/api/gateway/ontology')
@@ -95,7 +98,12 @@ export function CoverageView() {
     staleTime: 5 * 60 * 1000,
   })
 
-  if (summaryQ.isLoading || ontologyQ.isLoading) {
+  // Mock short-circuits — show the same Mitre-ATT&CK style coverage map
+  // the live gateway would return.
+  const summary = (USE_MOCK ? mockCoverageSummary() : summaryQ.data) as CoverageSummary | undefined
+  const ontology = (USE_MOCK ? mockOntology() : ontologyQ.data) as OntologyDoc | undefined
+
+  if (!USE_MOCK && (summaryQ.isLoading || ontologyQ.isLoading)) {
     return (
       <div className="flex items-center gap-2 text-xs" style={{ color: MUTED }}>
         <Loader2 className="h-4 w-4 animate-spin" /> Loading coverage map…
@@ -103,7 +111,7 @@ export function CoverageView() {
     )
   }
 
-  if (summaryQ.error || !summaryQ.data || !ontologyQ.data) {
+  if (!summary || !ontology) {
     return (
       <div className="text-xs inline-flex items-start gap-2" style={{ color: 'hsl(0 60% 40%)' }}>
         <ShieldAlert className="h-3.5 w-3.5 mt-0.5" />
@@ -112,8 +120,6 @@ export function CoverageView() {
     )
   }
 
-  const summary = summaryQ.data
-  const ontology = ontologyQ.data
   const techByNode = new Map(ontology.techniques.map(t => [t.id, t]))
 
   const filteredEntries = summary.entries.filter(e =>

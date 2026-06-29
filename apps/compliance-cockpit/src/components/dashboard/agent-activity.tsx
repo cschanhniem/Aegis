@@ -1,11 +1,15 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle, AlertCircle } from 'lucide-react'
+import { CheckCircle, AlertCircle, ShieldAlert } from 'lucide-react'
 import { ToolIcon } from '@/lib/tool-icons'
+import { describeActivity } from '@/lib/activity-description'
+import { EmailAvatar } from '@/lib/avatar'
+import { USE_MOCK, mockTraces } from '@/lib/mock-traces'
 
 export function AgentActivity() {
   const { data, isLoading } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['agent-activity-real'],
     queryFn: async () => {
       const res = await fetch('/api/gateway/traces?limit=50')
@@ -15,7 +19,7 @@ export function AgentActivity() {
     staleTime: 0,
   })
 
-  const traces: any[] = data?.traces || []
+  const traces: any[] = USE_MOCK ? mockTraces() : (data?.traces || [])
 
   if (isLoading) {
     return (
@@ -38,10 +42,11 @@ export function AgentActivity() {
   return (
     <div className="space-y-1 overflow-y-auto max-h-72">
       {traces.slice(0, 20).map((trace: any) => {
-        const toolName = trace.tool_call?.tool_name || 'unknown'
+        const rich = describeActivity(trace)
         const hasError = !!trace.observation?.error
+        const decision = String(trace.decision ?? '').toUpperCase()
+        const blocked = decision === 'BLOCK'
         const durationMs = trace.observation?.duration_ms
-        const prompt = trace.input_context?.prompt || ''
 
         return (
           <div
@@ -49,30 +54,33 @@ export function AgentActivity() {
             className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
             style={{ background: 'hsl(var(--secondary))' }}
           >
-            {/* Tool badge — colored brand/category icon */}
-            <ToolIcon name={toolName} size={22} />
-            <span className="text-[12px] font-medium flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>
-              {toolName}
+            {/* Tool badge — brand icon driven by rich.iconKey when available */}
+            <ToolIcon name={rich.iconKey ?? trace.tool_call?.tool_name ?? 'unknown'} size={22} />
+
+            {/* Plain-English description */}
+            <span className="flex-1 text-[12.5px] truncate" style={{ color: 'hsl(var(--foreground))' }}>
+              {rich.text}
             </span>
 
-            {/* Prompt preview */}
-            <span className="flex-1 text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              {String(prompt).slice(0, 60)}
-            </span>
+            {/* Recipient avatar (email path only) */}
+            {rich.recipientEmail && (
+              <EmailAvatar email={rich.recipientEmail} size={20} />
+            )}
 
-            {/* Duration */}
-            {durationMs !== undefined && (
-              <span className="text-[11px] flex-shrink-0" style={{ color: 'hsl(0 0% 56%)' }}>
+            {/* Duration — only when defined */}
+            {typeof durationMs === 'number' && Number.isFinite(durationMs) && (
+              <span className="text-[11px] flex-shrink-0 tabular-nums" style={{ color: 'hsl(0 0% 56%)' }}>
                 {durationMs < 1 ? '<1ms' : `${Math.round(durationMs)}ms`}
               </span>
             )}
 
             {/* Status */}
             <div className="flex-shrink-0">
-              {hasError
-                ? <AlertCircle className="h-3.5 w-3.5" style={{ color: 'hsl(0 18% 50%)' }} />
-                : <CheckCircle className="h-3.5 w-3.5" style={{ color: 'hsl(150 18% 44%)' }} />
-              }
+              {blocked
+                ? <ShieldAlert className="h-3.5 w-3.5" style={{ color: 'hsl(0 45% 45%)' }} />
+                : hasError
+                  ? <AlertCircle className="h-3.5 w-3.5" style={{ color: 'hsl(0 18% 50%)' }} />
+                  : <CheckCircle className="h-3.5 w-3.5" style={{ color: 'hsl(150 18% 44%)' }} />}
             </div>
           </div>
         )

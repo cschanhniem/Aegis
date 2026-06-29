@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Download, Shield, AlertCircle, ThumbsUp, ThumbsDown, EyeOff, ChevronRight, Code2, Eye, Brain } from 'lucide-react'
+import { USE_MOCK, mockTraces } from '@/lib/mock-traces'
 import { formatDate, getStatusColor, getRiskLevelColor } from '@/lib/utils'
 import { friendlyAgent } from '@/lib/friendly-names'
 import { useState, ReactNode } from 'react'
@@ -132,8 +133,35 @@ function summarizeData(data: any): string {
   if (Array.isArray(data)) return `${data.length} item${data.length !== 1 ? 's' : ''}`
   const keys = Object.keys(data)
   if (keys.length === 0) return '{}'
-  const preview = keys.slice(0, 3).join(', ')
-  return keys.length > 3 ? `${preview} +${keys.length - 3} more` : preview
+
+  // Surface VALUES for recognisable shapes — much more useful than key names.
+  const clip = (s: any, n = 50) => {
+    const str = String(s ?? '')
+    return str.length > n ? str.slice(0, n - 1) + '…' : str
+  }
+  if (data.to)         return `→ ${clip(data.to, 32)}${data.subject ? ` · "${clip(data.subject, 30)}"` : ''}`
+  if (data.recipient)  return `→ ${clip(data.recipient, 32)}`
+  if (data.url)        return clip(data.url, 60)
+  if (data.endpoint)   return clip(data.endpoint, 60)
+  if (data.sql)        return clip(data.sql, 60)
+  if (data.query)      return `"${clip(data.query, 50)}"`
+  if (data.q)          return `"${clip(data.q, 50)}"`
+  if (data.command)    return clip(data.command, 60)
+  if (data.path)       return clip(data.path, 60)
+  if (data.file_path)  return clip(data.file_path, 60)
+  if (data.amount)     return typeof data.amount === 'number' ? `$${(data.amount / 100).toFixed(2)}` : clip(data.amount)
+
+  // Fallback — at least show the first value, not just the key name.
+  const firstKey = keys[0]
+  const firstVal = data[firstKey]
+  if (firstVal && typeof firstVal !== 'object') return clip(firstVal, 60)
+  return keys.length > 3 ? `${keys.slice(0, 3).join(', ')} +${keys.length - 3} more` : keys.join(', ')
+}
+
+/** Format a possibly-undefined duration safely. */
+function fmtDuration(ms: any): string {
+  if (typeof ms !== 'number' || !Number.isFinite(ms)) return '—'
+  return ms < 1 ? '<1ms' : `${Math.round(ms)}ms`
 }
 
 function SmartDataView({ data, label }: { data: any; label?: string }) {
@@ -191,7 +219,8 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
   const [feedback, setFeedback] = useState('')
   const [pendingScore, setPendingScore] = useState<number | null>(null)
 
-  const { data: trace, isLoading } = useQuery({
+  const { data: traceFromApi, isLoading } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['trace', traceId],
     queryFn: async () => {
       const response = await fetch(`/api/gateway/traces/${traceId}`)
@@ -199,6 +228,11 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
       return response.json()
     },
   })
+  // Mock mode: pull the matching trace from the same in-memory list
+  // that traces-view fed to TracesList, so detail = the row clicked.
+  const trace = USE_MOCK
+    ? mockTraces().find((t: any) => t.trace_id === traceId)
+    : traceFromApi
 
   const scoreMutation = useMutation({
     mutationFn: async (score: number) => {
@@ -387,15 +421,15 @@ export function TraceDetails({ traceId, onExport }: TraceDetailsProps) {
           title="Result"
           summary={
             trace.observation.error
-              ? `Failed — ${trace.observation.duration_ms}ms`
-              : `${trace.observation.duration_ms}ms`
+              ? `Failed — ${fmtDuration(trace.observation.duration_ms)}`
+              : `${fmtDuration(trace.observation.duration_ms)}`
           }
           defaultOpen={false}
         >
           <div className="pt-3 space-y-3">
             <div className="flex items-center gap-3 text-xs">
               <span style={{ color: MUTED }}>Duration</span>
-              <span className="font-mono" style={{ color: NUM_COLOR }}>{trace.observation.duration_ms}ms</span>
+              <span className="font-mono" style={{ color: NUM_COLOR }}>{fmtDuration(trace.observation.duration_ms)}</span>
             </div>
             {trace.observation.error ? (
               <div className="rounded-md p-3" style={{ background: 'hsl(var(--status-drift) / 0.10)', border: '1px solid hsl(0 10% 88%)' }}>

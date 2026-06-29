@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
 import { CheckCircle, XCircle, Clock, Shield, AlertTriangle } from 'lucide-react'
+import { USE_MOCK, mockPendingChecks, mockTraces } from '@/lib/mock-traces'
 
 const BORDER = 'hsl(var(--border))'
 const MUTED  = 'hsl(var(--muted-foreground))'
@@ -64,6 +65,7 @@ export function PendingChecks() {
   const [deciding, setDeciding] = useState<Record<string, 'allowing' | 'blocking'>>({})
 
   const { data, isLoading } = useQuery({
+    enabled: !USE_MOCK,
     queryKey: ['pending-checks'],
     queryFn: async () => {
       const res = await fetch('/api/gateway/check/pending')
@@ -73,7 +75,7 @@ export function PendingChecks() {
     refetchInterval: 3_000,
   })
 
-  const checks: any[] = data?.checks ?? []
+  const checks: any[] = USE_MOCK ? mockPendingChecks() : (data?.checks ?? [])
 
   async function decide(checkId: string, decision: 'allow' | 'block') {
     setDeciding(prev => ({ ...prev, [checkId]: decision === 'allow' ? 'allowing' : 'blocking' }))
